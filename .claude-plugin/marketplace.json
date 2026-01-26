@@ -1,0 +1,24 @@
+{
+  "name": "webflow-seo-copilot",
+  "owner": {
+    "name": "Sofian Bettayeb",
+    "email": "contact@checklist-seo.com"
+  },
+  "metadata": {
+    "description": "SEO skills for Webflow sites — content refresh, optimization, and ranking recovery powered by Webflow MCP.",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "refresh-content",
+      "source": "./plugins/refresh-content",
+      "description": "Refresh and optimize Webflow blog articles for SEO — updates dates, meta tags, keywords, internal links, FAQs, and schema markup.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Sofian Bettayeb"
+      },
+      "category": "seo",
+      "tags": ["webflow", "seo", "blog", "content-refresh", "cms", "mcp"]
+    }
+  ]
+}

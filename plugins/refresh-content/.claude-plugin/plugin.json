@@ -1,0 +1,11 @@
+{
+  "name": "refresh-content",
+  "description": "Refresh and optimize Webflow blog articles for SEO — updates dates, meta tags, keywords, internal links, FAQs, and schema markup via Webflow MCP.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Sofian Bettayeb"
+  },
+  "homepage": "https://github.com/sofian-bettayeb/webflow-seo-copilot",
+  "license": "MIT",
+  "keywords": ["webflow", "seo", "blog", "content-refresh", "cms"]
+}
