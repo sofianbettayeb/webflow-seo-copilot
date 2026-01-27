@@ -10,7 +10,7 @@ Claude Code skills that turn your Webflow CMS into an SEO machine — refresh co
 ```
 
 **Requirements:**
-- [Webflow MCP server](https://github.com/anthropics/skills) (required)
+- [Webflow MCP server](https://developers.webflow.com/mcp/reference/overview) (required)
 - Google Search Console MCP server (optional — enables keyword data and indexing submission)
 
 ## Skills
