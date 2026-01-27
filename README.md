@@ -30,7 +30,7 @@ Refresh and optimize existing Webflow blog articles to improve rankings, recover
 Add the marketplace and install:
 
 ```
-/plugin marketplace add sofian-bettayeb/webflow-seo-copilot
+/plugin marketplace add sofianbettayeb/webflow-seo-copilot
 /plugin install refresh-content@webflow-seo-copilot
 ```
 
