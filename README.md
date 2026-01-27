@@ -50,7 +50,8 @@ This marketplace will grow with more Webflow SEO skills. Stay tuned.
 
 I'm [Sofian Bettayeb](https://www.checklist-seo.com).
 
-By day, I'm a martech consultant, working with billion-dollar brands like Rolex and Helsana. By night, I build tools like [AI SEO Copilot](https://webflow.com/apps/detail/ai-seo-copilot) (15k+ installs), [AEO Copilot](https://www.checklist-seo.com), and blueprints like [Webflow SEO Checklist](https://www.checklist-seo.com) (1k+ downloads) to help my Webflow friends make money with SEO and AEO.
+By day, I'm a martech consultant, working with billion-dollar brands like Rolex and Helsana. 
+By night, I build tools like [AI SEO Copilot](https://webflow.com/apps/detail/ai-seo-copilot) (15k+ installs), [AEO Copilot](https://www.aeo-copilot.com), and blueprints like [Webflow SEO Checklist](https://www.checklist-seo.com) (1k+ downloads) to help my Webflow friends make money with SEO and AEO.
 
 In between, I ride my bikes and play with my kids in Bern, Switzerland.
 
