@@ -2,6 +2,15 @@
 
 Claude Code skills that turn your Webflow CMS into an SEO machine — refresh content, optimize rankings, and recover lost traffic, all through natural language.
 
+## Why Keep Content Fresh?
+
+Stale content loses rankings. It's that simple.
+
+- **SEO** — Google's freshness algorithm boosts updated content. Old dates in titles kill CTR. Competitors publish newer articles and take your spot.
+- **AEO** — AI answer engines (ChatGPT, Perplexity, AI Overviews) prefer recent sources. Updated articles with structured FAQs get cited. Stale ones get ignored.
+
+A single refresh can recover months of lost traffic.
+
 ## Installation
 
 ```
