@@ -1,4 +1,4 @@
-# Webflow SEO Copilot
+# Webflow SEO Copilot - Claude Skills for Webflow SEO/AEO
 
 Claude Code skills that turn your Webflow CMS into an SEO machine — refresh content, optimize rankings, and recover lost traffic, all through natural language.
 
