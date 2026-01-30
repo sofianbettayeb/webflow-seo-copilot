@@ -19,6 +19,17 @@
       },
       "category": "seo",
       "tags": ["webflow", "seo", "blog", "content-refresh", "cms", "mcp"]
+    },
+    {
+      "name": "click-recovery",
+      "source": "./plugins/click-recovery",
+      "description": "Find pages with high impressions but low CTR — get recommendations and publish optimized meta titles and descriptions directly to Webflow.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Sofian Bettayeb"
+      },
+      "category": "seo",
+      "tags": ["seo", "ctr", "gsc", "google-search-console", "click-recovery", "webflow", "mcp"]
     }
   ]
 }

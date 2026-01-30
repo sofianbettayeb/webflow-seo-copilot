@@ -1,0 +1,11 @@
+{
+  "name": "click-recovery",
+  "description": "Find pages with high impressions but low CTR — get a prioritized list of titles and meta descriptions to rewrite for quick traffic wins.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Sofian Bettayeb"
+  },
+  "homepage": "https://github.com/sofianbettayeb/webflow-seo-copilot",
+  "license": "MIT",
+  "keywords": ["seo", "ctr", "gsc", "google-search-console", "click-recovery", "serp"]
+}

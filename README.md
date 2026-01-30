@@ -16,11 +16,12 @@ A single refresh can recover months of lost traffic.
 ```
 /plugin marketplace add sofianbettayeb/webflow-seo-copilot
 /plugin install refresh-content@webflow-seo-copilot
+/plugin install click-recovery@webflow-seo-copilot
 ```
 
 **Requirements:**
-- [Webflow MCP server](https://developers.webflow.com/mcp/reference/overview) (required)
-- Google Search Console MCP server (optional — enables keyword data and indexing submission)
+- [Webflow MCP server](https://developers.webflow.com/mcp/reference/overview) (required for both skills)
+- [Google Search Console MCP server](https://github.com/sofianbettayeb/gsc-mcp-server) (required for `/click-recovery`, optional for `/refresh-content`)
 
 ## Skills
 
@@ -51,9 +52,35 @@ Invoke it directly:
 
 Or just ask Claude to refresh, update, or optimize a blog article — the skill activates automatically.
 
-### More skills coming soon
+### `/click-recovery`
 
-This marketplace will grow with more Webflow SEO skills. Stay tuned.
+Find pages Google already trusts but users ignore. No crawling, no code — just fast wins with measurable impact.
+
+**What it does:**
+- Pulls GSC data to find high-impression, low-CTR pages
+- Validates queries with Keywords Everywhere (optional) for volume and intent
+- Scores and prioritizes opportunities by wasted traffic potential
+- Suggests new meta titles and descriptions based on search intent
+- Publishes approved changes directly to Webflow CMS
+
+**Why it's cool:**
+Google already ranks these pages. You're not building authority — you're fixing the pitch. A better title and description can recover clicks you're already earning impressions for.
+
+**Usage:**
+
+```
+/click-recovery
+```
+
+The skill analyzes your GSC data, presents a prioritized report, and asks which pages to update. Approve the changes and they're published to Webflow.
+
+### When to use each skill
+
+| Scenario | Skill |
+|----------|-------|
+| Low CTR, content is fine | `/click-recovery` — fix the pitch |
+| Outdated content, rankings dropping | `/refresh-content` — full refresh |
+| Both issues | `/click-recovery` first, then `/refresh-content` |
 
 ## About
 
