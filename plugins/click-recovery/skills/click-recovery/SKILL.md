@@ -337,19 +337,33 @@ Store the field mapping for updates.
 
 ### 6.4 Present Changes for Final Approval
 
-Before publishing, show the exact changes:
+Before publishing, show the exact changes with warnings:
 
 ```
 ## Ready to Publish
 
-| Page | Field | Current | New |
-|------|-------|---------|-----|
-| [title] | Meta title | [old] | [new] ([N] chars) |
-| [title] | Meta description | [old] | [new] ([N] chars) |
-| ... | ... | ... | ... |
+| Page | Field | Current | New | Status |
+|------|-------|---------|-----|--------|
+| [title] | Meta title | [old] | [new] | ✅ 52 chars |
+| [title] | Meta title | [old] | [new] | ⚠️ 68 chars — will truncate |
+| [title] | Meta title | [old] | [new] | ⚠️ 25 chars — too short |
+| [title] | Meta description | [old] | [new] | ✅ 142 chars |
+| ... | ... | ... | ... | ... |
 
 Publish these changes to Webflow? (yes/no)
 ```
+
+**Title length warnings:**
+- ⚠️ **> 60 chars**: "Title will be truncated in search results. Consider shortening."
+- ⚠️ **< 30 chars**: "Title is short — missing opportunity to include keywords or hooks."
+- ✅ **30-60 chars**: Optimal length
+
+**Meta description warnings:**
+- ⚠️ **> 155 chars**: "Description may be truncated."
+- ⚠️ **< 70 chars**: "Description is short — add more value proposition."
+- ✅ **70-155 chars**: Optimal length
+
+If any warnings exist, ask user: "Some titles/descriptions have length issues. Proceed anyway, or revise first?"
 
 **Wait for explicit user confirmation before publishing.**
 
@@ -385,10 +399,16 @@ Present a final summary:
 | [title] | CMS | ⚠️ No desc field | ✅ | ❌ Add field manually |
 | [title] | — | ❌ Not found | — | — |
 
+## Re-check Schedule
+
+| When | What to check |
+|------|---------------|
+| **2-3 weeks** | Verify changes are indexed (`site:URL` in Google). Check GSC for crawl errors. |
+| **4-6 weeks** | Measure CTR impact. Compare clicks before/after. Note any position changes. |
+| **Monthly** | Re-run `/click-recovery` to find new opportunities as rankings shift. |
+
 ## Next Steps
-- Monitor CTR in GSC (2-4 weeks)
-- Re-run `/click-recovery` monthly
-- For ranking opportunities, use `/refresh-content [URL]`
+- For ranking opportunities (position 21+), use `/refresh-content [URL]`
 - For pages missing meta description field, add field in Webflow Designer
 ```
 
@@ -448,11 +468,21 @@ If total impressions < 1000 in 90 days:
 
 ## Success Metrics
 
-After implementing recommendations, user should track:
-- CTR change per page (2-4 weeks)
-- Click change per page (2-4 weeks)
-- Position stability (ensure rankings held)
-- Total organic traffic change (30 days)
+After implementing recommendations, track at each milestone:
+
+**2-3 weeks (indexing check):**
+- Are updated pages indexed? (`site:URL` in Google)
+- Any crawl errors in GSC?
+
+**4-6 weeks (impact measurement):**
+- CTR change per page (compare to pre-update baseline)
+- Click change per page
+- Position stability (ensure rankings held or improved)
+
+**Monthly (ongoing):**
+- Total organic traffic change
+- New CTR opportunities from ranking shifts
+- Re-run `/click-recovery` to catch new issues
 
 ---
 
