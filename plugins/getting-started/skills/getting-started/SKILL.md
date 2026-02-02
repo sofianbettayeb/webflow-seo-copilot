@@ -25,19 +25,81 @@ Run this once per project. Re-run to update your config.
 ## Workflow
 
 ```
-INTERVIEW → GENERATE → SAVE → CONFIRM
+CHOOSE MODE → INTERVIEW → GENERATE → SAVE → CONFIRM
 ```
+
+---
+
+## Phase 0: Choose Setup Mode
+
+Start by asking:
+
+```
+How would you like to set up your SEO Copilot?
+
+1. **Quick setup** (3 questions) — Best for solo freelancers who want to get started fast
+   I'll ask: business, audience, tone. Everything else uses smart defaults.
+
+2. **Full setup** (7 sections) — Best for teams or agencies who need precise brand guidelines
+   Complete interview covering all SEO/AEO constraints.
+
+3. **Import existing config** — Have a config from another project? Paste it or provide a path.
+```
+
+If **Quick setup**: Jump to Phase 1 Quick Mode.
+If **Full setup**: Run Phase 1 Full Mode.
+If **Import**: Jump to Phase 3.5 Import Config.
 
 ---
 
 ## Phase 1: Interview
 
-Ask the user each section. Accept free-form answers. Provide examples to guide responses.
+### Quick Mode (3 questions)
+
+For users who chose quick setup:
+
+```
+Quick Setup — I'll infer the rest from your answers.
+
+1. **Business**: What's your business name and what do you do?
+   Example: "Acme Agency — Webflow development for SaaS startups"
+
+2. **Webflow site URL**: What's your site? (so other skills can fetch/analyze pages)
+   Example: "https://acme.agency"
+
+3. **Audience & tone**: Who do you write for, and how should it sound?
+   Example: "Startup founders, friendly but professional"
+```
+
+After quick mode answers, **infer the rest**:
+- From "Webflow freelancers" → infer `expertiseLevel: intermediate`
+- From "SaaS startups" → infer pain points: scaling, efficiency, growth
+- From "friendly but professional" → infer `formality: conversational`, `tone: ["Friendly", "Professional"]`
+- Use sensible defaults for SEO/AEO settings
+
+Offer: "Want me to analyze [site URL] to detect your current brand voice? (yes/no)"
+If yes: Fetch 2-3 blog posts, analyze tone, headings, formality, and pre-fill `brandVoice`.
+
+---
+
+### Full Mode (7 sections)
+
+For users who chose full setup. Accept free-form answers. Provide examples.
 
 ### 1.1 Business Overview
 
 ```
-Let's set up your SEO Copilot config. First, tell me about your business:
+Let's set up your SEO Copilot config.
+
+1. **Business name**: What's your company/brand name?
+2. **What you do**: One sentence describing your product/service
+3. **Webflow site URL**: Your site URL (so other skills can fetch pages)
+4. **Primary goal**: What's the main business outcome you want from SEO?
+   - More leads
+   - More sales
+   - Brand awareness
+   - Thought leadership
+   - Other: ___
 
 1. **Business name**: What's your company/brand name?
 2. **What you do**: One sentence describing your product/service
@@ -55,13 +117,29 @@ Let's set up your SEO Copilot config. First, tell me about your business:
 Who are you trying to reach?
 
 1. **Primary audience**: Who is your ideal customer? (role, industry, company size)
+   Example: "Marketing managers at B2B SaaS companies, 50-200 employees"
+
 2. **Expertise level**: How technical is your audience?
    - Beginner (explain everything)
    - Intermediate (knows basics)
    - Expert (skip fundamentals)
+   [If omitted, I'll infer from audience description]
+
 3. **Pain points**: What problems are they trying to solve?
-4. **Decision factors**: What matters most to them when choosing a solution?
+   [If omitted, I'll suggest common pain points based on your audience]
+
+4. **Decision factors**: What matters most when choosing a solution like yours?
+   Examples:
+   - Price vs. features vs. support quality
+   - Ease of use vs. power/flexibility
+   - Speed to implement vs. customization
+   - Reputation/reviews vs. personal demo
 ```
+
+**Smart inference**: If you say "Webflow freelancers," I'll suggest:
+- Expertise: Intermediate
+- Pain points: Finding clients, pricing projects, scaling solo work
+- Decision factors: Price, ease of use, time savings
 
 ### 1.3 Markets & Languages
 
@@ -100,7 +178,9 @@ SEO-specific guidelines:
 1. **Primary keywords**: What are your 3-5 most important keywords/topics?
 2. **Competitors**: Who are your main SEO competitors? (domains)
 3. **Keyword density**: Any preferences? (default: natural usage, no stuffing)
-4. **Internal linking**: Any pillar pages or key articles to always link to?
+4. **Pillar pages**: Key articles to always link to? (full URLs)
+   Example: "https://yoursite.com/guide/complete-webflow-seo"
+   [I'll validate these URLs are live]
 5. **External linking**:
    - Preferred sources to cite (e.g., industry publications, .gov, .edu)
    - Sources to avoid (e.g., competitors, low-quality sites)
@@ -108,6 +188,8 @@ SEO-specific guidelines:
    - Example: "| Brand Name" at the end
    - Example: "Brand: " at the start
 ```
+
+**Validation**: When pillar page URLs are provided, I'll fetch each one to confirm it's live. If any return 404, I'll flag it before saving the config.
 
 ### 1.6 AEO Constraints (Answer Engine Optimization)
 
@@ -167,10 +249,12 @@ After collecting all answers, generate a JSON config:
   "version": "1.0",
   "created": "YYYY-MM-DD",
   "updated": "YYYY-MM-DD",
+  "setupMode": "quick|full",
 
   "business": {
     "name": "...",
     "description": "...",
+    "webflowSiteUrl": "https://...",
     "primaryGoal": "..."
   },
 
@@ -228,6 +312,24 @@ After collecting all answers, generate a JSON config:
 ---
 
 ## Phase 3: Save Config
+
+### 3.0 Import Config (if chosen in Phase 0)
+
+If user chose "Import existing config":
+
+```
+Paste your existing config JSON, or provide a path:
+- Paste JSON directly
+- File path: /path/to/seo-copilot-config.json
+- URL: https://... (if hosted)
+```
+
+After import:
+1. Validate JSON structure
+2. Show summary of imported settings
+3. Ask: "Anything you'd like to update before saving?"
+4. If yes: Jump to relevant interview section
+5. If no: Proceed to save
 
 ### 3.1 Choose Location
 
@@ -287,6 +389,12 @@ Other Webflow SEO Copilot skills will automatically read this config:
 - `/click-recovery` — Frames titles/descriptions to match your tone and audience
 
 To update your config, run `/getting-started` again.
+
+### Share This Config
+
+To use this config in another project:
+1. Copy `.claude/seo-copilot-config.json` to the new project
+2. Or run `/getting-started` and choose "Import existing config"
 ```
 
 ---
@@ -305,6 +413,7 @@ Other skills should check for and load this config at startup:
 
 | Config Field | Used By | How |
 |--------------|---------|-----|
+| `business.webflowSiteUrl` | All skills | Fetch pages, validate URLs, analyze content |
 | `brandVoice.tone` | All content generation | Match tone in rewrites |
 | `brandVoice.avoid` | All content generation | Filter out forbidden words |
 | `audience.expertiseLevel` | Content complexity | Adjust jargon level |
@@ -335,6 +444,28 @@ If user skips a question:
 - Use a sensible default
 - Mark as `"value": null` or `"value": "default"` in config
 - Note in summary: "Some fields use defaults. Run `/getting-started` again to customize."
+
+⚡ GUARD — **Pillar page URL validation:**
+When pillar page URLs are provided:
+1. Fetch each URL to check if it's live
+2. If 404 or error: "⚠️ [URL] returned [status]. Is this correct?"
+3. If redirect: "ℹ️ [URL] redirects to [new URL]. Use the new URL?"
+4. Store only validated URLs in config
+
+⚡ GUARD — **Brand voice analysis offered:**
+If user provides a Webflow site URL and hasn't filled brand voice:
+- Offer: "Want me to analyze your existing content to detect your brand voice?"
+- If yes: Fetch 2-3 blog posts from the site
+- Analyze: tone, formality, average sentence length, common phrases
+- Present findings: "Based on your content, your voice seems [Friendly, Professional]. Formality: conversational. Sound right?"
+- Let user confirm or adjust
+
+⚡ GUARD — **Smart inference from audience:**
+When user describes their audience, automatically infer:
+- "Webflow freelancers" → `expertiseLevel: intermediate`, pain points: client acquisition, pricing, scaling
+- "Enterprise marketing teams" → `expertiseLevel: intermediate`, decision factors: security, support, integrations
+- "Beginners learning SEO" → `expertiseLevel: beginner`, pain points: overwhelm, jargon, where to start
+- Present inferences: "Based on 'Webflow freelancers,' I'm assuming intermediate expertise and these pain points: [list]. Adjust?"
 
 ---
 
