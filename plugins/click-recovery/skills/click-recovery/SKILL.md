@@ -69,11 +69,17 @@ Flag pages/queries meeting these criteria:
 - Impressions > 500
 - CTR < site average for that position bracket
 - Position ≤ 20 (realistic click potential)
+- **OR** Position 21-30 with impressions > 1000 (high-volume ranking opportunities)
 
 **Wasted impression queries:**
 - Impressions > 100
 - CTR < 2% (or < half the position-bracket average)
 - Position ≤ 10 (should be getting clicks)
+
+**Ranking opportunities (separate category):**
+- Position 21-50 with impressions > 1000
+- These pages rank but need content improvement to reach page 1
+- Flag for `/refresh-content` rather than just meta tag fixes
 
 ### 2.2 Quick Win Filter
 
@@ -89,6 +95,32 @@ Consolidate query-level findings to page level:
 - List all underperforming queries per page
 - Sum total wasted impressions per page
 - Identify the primary keyword (highest impressions) for each page
+
+### 2.4 Fetch Current Meta Tags from Webflow
+
+**Do this BEFORE making recommendations.** For each flagged page URL:
+
+1. Parse the URL to extract collection slug and item slug
+2. Use Webflow MCP `get_collection_list` to find collections
+3. Match URL path to collection + item
+4. Fetch the CMS item using `list_collection_items` with slug filter
+5. Use `get_collection_details` to identify meta title and meta description fields
+6. Store current values:
+   - Current meta title (or `name` field if no dedicated meta title)
+   - Current meta description (or `post-summary` if no dedicated field)
+
+**For static pages (not in CMS):**
+1. Use Webflow MCP `list_pages` to find the page by path
+2. Use `get_page_metadata` to fetch current SEO title and description
+3. Mark as "static page" for different update method later
+
+⚡ GUARD — **Meta description field missing in collection:**
+If the collection has no meta description field:
+- Use `post-summary` or similar if available
+- If no suitable field exists: note in report "No meta description field. Consider adding `meta-description` field to this collection."
+- Still generate recommended meta descriptions for manual use
+
+Store all current values — these are needed for the before/after comparison in recommendations.
 
 ---
 
@@ -181,30 +213,45 @@ Present findings as a structured report:
 **Diagnosis**: [Why is CTR low? Title mismatch? Weak description? Competitor snippets?]
 
 **Recommended changes**:
-- **Title**: [current] → [suggested]
-- **Meta description**: [current] → [suggested]
-- **Keyword framing**: [advice based on intent]
+
+| Field | Current | Suggested | Chars |
+|-------|---------|-----------|-------|
+| Meta title | [current title] | [suggested title] | [N]/60 |
+| Meta description | [current desc or "❌ Missing"] | [suggested desc] | [N]/155 |
+
+**Keyword framing**: [advice based on intent]
 
 **Estimated impact**: +[X] clicks/month
+
+**Page type**: [CMS item / Static page]
 
 ---
 
 [Repeat for each Tier 1 page]
 
 ## Tier 2: High Priority
-[Summary table with key metrics]
+[Summary table with key metrics, current titles, suggested titles]
 
 ## Tier 3: Worth Doing
 [Summary table with key metrics]
+
+## Ranking Opportunities (Position 21-50)
+
+These pages have high impressions but need more than meta tag fixes to reach page 1:
+
+| Page | Impressions | Position | Recommendation |
+|------|-------------|----------|----------------|
+| [title] | [X] | [X] | Run `/refresh-content` for full optimization |
 
 ---
 
 ## Next Steps
 
-1. Review Tier 1 recommendations
-2. Run `/refresh-content [URL]` to execute changes
-3. Monitor CTR in GSC after 2-4 weeks
-4. Re-run `/click-recovery` monthly to find new opportunities
+1. Review and approve Tier 1 recommendations
+2. Publish approved changes directly (this skill handles it)
+3. For ranking opportunities: run `/refresh-content [URL]`
+4. Monitor CTR in GSC after 2-4 weeks
+5. Re-run `/click-recovery` monthly
 ```
 
 ### 5.2 Title & Meta Description Guidelines
@@ -264,11 +311,20 @@ For each approved page:
 4. Use `list_collection_items` to fetch the CMS item by slug
 5. Store the item ID and current field values
 
-⚡ GUARD — **Page not found in CMS:**
-If a URL doesn't match any CMS item:
-- It may be a static page (not in CMS) or an external URL
-- Inform user: "[URL] is not a CMS item. Update the page manually in Webflow Designer."
-- Skip this page and continue with others
+⚡ GUARD — **Page not found in CMS (static page):**
+If a URL doesn't match any CMS item, check if it's a static page:
+
+1. Use Webflow MCP `list_pages` to search for the page by path
+2. If found as a static page:
+   - Use `update_page_settings` to update SEO title and meta description
+   - Include in the publish workflow
+3. If not found anywhere (external URL or deleted page):
+   - Inform user: "[URL] not found in Webflow. It may be external or deleted."
+   - Skip this page and continue with others
+
+**For static pages like homepage `/` or `/contact`:**
+- These are updated via `update_page_settings`, not CMS
+- The page must be republished after updating settings
 
 ### 6.3 Map CMS Fields
 
@@ -319,19 +375,21 @@ Present a final summary:
 ```
 ## Click Recovery Complete
 
-**Updated**: [N] pages
+**Updated**: [N] pages ([N] CMS items, [N] static pages)
 **Published**: [Yes/No — saved as drafts]
 
-| Page | Status | New Meta Title |
-|------|--------|----------------|
-| [title] | ✅ Published | [new title] |
-| [title] | ✅ Published | [new title] |
-| [title] | ⚠️ Not in CMS | Manual update needed |
+| Page | Type | Status | Title Updated | Description Updated |
+|------|------|--------|---------------|---------------------|
+| [title] | CMS | ✅ Published | ✅ | ✅ |
+| [title] | Static | ✅ Published | ✅ | ✅ |
+| [title] | CMS | ⚠️ No desc field | ✅ | ❌ Add field manually |
+| [title] | — | ❌ Not found | — | — |
 
 ## Next Steps
 - Monitor CTR in GSC (2-4 weeks)
 - Re-run `/click-recovery` monthly
-- For full content refreshes, use `/refresh-content [URL]`
+- For ranking opportunities, use `/refresh-content [URL]`
+- For pages missing meta description field, add field in Webflow Designer
 ```
 
 ---
@@ -377,8 +435,11 @@ If total impressions < 1000 in 90 days:
 | Keywords Everywhere API error | Proceed without KE data, note in report |
 | Rate limit hit | Pause, retry with exponential backoff |
 | Webflow MCP not connected | Run analysis only, skip publishing |
-| Page URL not found in CMS | Skip page, inform user to update manually |
+| Page URL not found in CMS | Check if static page via `list_pages`, use `update_page_settings` |
+| Page not found anywhere | Skip page, may be external or deleted |
 | CMS field not found | Try common field name variations, ask user if still not found |
+| No meta description field in collection | Note in report, suggest adding field, still provide recommendations |
+| Static page update fails | Check page permissions, may need to publish site |
 | Publish fails | Show error, check if item is in draft-only state |
 | Meta title > 60 chars | Warn user, suggest shortening before publish |
 | Meta description > 155 chars | Warn user, suggest shortening before publish |
