@@ -13,12 +13,31 @@ Find pages where Google already ranks you but users scroll past. These are your 
 
 ## Prerequisites
 
-- **Required**: [Google Search Console MCP server](https://github.com/sofianbettayeb/gsc-mcp-server) connected
-- **Required**: [Webflow MCP server](https://developers.webflow.com/mcp/reference/overview) connected (for publishing changes)
-- **Optional**: Keywords Everywhere API key (for search volume and intent data)
+- **Required**: [Google Search Console MCP server](https://github.com/sofianbettayeb/gsc-mcp-server)
+- **Required**: [Webflow MCP server](https://developers.webflow.com/mcp/reference/overview) (for publishing)
+- **Optional**: [Keywords Everywhere MCP server](https://github.com/hithereiamaliff/mcp-keywords-everywhere) (needs API key — for search volume and intent data)
 
-If GSC is unavailable, this skill cannot run. Inform the user and stop.
-If Webflow MCP is unavailable, run analysis only and output recommendations without publishing.
+## Prerequisites Check
+
+**Search for these tools BEFORE starting analysis:**
+
+**GSC MCP** (required):
+- Search: `+gsc search analytics`
+- If missing: Stop and inform user: "Click Recovery requires GSC MCP. Install from: https://github.com/sofianbettayeb/gsc-mcp-server"
+
+**Webflow MCP** (required for publishing):
+- Search: `+webflow data cms`
+- If missing: Run analysis only, skip publishing. Note: "Webflow MCP not connected — recommendations only, no publishing."
+
+**Keywords Everywhere** (optional but check):
+- Search: `+keywords everywhere volume`
+- If missing: Continue, but ADD to report header:
+  ```
+  ⚠️ Keywords Everywhere not connected.
+  Recommendations based on GSC impressions only.
+  Connect KE for search volume and intent data:
+  https://github.com/hithereiamaliff/mcp-keywords-everywhere
+  ```
 
 ## Workflow Overview
 
@@ -124,9 +143,13 @@ Store all current values — these are needed for the before/after comparison in
 
 ---
 
-## Phase 3: Validate with Keywords Everywhere (Optional)
+## Phase 3: Validate with Keywords Everywhere
 
-If Keywords Everywhere API is available:
+**IMPORTANT**: Do not silently skip this phase. Either:
+1. Use KE data to enrich recommendations, OR
+2. Explicitly note in the report that KE was unavailable (see Prerequisites Check)
+
+If Keywords Everywhere MCP is available:
 
 ### 3.1 Enrich Query Data
 
@@ -194,6 +217,15 @@ Present findings as a structured report:
 **Period**: Last 90 days
 **Total wasted impressions**: [sum across all flagged pages]
 **Estimated recoverable clicks**: [impressions × expected CTR improvement]
+
+**Data sources**:
+- ✅ GSC: Connected
+- ✅ Webflow: Connected [or ⚠️ Not connected — analysis only]
+- ✅ Keywords Everywhere: Connected [or ⚠️ Not connected — no volume/intent data]
+
+[If KE not connected, add:]
+> ⚠️ **Keywords Everywhere not connected.** Recommendations based on GSC impressions only.
+> For search volume and intent data, connect KE: https://github.com/hithereiamaliff/mcp-keywords-everywhere
 
 ---
 
