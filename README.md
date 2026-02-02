@@ -9,10 +9,14 @@ Claude Code skills that turn your Webflow CMS into an SEO machine — refresh co
 /plugin marketplace add sofianbettayeb/webflow-seo-copilot
 
 # Install skills
+/plugin install getting-started@webflow-seo-copilot
 /plugin install refresh-content@webflow-seo-copilot
 /plugin install click-recovery@webflow-seo-copilot
 
-# Use them
+# First time? Run setup to capture your brand voice & SEO goals
+/getting-started
+
+# Then use the SEO skills
 /refresh-content https://yoursite.com/blog/article-slug
 /click-recovery
 ```
@@ -32,6 +36,33 @@ Stale content loses rankings. It's that simple.
 A single refresh can recover months of lost traffic.
 
 ## Skills
+
+### `/getting-started`
+
+[View full skill →](plugins/getting-started/skills/getting-started/SKILL.md)
+
+One-time setup that captures your business context and saves it to a persistent config file. Run once per project.
+
+**What it captures:**
+- Business goals and primary outcomes
+- Target audience and expertise level
+- Markets, regions, and languages
+- Brand voice and tone preferences
+- SEO constraints (keywords, competitors, link preferences)
+- AEO constraints (citation goals, FAQ strategy, schema types)
+- Content style (headings, lists, CTAs)
+
+**What happens:**
+- Creates `.claude/seo-copilot-config.json` in your project
+- Other skills read this config for consistent, on-brand outputs
+- Re-run anytime to update your settings
+
+**Usage:**
+```
+/getting-started
+```
+
+---
 
 ### `/refresh-content`
 
@@ -93,6 +124,7 @@ The skill analyzes your GSC data, presents a prioritized report, and asks which 
 
 | Scenario | Skill |
 |----------|-------|
+| First time setup | `/getting-started` — run once to capture brand voice & goals |
 | Low CTR, content is fine | `/click-recovery` — fix the pitch |
 | Outdated content, rankings dropping | `/refresh-content` — full refresh |
 | Both issues | `/click-recovery` first, then `/refresh-content` |
@@ -109,6 +141,16 @@ In between, I ride my bikes and play with my kids in Bern, Switzerland.
 ## Changelog
 
 ### v1.0.0 (2026-02-02)
+
+**`/getting-started`**
+- Initial release
+- Captures business goals, audience, markets
+- Brand voice configuration (tone, formality, words to avoid)
+- SEO constraints (keywords, competitors, meta title format)
+- AEO constraints (citation goals, FAQ strategy, E-E-A-T signals)
+- Content preferences (headings, lists, CTAs)
+- Saves to `.claude/seo-copilot-config.json`
+- Other skills read config automatically
 
 **`/refresh-content`**
 - Initial release

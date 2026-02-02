@@ -1,0 +1,11 @@
+{
+  "name": "getting-started",
+  "description": "One-time setup that captures business goals, audience, markets, brand voice, SEO and AEO constraints. Saves to your AI config file for persistent guidelines.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Sofian Bettayeb"
+  },
+  "homepage": "https://github.com/sofianbettayeb/webflow-seo-copilot",
+  "license": "MIT",
+  "keywords": ["seo", "config", "setup", "onboarding", "brand-voice", "aeo"]
+}

@@ -10,6 +10,17 @@
   },
   "plugins": [
     {
+      "name": "getting-started",
+      "source": "./plugins/getting-started",
+      "description": "One-time setup that captures business goals, audience, markets, brand voice, SEO and AEO constraints. Saves to your AI config file.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Sofian Bettayeb"
+      },
+      "category": "setup",
+      "tags": ["config", "setup", "onboarding", "brand-voice", "seo", "aeo"]
+    },
+    {
       "name": "refresh-content",
       "source": "./plugins/refresh-content",
       "description": "Refresh and optimize Webflow blog articles for SEO — updates dates, meta tags, keywords, internal links, FAQs, and schema markup.",
