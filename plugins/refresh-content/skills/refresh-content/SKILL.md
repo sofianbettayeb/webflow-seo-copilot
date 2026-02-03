@@ -5,6 +5,7 @@ description: |
   Triggers: refresh blog, update article, actualise content, improve rankings, recover traffic, refresh content, update blog post, SEO refresh, content refresh, refresh my article.
   Requires: Webflow MCP server. Optional: Google Search Console MCP server for keyword data.
   Workflow: Guided with approval gates — proposes changes before executing via MCP.
+  Modes: /refresh-content:analyze (audit only), /refresh-content:execute (apply approved changes), /refresh-content (full workflow).
 ---
 
 # Webflow Blog Refresh Skill
@@ -16,12 +17,22 @@ Refresh existing blog articles to improve rankings, recover lost traffic, extend
 - **Required**: Webflow MCP server connected
 - **Optional**: GSC MCP server (enables keyword refresh, long-tail discovery, indexing submission)
 
-Check MCP availability before starting. If GSC unavailable, use fallback keyword research methods (see 1.5).
+Check MCP availability before starting. If GSC unavailable, use fallback keyword research methods (see 1.6).
+
+## Skill Modes
+
+This skill supports three modes for flexibility:
+
+| Mode | Command | Use Case |
+|------|---------|----------|
+| **Analyze** | `/refresh-content:analyze` | Quick audit only — no changes made. Returns analysis and recommendations. |
+| **Execute** | `/refresh-content:execute` | Apply previously approved changes. Requires a saved plan from analyze mode. |
+| **Full** | `/refresh-content` | Complete workflow: analyze → plan → approve → execute → verify. |
 
 ## Workflow Overview
 
 ```
-ANALYZE → PLAN → APPROVE → EXECUTE → VERIFY → SUBMIT → MONITOR
+[MODE SELECT] → ANALYZE → PLAN → APPROVE → EXECUTE → VERIFY → SUBMIT → MONITOR
 ```
 
 All major actions require user approval before execution.
@@ -42,16 +53,53 @@ Guards are embedded inline in the relevant steps below, marked with `⚡ GUARD:`
 
 ---
 
+## Phase 0: Mode Selection
+
+At the start, determine which mode to run:
+
+```
+How would you like to refresh this content?
+
+1. **Full refresh** (recommended) — Complete workflow with analysis, planning, and execution
+2. **Analyze only** — Quick audit with recommendations, no changes made
+3. **Execute saved plan** — Apply changes from a previous analysis
+```
+
+- If **Full refresh** or no mode specified: Run Phases 1-5
+- If **Analyze only**: Run Phase 1 only, then output recommendations and stop
+- If **Execute saved plan**: Skip to Phase 3, using the saved plan from `.claude/refresh-plans/[slug].json`
+
+---
+
 ## Phase 1: Analyze
 
 ### 1.0 Locate the Article
 
-Parse the user's input (URL or article name) to find the CMS item.
+Parse the user's input (URL or article name) to find the content.
 
-1. If a URL is provided, extract the collection slug and item slug from the path
-   - URL pattern: `site.com/{collection-slug}/{item-slug}`
-2. Match the collection slug against the site's collections using `get_collection_list`
-3. Fetch the item by slug using `list_collection_items`
+1. If a URL is provided, extract the path segments
+   - URL pattern: `site.com/{collection-slug}/{item-slug}` (CMS item)
+   - URL pattern: `site.com/{page-slug}` (static page)
+2. Use `get_page_list` to check if the URL matches a static page
+3. Use `get_collection_list` to check if the path matches a CMS collection
+
+⚡ GUARD — **Static page detected:**
+If the URL matches a static page (not a CMS item):
+```
+⚠️ This URL is a static page, not a CMS item.
+
+Static pages have limited refresh options via API:
+- ✅ Can update: SEO title, meta description, Open Graph settings (via page settings API)
+- ❌ Cannot update: Page content, body text, images (requires Webflow Designer)
+
+Options:
+1. **Update SEO metadata only** — I can refresh the title, meta description, and OG tags
+2. **Switch to a CMS article** — Provide a CMS blog post URL instead
+3. **Manual refresh** — I'll provide recommendations to implement in Webflow Designer
+```
+If user chooses option 1: Proceed with metadata-only refresh (skip content phases)
+If user chooses option 2: Ask for the CMS URL and restart
+If user chooses option 3: Output recommendations and stop
 
 ⚡ GUARD — **Collection not found by slug:**
 If the collection slug from the URL doesn't match any collection, or the item isn't found:
@@ -79,9 +127,40 @@ Use Webflow MCP `get_collection_details` to discover:
   - Date fields (published, last modified)
   - Keyword/tag fields (e.g., Synqpro keyword fields)
   - Author reference fields
+  - Reading time field (if exists)
 - Flag any missing fields the refresh needs (e.g., no `last-updated` field)
 
 Store the field mapping for use in Phase 3.
+
+⚡ GUARD — **Collection mapping cache:**
+Check if `.claude/collection-mappings/[collection-id].json` exists:
+- If yes: Load cached mapping, show summary: "Using saved mapping for [Collection Name]. Last updated [date]."
+  - Ask: "Use cached mapping or re-scan collection schema?"
+  - If re-scan: Run full discovery and update cache
+  - If use cache: Skip schema discovery, proceed with cached mapping
+- If no: Run full schema discovery, then save mapping to cache for future runs
+
+Cached mapping format:
+```json
+{
+  "collectionId": "...",
+  "collectionName": "Blog Posts",
+  "lastMapped": "2026-02-03",
+  "fields": {
+    "title": "name",
+    "metaTitle": "seo-title",
+    "metaDescription": "seo-description",
+    "body": "post-body",
+    "featuredImage": "main-image",
+    "publishDate": "published-date",
+    "lastModified": "last-updated",
+    "readingTime": "read-time",
+    "keywords": ["primary-keyword", "secondary-keywords"],
+    "author": "author-ref",
+    "faqFields": ["faq-question-1", "faq-answer-1", "..."]
+  }
+}
+```
 
 ⚡ GUARD — **Dedicated FAQ fields detected:**
 If the collection has fields matching patterns like `faq-question-*` / `faq-answer-*`:
@@ -101,6 +180,12 @@ If the collection has an SEO score field (e.g., Synqpro score):
 - Include it in the before/after diff in Phase 3
 - Recommend running the SEO tool after updates to verify improvement
 - If no score field exists: skip silently
+
+⚡ GUARD — **Reading time field detected:**
+If the collection has a reading time field (e.g., `read-time`, `reading-time`):
+- Calculate reading time based on word count (average 200-250 words/minute)
+- Include reading time update in the plan
+- If no reading time field exists: skip silently
 
 ### 1.2 Fetch Article Data
 
@@ -129,7 +214,7 @@ Use GSC MCP to retrieve for the article URL:
 - Queries with high impressions but low CTR
 - Click and impression trends
 
-If GSC unavailable, proceed to step 1.5 for fallback keyword research.
+If GSC unavailable, proceed to step 1.6 for fallback keyword research.
 
 ### 1.4 Discover Internal Linking Opportunities
 
@@ -148,7 +233,24 @@ If GSC unavailable, proceed to step 1.5 for fallback keyword research.
 |---------|----------|----------------|
 | [name]  | [slug]   | [section]      |
 
-### 1.5 Keyword Research (GSC Fallback)
+### 1.5 Competitor Analysis & Word Count Target
+
+Analyze top-ranking competitors for the primary keyword:
+
+1. Web search for the article's primary keyword
+2. Identify top 3 ranking articles
+3. Note for each competitor:
+   - Word count (approximate)
+   - Heading structure (H2/H3 count)
+   - Content depth and topics covered
+4. Calculate target word count:
+   - Current article word count: [N] words
+   - Competitor average: [N] words
+   - Recommended target: [N] words (match or exceed top competitor)
+
+Include word count comparison in the plan.
+
+### 1.6 Keyword Research (GSC Fallback)
 
 When GSC MCP is unavailable, use these alternative methods:
 
@@ -162,7 +264,7 @@ When GSC MCP is unavailable, use these alternative methods:
    - Missing semantic keywords and entities
 3. Inform user: "GSC data unavailable. Keyword optimization is based on content analysis and SERP research."
 
-### 1.6 Content Audit
+### 1.7 Content Audit
 
 Analyze current content for:
 - Outdated dates, statistics, or references (flag every year mention)
@@ -174,6 +276,7 @@ Analyze current content for:
 - Missing or outdated schema markup
 - Thin sections that need expansion
 - Broken or outdated external links
+- Word count vs. competitor target
 
 ⚡ GUARD — **Embedded images in body content:**
 If the rich text body contains `<img>` tags or `<figure>` elements:
@@ -230,6 +333,11 @@ Format the plan as:
 
 ### Article Status: [Published / Draft / Archived]
 
+### Word Count Analysis
+- Current: [N] words
+- Competitor average: [N] words
+- Target: [N] words
+
 ### Date & Freshness Signals
 - [ ] Update last-modified field to [DATE]
 - [ ] Add "[YEAR]" to title: "[NEW TITLE]"
@@ -243,6 +351,7 @@ Format the plan as:
 - [ ] Improve scannability: [specific changes]
 - [ ] Update alt text for [N] images
 - [ ] [Any new sections to add]
+- [ ] Update reading time: [N] min
 
 ### Keywords
 - [ ] Target keywords to strengthen: [list]
@@ -276,6 +385,12 @@ Estimated impact: [ranking recovery / traffic boost / CTR improvement]
 
 **Wait for user approval before proceeding.**
 
+⚡ GUARD — **Analyze-only mode:**
+If running in analyze-only mode (`/refresh-content:analyze`):
+- Save the plan to `.claude/refresh-plans/[slug].json`
+- Output: "Analysis complete. Plan saved. Run `/refresh-content:execute [slug]` to apply changes."
+- Stop here — do not proceed to Phase 3
+
 ---
 
 ## Phase 3: Execute
@@ -293,6 +408,7 @@ Update fields in order using the field mapping from step 1.1:
 5. Keyword/tag fields (update with refreshed target keywords)
 6. Image alt texts (if updatable via CMS)
 7. Last-modified date field (if it exists)
+8. Reading time field (if it exists) — calculate based on final word count
 
 ⚡ GUARD — **Dedicated FAQ fields exist:**
 If FAQ CMS fields were detected in step 1.1:
@@ -320,15 +436,146 @@ If new external links are being added to the article:
 
 ### 3.2 Generate Schema
 
-Reference `references/schema-templates.md` for JSON-LD templates.
+Construct schema markup by substituting actual values from CMS fields.
 
-Construct schema markup by substituting actual values from CMS fields:
-- Article schema (required for every refresh)
-- FAQ schema (if FAQ section was added)
-- Breadcrumb schema (recommended)
-- HowTo schema (if step-by-step content)
+#### Article Schema (Required)
 
-Combine multiple schemas using the `@graph` pattern from the templates.
+```json
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "{{title}}",
+  "description": "{{meta_description}}",
+  "image": "{{featured_image_url}}",
+  "author": {
+    "@type": "Person",
+    "name": "{{author_name}}",
+    "url": "{{author_url}}"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "{{site_name}}",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "{{logo_url}}"
+    }
+  },
+  "datePublished": "{{publish_date_iso}}",
+  "dateModified": "{{modified_date_iso}}",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "{{canonical_url}}"
+  }
+}
+```
+
+#### FAQ Schema (If FAQ section exists)
+
+```json
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "{{question_1}}",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "{{answer_1}}"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "{{question_2}}",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "{{answer_2}}"
+      }
+    }
+  ]
+}
+```
+
+**FAQ best practices**:
+- Answers should be 40-60 words for featured snippet eligibility
+- Questions should match "People Also Ask" phrasing exactly
+- Maximum 10 FAQs recommended per page
+
+#### Breadcrumb Schema (Recommended)
+
+```json
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "{{site_url}}"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Blog",
+      "item": "{{site_url}}/blog"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "{{article_title}}",
+      "item": "{{canonical_url}}"
+    }
+  ]
+}
+```
+
+#### HowTo Schema (If step-by-step content)
+
+```json
+{
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  "name": "{{how_to_title}}",
+  "description": "{{how_to_description}}",
+  "totalTime": "PT{{minutes}}M",
+  "step": [
+    {
+      "@type": "HowToStep",
+      "name": "{{step_1_title}}",
+      "text": "{{step_1_description}}",
+      "image": "{{step_1_image_url}}"
+    },
+    {
+      "@type": "HowToStep",
+      "name": "{{step_2_title}}",
+      "text": "{{step_2_description}}",
+      "image": "{{step_2_image_url}}"
+    }
+  ]
+}
+```
+
+#### Combining Multiple Schemas
+
+Wrap multiple schemas in a single script tag using @graph:
+
+```json
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    { "@type": "Article", "..." },
+    { "@type": "FAQPage", "..." },
+    { "@type": "BreadcrumbList", "..." }
+  ]
+}
+```
+
+**Webflow implementation notes**:
+- **Page-level custom code**: Settings > Custom Code > Footer Code
+- **CMS template**: Add embed block with dynamic fields
+- **Validation**: Test with Google Rich Results Test before publishing
+- **Date format**: Use ISO 8601 (YYYY-MM-DDTHH:MM:SS+00:00)
 
 Add schema to page custom code or embed block via Webflow MCP.
 
@@ -345,6 +592,8 @@ Before asking user to confirm publication, show a change summary:
 | Meta title | [old] | [new] ([N] chars) |
 | Meta description | [old] | [new] ([N] chars) |
 | Keywords | [old or empty] | [new] |
+| Word count | [old] | [new] |
+| Reading time | [old or empty] | [new] min |
 | SEO Score | [old score or N/A] | [re-check after publish] |
 
 ### Content Changes
@@ -366,6 +615,16 @@ Ask user: "Ready to publish these changes? Or would you like to review in the We
 
 On user confirmation, use `publish_collection_items` to publish the updated item.
 
+After successful publish, output:
+
+```
+## ✅ Published Successfully
+
+**Live URL**: [full article URL]
+
+Verify the changes are live: [clickable link]
+```
+
 ---
 
 ## Phase 4: Submit
@@ -386,6 +645,8 @@ Provide the user with a monitoring checklist:
 ```
 ## Post-Publish Checklist (follow up in 7 days)
 
+**Live URL**: [full article URL]
+
 - [ ] Verify page is indexed: search `site:[article URL]` in Google
 - [ ] Check for crawl errors in GSC
 - [ ] Monitor position changes for target keywords (7-14 days)
@@ -404,6 +665,43 @@ Add to the checklist:
 Add to the checklist:
 - [ ] Run SEO tool (e.g., Synqpro) to verify score improved after refresh
 - [ ] Compare: old score [X] → new score [check]
+
+---
+
+## Image Workflow Guidance
+
+The Webflow CMS API has specific limitations for images:
+
+### What the API CAN do:
+- ✅ Update alt text on existing CMS image fields
+- ✅ Preserve inline images in rich text by keeping their `<img>` tags
+- ✅ Reference existing asset URLs in rich text
+
+### What the API CANNOT do:
+- ❌ Upload new images to Webflow
+- ❌ Replace image files in CMS fields
+- ❌ Add new inline images to rich text
+
+### Recommended Image Workflow:
+
+1. **During analysis**: Flag images needing updates (missing alt text, outdated visuals)
+2. **Before refresh**: User uploads new images in Webflow Designer or Asset Manager
+3. **During refresh**: Update alt text and reference new image URLs if provided
+4. **After refresh**: User adds any new inline images in Designer
+
+### Alt Text Update Format:
+
+When updating CMS image field alt text, pass the complete image object:
+
+```json
+{
+  "main-image": {
+    "fileId": "existing-file-id",
+    "url": "https://existing-url.webflow.com/image.jpg",
+    "alt": "New descriptive alt text for the image"
+  }
+}
+```
 
 ---
 
@@ -435,6 +733,11 @@ When rewriting or adding content, follow these standards:
 - FAQ answers: 40-60 words (featured snippet optimal)
 - Meta title: ≤60 characters
 - Meta description: ≤155 characters
+
+### Reading Time Calculation
+- Average reading speed: 200-250 words per minute
+- Formula: `ceil(wordCount / 225)` minutes
+- Round up to nearest minute
 
 ### Webflow Rich Text Limitations
 Be aware of these constraints when editing body content via the CMS API:
@@ -489,7 +792,7 @@ If issues arise after publishing:
 | Error | Action |
 |-------|--------|
 | Webflow MCP unavailable | Stop and inform user to connect Webflow MCP |
-| GSC MCP unavailable | Use fallback keyword research (step 1.5), skip GSC submission steps |
+| GSC MCP unavailable | Use fallback keyword research (step 1.6), skip GSC submission steps |
 | CMS field not found | Check field mapping from step 1.1; recommend field structure if missing |
 | Schema validation fails | Show error, provide corrected schema |
 | Collection item not found | Search across all collections by slug, then ask user |
@@ -499,6 +802,7 @@ If issues arise after publishing:
 | Broken external link detected | Warn user, suggest alternative URL or removal |
 | Inline images lost during rewrite | Warn user before executing, offer to preserve |
 | CMS image alt text is null/placeholder | Update image field with descriptive alt text |
+| Static page instead of CMS item | Offer metadata-only refresh or manual recommendations |
 
 ---
 
