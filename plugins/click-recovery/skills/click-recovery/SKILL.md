@@ -1,10 +1,12 @@
 ---
 name: click-recovery
+version: "1.1"
 description: |
   Find pages Google trusts but users ignore — high impressions, low CTR. Get a prioritized list of titles and meta descriptions to rewrite, then publish directly to Webflow.
   Triggers: click recovery, improve CTR, low CTR, fix CTR, wasted impressions, title optimization, meta description optimization, SERP optimization.
   Requires: Google Search Console MCP server, Webflow MCP server. Optional: Keywords Everywhere API for volume/intent validation.
   Workflow: Analyze → Recommend → Approve → Publish to Webflow.
+  Modes: /click-recovery:analyze (report only), /click-recovery (full workflow with publishing).
 ---
 
 # Click Recovery Skill
@@ -17,7 +19,93 @@ Find pages where Google already ranks you but users scroll past. These are your 
 - **Required**: [Webflow MCP server](https://developers.webflow.com/mcp/reference/overview) (for publishing)
 - **Optional**: [Keywords Everywhere MCP server](https://github.com/hithereiamaliff/mcp-keywords-everywhere) (needs API key — for search volume and intent data)
 
-## Prerequisites Check
+## Skill Modes
+
+This skill supports two modes for flexibility:
+
+| Mode | Command | Use Case |
+|------|---------|----------|
+| **Analyze** | `/click-recovery:analyze` | Report only — no changes made. Returns CTR analysis and recommendations. |
+| **Full** | `/click-recovery` | Complete workflow: analyze → recommend → approve → publish. |
+
+## Workflow Overview
+
+```
+[MODE SELECT] → FETCH → FILTER → VALIDATE → PRIORITIZE → RECOMMEND → [APPROVE → PUBLISH]
+```
+
+Phases in brackets only run in full mode. After presenting recommendations, ask user which pages to update. On approval, publish directly to Webflow CMS.
+
+## Threshold Rationale
+
+These thresholds are based on industry benchmarks and can be adjusted:
+
+| Threshold | Value | Rationale |
+|-----------|-------|-----------|
+| Min impressions (page) | 500 | Enough data for statistical significance |
+| Min impressions (query) | 100 | Lower bar for query-level insights |
+| Low CTR | < 2% | Below typical position 1-10 averages |
+| Position cutoff | ≤ 20 | Realistic click potential; beyond page 2 clicks are rare |
+| Ranking opportunity | 21-50 | Visible to Google but not users |
+| Min search volume | 50/month | Below this, effort may not be worth it |
+
+---
+
+## Conditional Guards (Global)
+
+These guards apply throughout the skill execution.
+
+⚡ GUARD — **Load SEO Copilot config:**
+At the start of execution, check if `.claude/seo-copilot-config.json` exists:
+- If yes: Load and apply settings:
+  - `brandVoice.tone` → Match tone in title/description rewrites
+  - `brandVoice.avoid` → Filter out forbidden words from suggestions
+  - `seo.metaTitleFormat` → Apply brand suffix/prefix to titles
+  - `audience.primary` → Frame messaging for target audience
+- If no: Proceed with defaults, note: "No SEO Copilot config found. Run `/getting-started` for personalized recommendations."
+
+⚡ GUARD — **User requests abort:**
+If user says "stop", "cancel", "abort", or "nevermind" at any phase:
+- Confirm: "Stop the workflow? Progress will be lost."
+- If confirmed: Exit cleanly with summary of what was completed
+- Output any partial results (e.g., analysis done but not published)
+
+⚡ GUARD — **GSC MCP unavailable:**
+This skill requires GSC data. If unavailable:
+- Inform user: "Click Recovery requires Google Search Console access. Please connect GSC MCP and try again."
+- Stop execution
+
+⚡ GUARD — **Webflow MCP unavailable:**
+If Webflow MCP is not connected:
+- Run analysis and recommendations (Phases 0-4)
+- Skip execution phase
+- Inform user: "Webflow MCP not connected. Recommendations generated but cannot publish. Connect Webflow MCP and run again, or update manually."
+
+⚡ GUARD — **Keywords Everywhere unavailable:**
+If KE API is not available:
+- Proceed without volume/intent data
+- Note in report: "Search volume and intent data unavailable. Recommendations based on GSC impressions only."
+- Suggest user add KE API for richer insights
+
+---
+
+## Phase 0: Mode Selection & Prerequisites
+
+### 0.1 Choose Mode
+
+At the start, determine which mode to run:
+
+```
+How would you like to run Click Recovery?
+
+1. **Full workflow** (recommended) — Analyze, recommend, and publish approved changes
+2. **Analyze only** — Generate report with recommendations, no publishing
+```
+
+- If **Full workflow** or no mode specified: Run Phases 0-5
+- If **Analyze only**: Run Phases 0-4, output report, stop
+
+### 0.2 Prerequisites Check
 
 **Search for these tools BEFORE starting analysis:**
 
@@ -27,7 +115,7 @@ Find pages where Google already ranks you but users scroll past. These are your 
 
 **Webflow MCP** (required for publishing):
 - Search: `+webflow data cms`
-- If missing: Run analysis only, skip publishing. Note: "Webflow MCP not connected — recommendations only, no publishing."
+- If missing in full mode: Switch to analyze-only mode automatically. Note: "Webflow MCP not connected — running in analyze-only mode."
 
 **Keywords Everywhere** (optional but check):
 - Search: `+keywords everywhere volume`
@@ -38,14 +126,6 @@ Find pages where Google already ranks you but users scroll past. These are your 
   Connect KE for search volume and intent data:
   https://github.com/hithereiamaliff/mcp-keywords-everywhere
   ```
-
-## Workflow Overview
-
-```
-FETCH → FILTER → VALIDATE → PRIORITIZE → RECOMMEND → APPROVE → PUBLISH
-```
-
-After presenting recommendations, ask user which pages to update. On approval, publish directly to Webflow CMS.
 
 ---
 
@@ -141,6 +221,16 @@ If the collection has no meta description field:
 
 Store all current values — these are needed for the before/after comparison in recommendations.
 
+⚡ GUARD — **No opportunities found:**
+If filtering returns zero pages:
+- Inform user: "No significant CTR opportunities found. Your titles and meta descriptions are performing well relative to your positions."
+- Suggest: "Consider running `/refresh-content` on older articles to improve rankings first, then re-check CTR."
+
+⚡ GUARD — **Low traffic site:**
+If total impressions < 1000 in 90 days:
+- Warn user: "Limited data available. Results may not be statistically significant."
+- Proceed but note confidence is lower
+
 ---
 
 ## Phase 3: Validate with Keywords Everywhere
@@ -180,7 +270,7 @@ Flag high-value queries:
 
 ---
 
-## Phase 4: Prioritize
+## Phase 4: Prioritize & Recommend
 
 ### 4.1 Scoring Model
 
@@ -202,11 +292,29 @@ Sort pages by score, descending. Group into tiers:
 - **Tier 2 (Score 50-69)**: High priority — solid improvement potential
 - **Tier 3 (Score 30-49)**: Worth doing — incremental gains
 
----
+### 4.3 Generate Recommendations
 
-## Phase 5: Recommend
+For each page, generate title and meta description suggestions following these guidelines:
 
-### 5.1 Output Format
+**Titles (≤60 characters):**
+- Lead with primary keyword
+- Include a compelling hook (number, year, power word)
+- Match search intent (informational = "Guide", commercial = "Best", etc.)
+- Differentiate from competitors in SERP
+- Apply brand suffix from config if set (e.g., "| Brand Name")
+
+**Meta descriptions (≤155 characters):**
+- Include primary keyword naturally
+- Add a clear value proposition
+- Include a call-to-action or curiosity hook
+- Mention specifics (numbers, timeframes, outcomes)
+
+**Intent-based framing:**
+- Informational: "Learn how to...", "Complete guide to...", "X steps to..."
+- Commercial: "Best X for [use case]", "X vs Y: Which is...", "Top X in [year]"
+- Transactional: "Get X today", "Free X", "X% off", "Starting at $X"
+
+### 4.4 Output Report
 
 Present findings as a structured report:
 
@@ -222,6 +330,7 @@ Present findings as a structured report:
 - ✅ GSC: Connected
 - ✅ Webflow: Connected [or ⚠️ Not connected — analysis only]
 - ✅ Keywords Everywhere: Connected [or ⚠️ Not connected — no volume/intent data]
+- ✅ SEO Copilot Config: Loaded [or ℹ️ Not found — using defaults]
 
 [If KE not connected, add:]
 > ⚠️ **Keywords Everywhere not connected.** Recommendations based on GSC impressions only.
@@ -286,28 +395,7 @@ These pages have high impressions but need more than meta tag fixes to reach pag
 5. Re-run `/click-recovery` monthly
 ```
 
-### 5.2 Title & Meta Description Guidelines
-
-When suggesting rewrites:
-
-**Titles (≤60 characters):**
-- Lead with primary keyword
-- Include a compelling hook (number, year, power word)
-- Match search intent (informational = "Guide", commercial = "Best", etc.)
-- Differentiate from competitors in SERP
-
-**Meta descriptions (≤155 characters):**
-- Include primary keyword naturally
-- Add a clear value proposition
-- Include a call-to-action or curiosity hook
-- Mention specifics (numbers, timeframes, outcomes)
-
-**Intent-based framing:**
-- Informational: "Learn how to...", "Complete guide to...", "X steps to..."
-- Commercial: "Best X for [use case]", "X vs Y: Which is...", "Top X in [year]"
-- Transactional: "Get X today", "Free X", "X% off", "Starting at $X"
-
-### 5.3 Competitor SERP Analysis (Optional)
+### 4.5 Competitor SERP Analysis (Optional)
 
 For Tier 1 pages, offer to analyze the SERP:
 
@@ -316,11 +404,17 @@ For Tier 1 pages, offer to analyze the SERP:
 3. Identify patterns (what hooks are they using?)
 4. Find differentiation opportunities
 
+⚡ GUARD — **Analyze-only mode:**
+If running in analyze-only mode (`/click-recovery:analyze`):
+- Output the report
+- End with: "Analysis complete. Run `/click-recovery` (full mode) to publish approved changes."
+- Stop here — do not proceed to Phase 5
+
 ---
 
-## Phase 6: Execute
+## Phase 5: Execute
 
-### 6.1 User Approval
+### 5.1 User Approval
 
 After presenting the report, ask the user:
 
@@ -333,7 +427,7 @@ Which pages would you like to update?
 
 If user selects option 3, stop here. They can run the skill again or use `/refresh-content` manually.
 
-### 6.2 Map Pages to CMS Items
+### 5.2 Map Pages to CMS Items
 
 For each approved page:
 
@@ -358,7 +452,7 @@ If a URL doesn't match any CMS item, check if it's a static page:
 - These are updated via `update_page_settings`, not CMS
 - The page must be republished after updating settings
 
-### 6.3 Map CMS Fields
+### 5.3 Map CMS Fields
 
 For each CMS item, identify the correct fields using `get_collection_details`:
 
@@ -367,7 +461,7 @@ For each CMS item, identify the correct fields using `get_collection_details`:
 
 Store the field mapping for updates.
 
-### 6.4 Present Changes for Final Approval
+### 5.4 Present Changes for Final Approval
 
 Before publishing, show the exact changes with warnings:
 
@@ -399,14 +493,14 @@ If any warnings exist, ask user: "Some titles/descriptions have length issues. P
 
 **Wait for explicit user confirmation before publishing.**
 
-### 6.5 Update CMS Items
+### 5.5 Update CMS Items
 
 On confirmation, for each approved page:
 
 1. Call Webflow MCP `update_collection_item` with the new meta title and description
 2. Log success or failure for each item
 
-### 6.6 Publish Changes
+### 5.6 Publish Changes
 
 After all items are updated:
 
@@ -414,7 +508,7 @@ After all items are updated:
 2. If publish: call `publish_collection_items` for all updated items
 3. If draft: inform user changes are saved but not live
 
-### 6.7 Summary
+### 5.7 Summary
 
 Present a final summary:
 
@@ -443,37 +537,6 @@ Present a final summary:
 - For ranking opportunities (position 21+), use `/refresh-content [URL]`
 - For pages missing meta description field, add field in Webflow Designer
 ```
-
----
-
-## Conditional Guards
-
-⚡ GUARD — **GSC MCP unavailable:**
-This skill requires GSC data. If unavailable:
-- Inform user: "Click Recovery requires Google Search Console access. Please connect GSC MCP and try again."
-- Stop execution
-
-⚡ GUARD — **Webflow MCP unavailable:**
-If Webflow MCP is not connected:
-- Run analysis and recommendations (Phases 1-5)
-- Skip execution phase
-- Inform user: "Webflow MCP not connected. Recommendations generated but cannot publish. Connect Webflow MCP and run again, or update manually."
-
-⚡ GUARD — **No opportunities found:**
-If filtering returns zero pages:
-- Inform user: "No significant CTR opportunities found. Your titles and meta descriptions are performing well relative to your positions."
-- Suggest: "Consider running `/refresh-content` on older articles to improve rankings first, then re-check CTR."
-
-⚡ GUARD — **Keywords Everywhere unavailable:**
-If KE API is not available:
-- Proceed without volume/intent data
-- Note in report: "Search volume and intent data unavailable. Recommendations based on GSC impressions only."
-- Suggest user add KE API for richer insights
-
-⚡ GUARD — **Low traffic site:**
-If total impressions < 1000 in 90 days:
-- Warn user: "Limited data available. Results may not be statistically significant."
-- Proceed but note confidence is lower
 
 ---
 
@@ -518,7 +581,7 @@ After implementing recommendations, track at each milestone:
 
 ---
 
-## Integration with /refresh-content
+## Integration with Other Skills
 
 Click Recovery focuses on **meta tags** (title + description) for CTR optimization.
 Refresh Content does **full content refreshes** (body, keywords, FAQs, schema, internal links).

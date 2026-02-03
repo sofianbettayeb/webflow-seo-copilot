@@ -1,5 +1,6 @@
 ---
 name: refresh-content
+version: "1.1"
 description: |
   Refresh and optimize Webflow blog articles to improve rankings, recover traffic, and extend content lifespan.
   Triggers: refresh blog, update article, actualise content, improve rankings, recover traffic, refresh content, update blog post, SEO refresh, content refresh, refresh my article.
@@ -50,6 +51,30 @@ OTHERWISE → skip silently and continue
 ```
 
 Guards are embedded inline in the relevant steps below, marked with `⚡ GUARD:`.
+
+### Global Guards
+
+These guards apply throughout the skill execution.
+
+⚡ GUARD — **Load SEO Copilot config:**
+At the start of execution, check if `.claude/seo-copilot-config.json` exists:
+- If yes: Load and apply settings:
+  - `brandVoice.tone` → Match tone in content rewrites
+  - `brandVoice.avoid` → Filter out forbidden words
+  - `brandVoice.formality` → Match formality level
+  - `audience.expertiseLevel` → Adjust jargon and complexity
+  - `seo.primaryKeywords` → Prioritize these keywords
+  - `seo.pillarPages` → Always suggest linking to these
+  - `seo.metaTitleFormat` → Apply brand suffix/prefix
+  - `aeo.faqStrategy` → Use PAA phrasing or brand voice for FAQs
+  - `content.headingStyle` → sentence-case or Title Case
+- If no: Proceed with defaults, note: "No SEO Copilot config found. Run `/getting-started` for personalized content guidelines."
+
+⚡ GUARD — **User requests abort:**
+If user says "stop", "cancel", "abort", or "nevermind" at any phase:
+- Confirm: "Stop the refresh workflow? Unsaved changes will be lost."
+- If confirmed: Exit cleanly with summary of what was completed
+- If partial work exists (e.g., analysis done): Offer to save it to `.claude/refresh-plans/[slug].json`
 
 ---
 
@@ -322,7 +347,7 @@ If triggered, generate a **content brief** before writing:
 
 ## Phase 2: Plan
 
-Generate a refresh plan. Reference `references/refresh-checklist.md` for the complete checklist.
+Generate a refresh plan based on the analysis from Phase 1.
 
 ### Present Plan to User
 

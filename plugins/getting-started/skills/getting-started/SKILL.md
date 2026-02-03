@@ -1,5 +1,6 @@
 ---
 name: getting-started
+version: "1.1"
 description: |
   One-time setup that captures business goals, audience, markets, brand voice, SEO and AEO constraints.
   Saves to your project's AI config file for persistent guidelines across all SEO Copilot skills.
@@ -426,6 +427,12 @@ Other skills should check for and load this config at startup:
 ---
 
 ## Conditional Guards
+
+⚡ GUARD — **User requests abort:**
+If user says "stop", "cancel", "abort", or "nevermind" at any phase:
+- Confirm: "Stop the setup? Any answers given so far will be lost."
+- If confirmed: Exit cleanly
+- If partial answers exist: Offer to save partial config as draft to `.claude/seo-copilot-config.draft.json`
 
 ⚡ GUARD — **Config already exists:**
 If `.claude/seo-copilot-config.json` already exists:
