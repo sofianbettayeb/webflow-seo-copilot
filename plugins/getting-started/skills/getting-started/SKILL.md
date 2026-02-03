@@ -168,7 +168,16 @@ How should your content sound?
 3. **Avoid**: Any words, phrases, or styles to never use?
    - Example: "Never use 'synergy' or 'leverage'"
    - Example: "Avoid exclamation marks"
-4. **Examples**: Link to 1-2 articles that represent your ideal voice (optional)
+4. **AI tell-tales to avoid**: Common AI patterns that don't match your brand
+   - Default banned: "game-changer", "revolutionary", "let's dive in", "in today's [X]"
+   - Emoji bullets (✅ ❌)
+   - "Key Takeaways" / "Final Thoughts" headers
+   - Add any others: ___
+5. **Human signals to include**:
+   - First-person experience phrases you use
+   - Your typical aside style (e.g., "honestly", "frankly", "look")
+   - Specific numbers/data you can reference
+6. **Examples**: Link to 1-2 articles that represent your ideal voice (optional)
 ```
 
 ### 1.5 SEO Constraints
@@ -276,6 +285,16 @@ After collecting all answers, generate a JSON config:
     "tone": ["Professional", "Friendly"],
     "formality": "conversational",
     "avoid": ["synergy", "leverage"],
+    "avoidAiPatterns": {
+      "phrases": ["game-changer", "let's dive in", "in today's"],
+      "structures": ["emoji-bullets", "key-takeaways-header", "final-thoughts-header"],
+      "formatting": ["excessive-em-dashes", "bold-every-phrase"]
+    },
+    "humanSignals": {
+      "firstPerson": true,
+      "asideStyle": "honestly",
+      "specificNumbers": true
+    },
     "exampleUrls": ["https://..."]
   },
 

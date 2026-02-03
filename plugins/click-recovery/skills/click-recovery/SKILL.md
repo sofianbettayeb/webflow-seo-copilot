@@ -314,6 +314,28 @@ For each page, generate title and meta description suggestions following these g
 - Commercial: "Best X for [use case]", "X vs Y: Which is...", "Top X in [year]"
 - Transactional: "Get X today", "Free X", "X% off", "Starting at $X"
 
+### 4.4 Avoid AI Writing Tell-Tales
+
+**Phrases to NEVER USE in titles/descriptions:**
+- "Ultimate Guide" (overused)
+- "Everything You Need to Know"
+- "game-changer" / "revolutionary"
+- "In [Year]" at the start (put year elsewhere)
+- "Discover how..."
+- "Unlock the secrets..."
+
+**Patterns to AVOID:**
+- Identical structure across all suggestions ("Best X for Y" for every title)
+- Generic value props: "save time and money"
+- Exclamation marks in descriptions
+- Starting every description with the brand name
+
+**Human signals to ADD:**
+- Specific numbers: "47 templates" not "dozens of templates"
+- Honest qualifiers: "for small teams" instead of "for everyone"
+- Casual confidence: "The only X you'll need" (sparingly)
+- Outcome focus: "Rank higher in 30 days" not "Improve your SEO"
+
 ### 4.4 Output Report
 
 Present findings as a structured report:

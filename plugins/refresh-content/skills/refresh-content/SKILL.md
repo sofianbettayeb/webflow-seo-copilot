@@ -734,6 +734,45 @@ When updating CMS image field alt text, pass the complete image object:
 
 When rewriting or adding content, follow these standards:
 
+### Avoid AI Writing Tell-Tales
+
+**Structural patterns to AVOID:**
+- Emoji bullets (✅ ❌ 🚀) — dead giveaway of AI content
+- Every section having exactly 3-5 bullet points
+- Perfect parallel structure in all headings ("Webflow Designers", "Webflow Developers", "Webflow Marketers")
+- "Key Takeaways" as the opening section
+- "Final Thoughts" or "Conclusion" headers
+- Numbered lists for things that don't need sequence
+
+**Filler phrases to NEVER USE:**
+- "Here's what it offers:"
+- "Let's dive in" / "Let's explore"
+- "Whether you're a [X], [Y], or [Z]"
+- "In today's [industry]..."
+- "From [X] to [Y], [product] has you covered"
+- "everything you need to [verb]"
+- "takes it to the next level"
+- "game-changer" / "revolutionary" / "cutting-edge"
+- "In this article, we'll..."
+- "Without further ado"
+
+**Formatting to AVOID:**
+- Excessive em-dashes (—) — limit to 2-3 per article
+- Bold on every key phrase
+- Every paragraph starting with the product/brand name
+- Perfectly uniform paragraph lengths
+
+### Add Human Signals
+
+**Include these to sound authentic:**
+- First-person experience: "I've tested this on 50+ sites"
+- Specific numbers: "saves ~15 minutes per page" not "saves time"
+- Honest limitations: "It won't help with backlinks or technical crawl issues"
+- Casual asides: "honestly, this is the part I use most"
+- Opinions with edge: "other tools charge $30/month for less"
+- Imperfect structure: vary bullet counts (2 here, 6 there)
+- Natural transitions, not formulaic ones
+
 ### Tone & Voice
 - Match the existing site's tone (analyze 2-3 other articles if unsure)
 - Write for the target audience's expertise level
