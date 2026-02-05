@@ -66,6 +66,8 @@ One-time setup that captures your business context and saves it to a persistent 
 
 ### `/refresh-content`
 
+<img width="1243" height="434" alt="image" src="https://github.com/user-attachments/assets/9f0adcea-8916-4d00-88c3-dce950bb2b3a" />
+
 [View full skill →](plugins/refresh-content/skills/refresh-content/SKILL.md)
 
 Refresh and optimize existing Webflow blog articles to improve rankings, recover lost traffic, and extend content lifespan.
