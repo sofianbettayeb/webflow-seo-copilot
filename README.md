@@ -166,13 +166,14 @@ A weekly SEO pulse that compares this week vs last week, tracks progress against
 - Compares Week W vs W-1 with 4-week trend data
 - Splits branded vs non-branded traffic
 - Identifies top growing and declining pages
-- Finds content gaps — queries with high impressions but no matching page
+- Finds content gaps with adaptive thresholds (relative for small sites, absolute for large)
+- Audits CMS templates — flags collections using `name` instead of a dedicated SEO title field
 - Cross-references Webflow pages with GSC index status
 - Audits metadata (missing, duplicate, too long/short)
 - Flags high-impression/low-CTR pages and striking distance keywords
-- Analyzes internal linking structure and orphan pages
 - Scores every recommendation by Impact, Confidence (capped for weekly data), and Effort
 - Links back to last monthly report for progress tracking
+- Saves reports per site: `.claude/reports/{domain}/weekly-report-YYYY-WXX.md`
 - Outputs a prioritized action plan in 3 buckets: Must fix, High impact, Nice to have
 
 **This skill is read-only** — it never modifies Webflow content. It points you to `/click-recovery` and `/refresh-content` for execution.
@@ -183,7 +184,7 @@ A weekly SEO pulse that compares this week vs last week, tracks progress against
 /weekly-report:quick
 ```
 
-The full report covers 7 sections: executive summary (with monthly context), performance overview, content performance, technical health, on-page opportunities, internal linking, and action plan. Quick mode outputs only the executive summary and action plan.
+The full report covers 6 sections: executive summary (with monthly context), performance overview, content performance, technical health, on-page opportunities, and action plan. Quick mode outputs only the executive summary and action plan.
 
 ---
 
@@ -212,13 +213,14 @@ In between, I ride my bikes and play with my kids in Bern, Switzerland.
 ### v1.2.0 (2026-02-12)
 
 **`/weekly-report`** (new)
-- Weekly SEO pulse with same 7-section depth as monthly report
+- Weekly SEO pulse — 6-section report with executive summary, content performance, technical health, and action plan
 - Week-over-week comparison with 4-week trend data
-- Monthly report integration — tracks progress against last monthly report
+- Per-site report storage: `.claude/reports/{domain}/weekly-report-YYYY-WXX.md`
+- Monthly report integration — tracks progress against last monthly report per domain
+- Template SEO audit — flags CMS collections using `name` instead of dedicated SEO title field
+- Adaptive thresholds — relative (top N%) for small sites, absolute for large sites
 - Confidence scoring adjusted for weekly data volumes (capped at 3 for single-week observations)
-- Thresholds scaled for weekly volumes (content gaps >100 impressions, low traffic <250)
 - Quick mode (`/weekly-report:quick`) for executive summary + action plan only
-- Saves reports to `.claude/reports/weekly-report-YYYY-WXX.md`
 - Read-only — points to `/click-recovery` and `/refresh-content` for execution
 
 ### v1.1.0 (2026-02-12)
