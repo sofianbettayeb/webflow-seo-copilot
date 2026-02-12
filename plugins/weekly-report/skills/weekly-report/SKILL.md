@@ -84,18 +84,33 @@ The `{domain}` value is used throughout for:
 - **Report save path**: `.claude/reports/{domain}/weekly-report-YYYY-WXX.md`
 - **Monthly report lookup**: `.claude/reports/{domain}/monthly-report-*.md`
 
+### 0.4 Review Activity Log
+
+Once `{domain}` is set, check `.claude/reports/{domain}/activity-log.md`:
+- If it exists: read the last 10 entries and surface a brief summary:
+  ```
+  Recent activity on {domain}:
+  - 2026-02-10 /click-recovery — Updated meta titles on 5 pages
+  - 2026-02-05 /weekly-report — Week W06 report. Health: STABLE.
+  - 2026-02-01 /monthly-report — January 2026 report. Health: UP.
+  ```
+- **Redundancy check**: if `/weekly-report` was already run for the same week → warn: "You already ran `/weekly-report` for Week [XX] on [date]. Run again anyway?"
+- If the log doesn't exist: proceed silently (first run for this domain)
+
+Use recent activity as context for recommendations (e.g., "Since `/click-recovery` was run 2 days ago, CTR changes may not be visible yet").
+
 ⚡ GUARD — **Report already exists:**
 Check if `.claude/reports/{domain}/weekly-report-YYYY-WXX.md` already exists:
 - If yes: "A report for Week [XX] already exists. Overwrite?"
 - If declined: stop
 
-### 0.4 Load Last Monthly Report
+### 0.5 Load Last Monthly Report
 
 Search for the most recent `.claude/reports/{domain}/monthly-report-*.md`:
 - If found: extract executive summary metrics (clicks, impressions, CTR, position), health trend, and action plan items
 - If not found: proceed without, note "No monthly report found. Run `/monthly-report` for month-level context."
 
-### 0.5 Calculate Date Boundaries
+### 0.6 Calculate Date Boundaries
 
 Compute 7-day windows (Mon–Sun). If today is mid-week, use the most recent complete window as W.
 

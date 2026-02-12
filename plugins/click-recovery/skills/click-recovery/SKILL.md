@@ -131,11 +131,25 @@ How would you like to run Click Recovery?
 
 ## Phase 1: Fetch GSC Data
 
-### 1.1 Identify Target Site
+### 1.1 Identify Target Site & Set {domain}
 
-Ask the user which property to analyze if multiple GSC properties are available.
+Ask the user which property to analyze if multiple GSC properties are available. Extract the domain from the selected property URL (e.g., `https://www.checklist-seo.com/` → `checklist-seo.com`).
 
-### 1.2 Pull Performance Data
+### 1.2 Review Activity Log
+
+Check `.claude/reports/{domain}/activity-log.md`:
+- If it exists: read the last 10 entries and surface a brief summary:
+  ```
+  Recent activity on {domain}:
+  - 2026-02-10 /weekly-report — Week W06 report. Health: STABLE.
+  - 2026-02-05 /click-recovery — Updated meta titles on 5 pages.
+  ```
+- **Redundancy check**: if `/click-recovery` was run in the last 7 days → warn: "You ran `/click-recovery` on [date]. CTR changes typically take 2-3 weeks to show in GSC. Run again anyway?"
+- If the log doesn't exist: proceed silently
+
+Use recent activity as context (e.g., if `/weekly-report` flagged specific CTR issues, prioritize those pages).
+
+### 1.3 Pull Performance Data
 
 Use GSC MCP to fetch the last 90 days of data:
 
@@ -147,7 +161,7 @@ Use GSC MCP to fetch the last 90 days of data:
 - All pages with impressions > 500
 - Include: page, impressions, clicks, CTR, average position
 
-### 1.3 Calculate Benchmarks
+### 1.4 Calculate Benchmarks
 
 Compute site-wide averages:
 - Average CTR by position bracket (1-3, 4-10, 11-20)

@@ -144,16 +144,31 @@ Compute date ranges for comparison:
 
 If today is mid-month, use the most recent **complete** month as M.
 
-### 0.5 Confirm Site
+### 0.5 Select Site & Set {domain}
 
-⚡ GUARD — **Multiple GSC properties:**
-If multiple properties are available:
-- List all properties
-- Ask user to select: "Which GSC property should I analyze?"
-- Confirm selection before proceeding
+List available GSC properties. If multiple, ask user to select. Extract the domain from the selected property URL (e.g., `https://www.checklist-seo.com/` → `checklist-seo.com`).
+
+The `{domain}` value is used for:
+- **Report save path**: `.claude/reports/{domain}/monthly-report-YYYY-MM.md`
+- **Activity log**: `.claude/reports/{domain}/activity-log.md`
+
+### 0.6 Review Activity Log
+
+Check `.claude/reports/{domain}/activity-log.md`:
+- If it exists: read the last 10 entries and surface a brief summary:
+  ```
+  Recent activity on {domain}:
+  - 2026-02-10 /weekly-report — Week W06 report. Health: STABLE.
+  - 2026-02-05 /click-recovery — Updated meta titles on 5 pages.
+  - 2026-01-31 /monthly-report — January 2026 report. Health: UP.
+  ```
+- **Redundancy check**: if `/monthly-report` was already run for the same month → warn: "You already ran `/monthly-report` for [Month] on [date]. Run again anyway?"
+- If the log doesn't exist: proceed silently (first run for this domain)
+
+Use recent activity as context for the report (e.g., note which skills ran since last monthly report and what they changed).
 
 ⚡ GUARD — **Report already exists:**
-Check if `.claude/reports/monthly-report-YYYY-MM.md` already exists for the target month:
+Check if `.claude/reports/{domain}/monthly-report-YYYY-MM.md` already exists for the target month:
 - If yes: Ask user: "A report for [Month] already exists. Overwrite it?"
 - If user declines: Stop execution
 

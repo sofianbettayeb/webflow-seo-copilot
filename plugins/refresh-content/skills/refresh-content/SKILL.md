@@ -98,15 +98,22 @@ How would you like to refresh this content?
 
 ## Phase 1: Analyze
 
-### 1.0 Locate the Article
+### 1.0 Locate the Article & Set {domain}
 
-Parse the user's input (URL or article name) to find the content.
+Parse the user's input (URL or article name) to find the content. Extract `{domain}` from the URL (e.g., `https://www.checklist-seo.com/blog/seo-guide` → `checklist-seo.com`).
 
 1. If a URL is provided, extract the path segments
    - URL pattern: `site.com/{collection-slug}/{item-slug}` (CMS item)
    - URL pattern: `site.com/{page-slug}` (static page)
 2. Use `get_page_list` to check if the URL matches a static page
 3. Use `get_collection_list` to check if the path matches a CMS collection
+
+**Review Activity Log:**
+
+Check `.claude/reports/{domain}/activity-log.md`:
+- If it exists: read the last 10 entries and surface a brief summary
+- **Redundancy check**: if `/refresh-content` was run on the same URL in the last 14 days → warn: "You refreshed this page on [date]. Content changes take 2-4 weeks to impact rankings. Run again anyway?"
+- Use recent activity as context (e.g., if `/click-recovery` recently updated this page's meta title, note it to avoid overwriting)
 
 ⚡ GUARD — **Static page detected:**
 If the URL matches a static page (not a CMS item):

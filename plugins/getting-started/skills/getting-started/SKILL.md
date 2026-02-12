@@ -72,7 +72,16 @@ Quick Setup — I'll infer the rest from your answers.
    Example: "Startup founders, friendly but professional"
 ```
 
-After quick mode answers, **infer the rest**:
+After quick mode answers, **set `{domain}`** from the Webflow site URL (e.g., `https://acme.agency` → `acme.agency`).
+
+**Review Activity Log:**
+
+Check `.claude/reports/{domain}/activity-log.md`:
+- If it exists: read the last 10 entries and surface a brief summary. This helps understand what skills have already been run on this site.
+- **Re-run check**: if `/getting-started` was run before → note: "Config already exists (created [date]). This run will update it."
+- If the log doesn't exist: proceed silently (first setup for this domain)
+
+Then **infer the rest**:
 - From "Webflow freelancers" → infer `expertiseLevel: intermediate`
 - From "SaaS startups" → infer pain points: scaling, efficiency, growth
 - From "friendly but professional" → infer `formality: conversational`, `tone: ["Friendly", "Professional"]`
@@ -111,6 +120,8 @@ Let's set up your SEO Copilot config.
    - Thought leadership
    - Other: ___
 ```
+
+After collecting answers, **set `{domain}`** from the Webflow site URL and review the activity log (same as quick mode above).
 
 ### 1.2 Target Audience
 
