@@ -12,6 +12,8 @@ Claude Code skills that turn your Webflow CMS into an SEO machine — refresh co
 /plugin install getting-started@webflow-seo-copilot
 /plugin install refresh-content@webflow-seo-copilot
 /plugin install click-recovery@webflow-seo-copilot
+/plugin install monthly-report@webflow-seo-copilot
+/plugin install weekly-report@webflow-seo-copilot
 
 # First time? Run setup to capture your brand voice & SEO goals
 /getting-started
@@ -19,11 +21,13 @@ Claude Code skills that turn your Webflow CMS into an SEO machine — refresh co
 # Then use the SEO skills
 /refresh-content https://yoursite.com/blog/article-slug
 /click-recovery
+/monthly-report
+/weekly-report
 ```
 
 **Requirements:**
 - [Webflow MCP server](https://developers.webflow.com/mcp/reference/overview) (required)
-- [Google Search Console MCP server](https://github.com/sofianbettayeb/gsc-mcp-server) (required for `/click-recovery`, optional for `/refresh-content`)
+- [Google Search Console MCP server](https://github.com/sofianbettayeb/gsc-mcp-server) (required for `/click-recovery`, `/monthly-report`, and `/weekly-report`, optional for `/refresh-content`)
 - [Keywords Everywhere MCP server](https://github.com/hithereiamaliff/mcp-keywords-everywhere) (optional, needs API key)
 
 ## Why Keep Content Fresh?
@@ -122,6 +126,67 @@ The skill analyzes your GSC data, presents a prioritized report, and asks which 
 
 ---
 
+### `/monthly-report`
+
+[View full skill →](plugins/monthly-report/skills/monthly-report/SKILL.md)
+
+A decision-making tool for founders and executives. Compares this month vs last month, scores every recommendation, and outputs a prioritized action plan.
+
+**What it does:**
+- Compares Month M vs M-1 with 3-month trend data
+- Splits branded vs non-branded traffic
+- Identifies top growing and declining pages
+- Finds content gaps — queries with high impressions but no matching page
+- Cross-references Webflow pages with GSC index status
+- Audits metadata (missing, duplicate, too long/short)
+- Flags high-impression/low-CTR pages and striking distance keywords
+- Analyzes internal linking structure and orphan pages
+- Scores every recommendation by Impact, Confidence, and Effort
+- Outputs a prioritized action plan in 3 buckets: Must fix, High impact, Nice to have
+
+**This skill is read-only** — it never modifies Webflow content. It points you to `/click-recovery` and `/refresh-content` for execution.
+
+**Usage:**
+```
+/monthly-report
+/monthly-report:quick
+```
+
+The full report covers 7 sections: executive summary, performance overview, content performance, technical health, on-page opportunities, internal linking, and action plan. Quick mode outputs only the executive summary and action plan.
+
+---
+
+### `/weekly-report`
+
+[View full skill →](plugins/weekly-report/skills/weekly-report/SKILL.md)
+
+A weekly SEO pulse that compares this week vs last week, tracks progress against the monthly report, and outputs a prioritized action plan.
+
+**What it does:**
+- Compares Week W vs W-1 with 4-week trend data
+- Splits branded vs non-branded traffic
+- Identifies top growing and declining pages
+- Finds content gaps — queries with high impressions but no matching page
+- Cross-references Webflow pages with GSC index status
+- Audits metadata (missing, duplicate, too long/short)
+- Flags high-impression/low-CTR pages and striking distance keywords
+- Analyzes internal linking structure and orphan pages
+- Scores every recommendation by Impact, Confidence (capped for weekly data), and Effort
+- Links back to last monthly report for progress tracking
+- Outputs a prioritized action plan in 3 buckets: Must fix, High impact, Nice to have
+
+**This skill is read-only** — it never modifies Webflow content. It points you to `/click-recovery` and `/refresh-content` for execution.
+
+**Usage:**
+```
+/weekly-report
+/weekly-report:quick
+```
+
+The full report covers 7 sections: executive summary (with monthly context), performance overview, content performance, technical health, on-page opportunities, internal linking, and action plan. Quick mode outputs only the executive summary and action plan.
+
+---
+
 ### When to use each skill
 
 | Scenario | Skill |
@@ -130,6 +195,8 @@ The skill analyzes your GSC data, presents a prioritized report, and asks which 
 | Low CTR, content is fine | `/click-recovery` — fix the pitch |
 | Outdated content, rankings dropping | `/refresh-content` — full refresh |
 | Both issues | `/click-recovery` first, then `/refresh-content` |
+| Monthly performance review | `/monthly-report` — see what changed and what to do next |
+| Weekly performance check | `/weekly-report` — weekly pulse with monthly progress tracking |
 
 ## About
 
@@ -141,6 +208,33 @@ By night, I build tools like [AI SEO Copilot](https://webflow.com/apps/detail/ai
 In between, I ride my bikes and play with my kids in Bern, Switzerland.
 
 ## Changelog
+
+### v1.2.0 (2026-02-12)
+
+**`/weekly-report`** (new)
+- Weekly SEO pulse with same 7-section depth as monthly report
+- Week-over-week comparison with 4-week trend data
+- Monthly report integration — tracks progress against last monthly report
+- Confidence scoring adjusted for weekly data volumes (capped at 3 for single-week observations)
+- Thresholds scaled for weekly volumes (content gaps >100 impressions, low traffic <250)
+- Quick mode (`/weekly-report:quick`) for executive summary + action plan only
+- Saves reports to `.claude/reports/weekly-report-YYYY-WXX.md`
+- Read-only — points to `/click-recovery` and `/refresh-content` for execution
+
+### v1.1.0 (2026-02-12)
+
+**`/monthly-report`** (new)
+- Monthly SEO report for founders and executives
+- Month-over-month comparison with 3-month trend
+- Branded vs non-branded traffic split
+- Content performance: top pages, growing, declining, content gaps
+- Technical SEO health: indexation cross-reference, metadata audit
+- On-page opportunities: CTR optimization, striking distance, keyword mismatches
+- Internal linking analysis: orphan pages, under-linked pages, pillar health
+- Impact/Confidence/Effort scoring engine with priority buckets
+- Read-only — points to `/click-recovery` and `/refresh-content` for execution
+- Quick mode (`/monthly-report:quick`) for executive summary + action plan only
+- Saves reports to `.claude/reports/monthly-report-YYYY-MM.md`
 
 ### v1.0.0 (2026-02-02)
 

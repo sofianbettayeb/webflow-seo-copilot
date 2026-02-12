@@ -41,6 +41,28 @@
       },
       "category": "seo",
       "tags": ["seo", "ctr", "gsc", "google-search-console", "click-recovery", "webflow", "mcp"]
+    },
+    {
+      "name": "monthly-report",
+      "source": "./plugins/monthly-report",
+      "description": "Monthly SEO report — what changed, why it matters, and what to do next. Performance overview, content analysis, technical health, and a prioritized action plan.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Sofian Bettayeb"
+      },
+      "category": "seo",
+      "tags": ["seo", "report", "monthly", "gsc", "analytics", "webflow", "executive", "action-plan", "mcp"]
+    },
+    {
+      "name": "weekly-report",
+      "source": "./plugins/weekly-report",
+      "description": "Weekly SEO pulse — what changed this week, how it tracks against the month, and what to do now. Same depth as monthly, weekly cadence.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Sofian Bettayeb"
+      },
+      "category": "seo",
+      "tags": ["seo", "report", "weekly", "gsc", "analytics", "webflow", "pulse", "action-plan", "mcp"]
     }
   ]
 }

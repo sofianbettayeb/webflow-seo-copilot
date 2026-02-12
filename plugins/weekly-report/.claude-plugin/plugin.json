@@ -1,0 +1,11 @@
+{
+  "name": "weekly-report",
+  "description": "Weekly SEO pulse — what changed this week, how it tracks against the month, and what to do now.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Sofian Bettayeb"
+  },
+  "homepage": "https://github.com/sofianbettayeb/webflow-seo-copilot",
+  "license": "MIT",
+  "keywords": ["seo", "report", "weekly", "gsc", "analytics", "webflow", "pulse", "action-plan"]
+}

@@ -1,0 +1,11 @@
+{
+  "name": "monthly-report",
+  "description": "Monthly SEO report — what changed, why it matters, and what to do next. Built for founders and executives.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Sofian Bettayeb"
+  },
+  "homepage": "https://github.com/sofianbettayeb/webflow-seo-copilot",
+  "license": "MIT",
+  "keywords": ["seo", "report", "monthly", "gsc", "analytics", "webflow", "executive", "action-plan"]
+}
