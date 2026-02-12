@@ -896,3 +896,28 @@ After refresh, track (user should monitor):
 - Organic traffic to page (30 days)
 - FAQ rich result appearances in SERP
 - Internal link click-through from linked articles
+
+---
+
+## Activity Log
+
+After every execution, append a row to `.claude/reports/{domain}/activity-log.md`.
+
+**Determining `{domain}`**: Extract from the target article URL (e.g., `https://www.checklist-seo.com/blog/seo-guide` → `checklist-seo.com`).
+
+If the file doesn't exist, create it with the header:
+
+```markdown
+# Activity Log — {domain}
+
+| Date | Skill | Summary |
+|------|-------|---------|
+```
+
+Then append a row:
+
+```
+| YYYY-MM-DD | /refresh-content | [one-line summary: e.g., "Refreshed /blog/seo-guide. Updated meta title, added 3 FAQs, 4 internal links. Published to Webflow."] |
+```
+
+Log even if the skill exits early — note why. Log in analyze-only mode too (e.g., "Analyze only — /blog/seo-guide audited, 6 recommendations generated, no changes published.").

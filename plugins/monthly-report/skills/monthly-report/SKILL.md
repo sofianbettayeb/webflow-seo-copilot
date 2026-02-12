@@ -784,3 +784,28 @@ Monthly Report is **read-only** — it identifies issues and recommends actions.
 2. Use the Action Plan to prioritize work
 3. Execute with `/click-recovery` and `/refresh-content`
 4. Re-run `/monthly-report` next month to measure impact
+
+---
+
+## Activity Log
+
+After every execution, append a row to `.claude/reports/{domain}/activity-log.md`.
+
+**Determining `{domain}`**: Extract from the selected GSC property URL (e.g., `https://www.checklist-seo.com/` → `checklist-seo.com`). Same logic as `/weekly-report`.
+
+If the file doesn't exist, create it with the header:
+
+```markdown
+# Activity Log — {domain}
+
+| Date | Skill | Summary |
+|------|-------|---------|
+```
+
+Then append a row:
+
+```
+| YYYY-MM-DD | /monthly-report | [one-line summary: e.g., "February 2026 report. Health: UP. 4 must-fix, 6 high-impact items. Saved to monthly-report-2026-02.md"] |
+```
+
+Log even if the skill exits early due to a guard — note why (e.g., "Aborted: GSC MCP unavailable").

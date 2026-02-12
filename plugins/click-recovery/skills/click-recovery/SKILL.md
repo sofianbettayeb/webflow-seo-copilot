@@ -620,3 +620,28 @@ Refresh Content does **full content refreshes** (body, keywords, FAQs, schema, i
 1. Run `/click-recovery` monthly to catch CTR opportunities
 2. Approve and publish meta tag updates directly
 3. For pages needing more than meta fixes, run `/refresh-content [URL]`
+
+---
+
+## Activity Log
+
+After every execution, append a row to `.claude/reports/{domain}/activity-log.md`.
+
+**Determining `{domain}`**: Extract from the GSC property URL used for analysis (e.g., `https://www.checklist-seo.com/` → `checklist-seo.com`).
+
+If the file doesn't exist, create it with the header:
+
+```markdown
+# Activity Log — {domain}
+
+| Date | Skill | Summary |
+|------|-------|---------|
+```
+
+Then append a row:
+
+```
+| YYYY-MM-DD | /click-recovery | [one-line summary: e.g., "Analyzed 45 pages. Updated meta titles on 5 pages, descriptions on 3. Published to Webflow."] |
+```
+
+Log even if the skill exits early due to a guard — note why (e.g., "Aborted: GSC MCP unavailable"). Log in analyze-only mode too (e.g., "Analyze only — 8 CTR opportunities found, no changes published.").

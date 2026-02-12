@@ -349,3 +349,26 @@ Weekly Report is **read-only**. Other skills execute.
 1. `/weekly-report` every week for pulse
 2. Execute with `/click-recovery` and `/refresh-content`
 3. `/monthly-report` at month-end for the full picture
+
+---
+
+## Activity Log
+
+After every execution, append a row to `.claude/reports/{domain}/activity-log.md`.
+
+If the file doesn't exist, create it with the header:
+
+```markdown
+# Activity Log — {domain}
+
+| Date | Skill | Summary |
+|------|-------|---------|
+```
+
+Then append a row:
+
+```
+| YYYY-MM-DD | /weekly-report | [one-line summary: e.g., "Week W07 report. Health: UP. 2 must-fix, 3 high-impact items. Saved to weekly-report-2026-W07.md"] |
+```
+
+The `{domain}` is already set in Phase 0 (from GSC property selection). Log even if the skill exits early due to a guard — note why (e.g., "Aborted: GSC MCP unavailable").

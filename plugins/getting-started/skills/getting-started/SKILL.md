@@ -537,3 +537,28 @@ Claude:
 
 Your other SEO Copilot skills will now use these settings automatically.
 ```
+
+---
+
+## Activity Log
+
+After every execution, append a row to `.claude/reports/{domain}/activity-log.md`.
+
+**Determining `{domain}`**: Extract from the Webflow site URL configured during setup. If no Webflow site is identified yet, use the `business.name` slug as a fallback (e.g., "Acme SaaS" → `acme-saas`).
+
+If the file doesn't exist, create it with the header:
+
+```markdown
+# Activity Log — {domain}
+
+| Date | Skill | Summary |
+|------|-------|---------|
+```
+
+Then append a row:
+
+```
+| YYYY-MM-DD | /getting-started | [one-line summary: e.g., "Config created. Business: Acme SaaS. Markets: US, UK. Voice: Professional. Saved to seo-copilot-config.json"] |
+```
+
+Log even if re-running to update config (e.g., "Config updated. Changed primary keywords and brand voice.").
