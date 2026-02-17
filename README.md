@@ -14,6 +14,8 @@ Claude Code skills that turn your Webflow CMS into an SEO machine — refresh co
 /plugin install click-recovery@webflow-seo-copilot
 /plugin install monthly-report@webflow-seo-copilot
 /plugin install weekly-report@webflow-seo-copilot
+/plugin install audit@webflow-seo-copilot
+/plugin install audit-deep@webflow-seo-copilot
 
 # First time? Run setup to capture your brand voice & SEO goals
 /getting-started
@@ -23,11 +25,18 @@ Claude Code skills that turn your Webflow CMS into an SEO machine — refresh co
 /click-recovery
 /monthly-report
 /weekly-report
+
+# Audit any site (no MCP needed)
+/audit https://example.com
+
+# Deep audit (requires GSC + Webflow MCP)
+/audit:deep
 ```
 
 **Requirements:**
 - [Webflow MCP server](https://developers.webflow.com/mcp/reference/overview) (required)
-- [Google Search Console MCP server](https://github.com/sofianbettayeb/gsc-mcp-server) (required for `/click-recovery`, `/monthly-report`, and `/weekly-report`, optional for `/refresh-content`)
+- [Google Search Console MCP server](https://github.com/sofianbettayeb/gsc-mcp-server) (required for `/click-recovery`, `/monthly-report`, `/weekly-report`, and `/audit:deep`, optional for `/refresh-content`)
+- `/audit {url}` requires no MCP servers — works with any public URL
 - [Keywords Everywhere MCP server](https://github.com/hithereiamaliff/mcp-keywords-everywhere) (optional, needs API key)
 
 ## Why Keep Content Fresh?
@@ -188,11 +197,56 @@ The full report covers 6 sections: executive summary (with monthly context), per
 
 ---
 
+### `/audit`
+
+[View full skill →](plugins/audit/skills/audit/SKILL.md)
+
+Quick SEO & AEO maturity assessment from a public URL. No MCP servers needed — just a URL. Scores 4 dimensions across 5 maturity levels using deterministic boolean checks.
+
+**What it does:**
+- Fetches homepage, optional pillar page, blog post, sitemap, robots.txt
+- Runs deterministic checks: content signals, technical signals, authority signals, measurement signals
+- Scores each dimension using the AEO Maturity Model rubric (level-by-level gate evaluation)
+- Outputs action plan grouped by maturity level (Level 1 blockers first, then Level 2, etc.)
+- Saves reports per site: `./{domain}/reports/audit-quick-YYYY-MM-DD.md`
+
+**Usage:**
+```
+/audit https://example.com
+```
+
+---
+
+### `/audit:deep`
+
+[View full skill →](plugins/audit-deep/skills/audit-deep/SKILL.md)
+
+Full data-backed SEO & AEO maturity audit with GSC + Webflow access. Same maturity model as `/audit` but with deep signals and higher confidence.
+
+**What it does:**
+- Full GSC search analytics (90 days): queries, pages, clicks, impressions, CTR, position
+- Webflow CMS analysis: collections, fields, template settings, SEO title mapping
+- URL inspection for top pages and key templates
+- Content gap analysis, keyword cannibalization detection, thin content flagging
+- Indexation cross-reference (Webflow vs GSC)
+- CMS template audit (field completeness per collection type)
+- Impact/Confidence/Effort scoring for prioritization
+- Saves reports per site: `./{domain}/reports/audit-deep-YYYY-MM-DD.md`
+
+**Usage:**
+```
+/audit:deep
+```
+
+---
+
 ### When to use each skill
 
 | Scenario | Skill |
 |----------|-------|
 | First time setup | `/getting-started` — run once to capture brand voice & goals |
+| Quick site assessment (no MCP needed) | `/audit {url}` — public signals only, pre-discovery |
+| Full data-backed audit | `/audit:deep` — GSC + Webflow, post-sale |
 | Low CTR, content is fine | `/click-recovery` — fix the pitch |
 | Outdated content, rankings dropping | `/refresh-content` — full refresh |
 | Both issues | `/click-recovery` first, then `/refresh-content` |
@@ -209,6 +263,28 @@ By night, I build tools like [AI SEO Copilot](https://webflow.com/apps/detail/ai
 In between, I ride my bikes and play with my kids in Bern, Switzerland.
 
 ## Changelog
+
+### v1.3.0 (2026-02-12)
+
+**`/audit`** (new)
+- Quick SEO & AEO maturity audit from any public URL — no MCP servers needed
+- 5-level maturity model across 4 dimensions (Content, Technical, Authority, Measurement)
+- Deterministic boolean checks with evidence logging (no heuristic scoring)
+- Action plan grouped by maturity level (Level 1 blockers first)
+- Optional pillar page and blog post URLs for deeper analysis
+- PageSpeed integration when available
+- Per-site storage: `./{domain}/reports/audit-quick-YYYY-MM-DD.md` + `latest-quick.md`
+
+**`/audit:deep`** (new)
+- Deep SEO & AEO maturity audit with GSC + Webflow data
+- Same maturity model with deep audit signals and Medium–High confidence
+- Content gap analysis, keyword cannibalization detection, thin content flagging
+- Indexation cross-reference (Webflow pages vs GSC indexed pages)
+- CMS template audit: field completeness, SEO title mapping, schema coverage
+- Branded query trend analysis and E-E-A-T signal consistency
+- Impact/Confidence/Effort prioritization within each maturity level
+- Appendix tables: metadata audit, content gaps, cannibalization, indexation
+- Per-site storage: `./{domain}/reports/audit-deep-YYYY-MM-DD.md` + `latest-deep.md`
 
 ### v1.2.0 (2026-02-12)
 

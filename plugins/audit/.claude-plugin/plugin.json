@@ -1,0 +1,11 @@
+{
+  "name": "audit",
+  "description": "Quick SEO & AEO maturity audit from a public URL. 5-level scoring across 4 dimensions with deterministic checks.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Sofian Bettayeb"
+  },
+  "homepage": "https://github.com/sofianbettayeb/webflow-seo-copilot",
+  "license": "MIT",
+  "keywords": ["seo", "aeo", "audit", "maturity", "webflow", "discovery", "scorecard"]
+}

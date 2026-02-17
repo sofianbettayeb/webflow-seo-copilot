@@ -63,6 +63,28 @@
       },
       "category": "seo",
       "tags": ["seo", "report", "weekly", "gsc", "analytics", "webflow", "pulse", "action-plan", "mcp"]
+    },
+    {
+      "name": "audit",
+      "source": "./plugins/audit",
+      "description": "Quick SEO & AEO maturity audit from a public URL. 5-level scoring across 4 dimensions with deterministic checks. No MCP needed.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Sofian Bettayeb"
+      },
+      "category": "seo",
+      "tags": ["seo", "aeo", "audit", "maturity", "discovery", "scorecard", "webflow"]
+    },
+    {
+      "name": "audit-deep",
+      "source": "./plugins/audit-deep",
+      "description": "Deep SEO & AEO maturity audit with GSC + Webflow data. Indexation, content gaps, cannibalization, CMS template analysis, and data-backed scoring.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Sofian Bettayeb"
+      },
+      "category": "seo",
+      "tags": ["seo", "aeo", "audit", "deep", "maturity", "gsc", "webflow", "indexation", "scorecard", "mcp"]
     }
   ]
 }

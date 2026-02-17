@@ -1,0 +1,11 @@
+{
+  "name": "audit-deep",
+  "description": "Deep SEO & AEO maturity audit with GSC + Webflow data. Full indexation, content gaps, cannibalization, and CMS template analysis.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Sofian Bettayeb"
+  },
+  "homepage": "https://github.com/sofianbettayeb/webflow-seo-copilot",
+  "license": "MIT",
+  "keywords": ["seo", "aeo", "audit", "deep", "maturity", "gsc", "webflow", "indexation", "scorecard"]
+}
