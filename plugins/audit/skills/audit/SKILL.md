@@ -1,8 +1,8 @@
 ---
 name: audit
-version: "1.0"
+version: "1.1"
 description: |
-  Quick SEO & AEO maturity audit from a public URL. Scores 4 dimensions (Content, Technical, Authority, Measurement) across 5 maturity levels using deterministic boolean checks on public signals only.
+  Quick SEO & AEO maturity assessment from a public URL. Pre-sale discovery tool that scores 4 dimensions across 5 maturity levels. Produces a client-ready report with opportunities, quick wins, and a roadmap — designed to present findings and prepare a proposal.
   Triggers: audit, site audit, seo audit, aeo audit, discovery audit.
   Requires: Web access (WebFetch). No MCP servers needed.
   Workflow: Parse → Prompt → Fetch → Check → Score → Report → Save.
@@ -11,7 +11,9 @@ description: |
 
 # Quick Audit Skill
 
-Assess any site's SEO and AEO maturity from a public URL. Runs deterministic boolean checks on public signals, scores 4 dimensions using the AEO Maturity Model, and outputs a prioritized action plan grouped by maturity level.
+Pre-sale SEO and AEO maturity assessment from a public URL. Runs evidence-based checks on public signals, scores 4 dimensions using the AEO Maturity Model, and outputs a client-ready report with prioritized opportunities and a roadmap to the next level.
+
+This report is designed to present to a client and prepare a proposal. It frames findings as opportunities, quantifies business impact, and leads naturally to an engagement recommendation.
 
 This skill is **read-only** and requires no MCP servers — just a URL.
 
@@ -107,12 +109,14 @@ For each fetch, record: URL attempted, success/fail, HTTP status if available.
 
 ## Phase 2: CHECK
 
-Run deterministic boolean checks on the fetched HTML. Every check produces:
+Run evidence-based checks on the fetched HTML. Every check produces:
 - **Pass/Fail** (boolean)
 - **Evidence** (exact snippet, attribute value, or count)
 - **Source URL** (which page the evidence came from)
 
 No heuristic language in pass/fail. Heuristics may only appear in recommendations.
+
+**IMPORTANT:** Check IDs (C1, T4, etc.) are for internal skill logic only. They must NEVER appear in the client-facing report. The report uses plain language descriptions instead.
 
 ### Content Checks
 
@@ -166,11 +170,13 @@ No heuristic language in pass/fail. Heuristics may only appear in recommendation
 | M3 | GSC verification | `<meta name="google-site-verification">` present | Tag content |
 | M4 | Other analytics tools | Patterns for PostHog (`posthog`), Segment (`analytics.js`), Hotjar, Mixpanel, Plausible, Fathom | Tools detected |
 
+**M3 limitation:** This check only detects HTML meta tag verification. Domain-level GSC properties use DNS TXT records, which are not visible in page HTML. If M3 fails, note in the report: "GSC verification not detected via HTML. If verified via DNS (domain-level property), this check does not apply." Do not penalize the score when there is reason to believe DNS verification is in use (e.g., analytics scripts suggest GSC awareness, or client confirms domain-level property).
+
 ---
 
 ## Phase 3: SCORE
 
-Apply the maturity model rubric deterministically. For each dimension, evaluate level gates in order (1→5). Stop at the first level that fails.
+Apply the maturity model rubric. For each dimension, evaluate level gates in order (1→5). Stop at the first level that fails.
 
 ### Scoring Engine
 
@@ -219,8 +225,8 @@ score_dimension(dimension, evidence):
 | Level | Gates (all must pass) |
 |-------|----------------------|
 | 1 | Always passes (baseline — no tracking = Level 1) |
-| 2 | (M1 OR M2) (any analytics installed) AND M3 (GSC verification) |
-| 3 | Level 2 AND M4 (multiple tracking tools detected) |
+| 2 | (M1 OR M2 OR M4) (any analytics installed) AND M3 (GSC verification — see M3 limitation note) |
+| 3 | Level 2 AND multiple tracking tools detected (≥ 2 of M1, M2, M4) |
 | 4 | Level 3 AND advanced tracking setup (multiple measurement tools visible) |
 | 5 | Level 4 AND enterprise-grade measurement stack |
 
@@ -235,42 +241,149 @@ confidence = "Low-Medium" (always, for quick mode)
 
 ## Phase 4: REPORT & SAVE
 
-### 4.1 Report Structure
+### 4.1 Report Principles
+
+The report is a **client-facing deliverable** designed to present findings and prepare a proposal. Follow these rules:
+
+1. **No check IDs** — Never write C1, T4, M3, etc. in the report. Use plain language: "page title", "Open Graph tags", "search console verification".
+2. **Opportunities, not failures** — Frame findings as untapped potential, not broken things. "You're leaving X on the table" not "X is broken".
+3. **No implementation details** — Say **what** needs attention and **why** it matters. Never say **how** to fix it (e.g., don't write "In Webflow Designer, go to Page Settings → Open Graph"). The how is the work you sell.
+4. **Business language** — Traffic, visibility, clicks, rankings, competitive advantage. Not "pass/fail", "boolean", "gates".
+5. **Lead to engagement** — The report should make the client want to work with you. End with a clear next step.
+
+### 4.2 Report Structure
 
 Output a single markdown file with these sections in order:
 
-**1. AEO Maturity Scorecard**
-- Overall level (number + name)
-- Confidence: Low–Medium
-- Table: dimension, score 1–5, level name, evidence links (which checks passed/failed)
-- Weakest dimension, strongest dimension, fastest win
+---
 
-**2. Findings per Dimension**
-- For each dimension (Content, Technical, Authority, Measurement):
-  - What was found (passed checks with evidence)
-  - What's missing (failed checks with evidence)
-  - Source URLs for each finding
+**Header:**
+```
+# SEO & AEO Maturity Assessment — {domain}
 
-**3. What's Broken & Consequences**
-- Top 3–5 failures with business impact statements
-- Table: issue, impact (High/Medium/Low), consequence (what happens if not fixed)
+**Prepared for:** {domain}
+**Date:** YYYY-MM-DD
+**Assessment type:** Discovery (public signals)
+**Confidence:** Low–Medium (based on publicly available data)
+**Pages analyzed:** [list URLs checked]
+```
 
-**4. Action Plan (grouped by level)**
-- **Level 1 blockers first** — anything preventing a dimension from consistently reaching Level 1
-- Then **Level 2 requirements**, then Level 3, etc.
-- Within a level, order: Technical → Content → Measurement → Authority
-- Do NOT use impact/effort scoring in quick mode — strict level ordering only
-- Each action: what to do, which dimension it improves, evidence reference
+---
 
-**5. Roadmap to Next Level**
-- Current level and target level (current + 1)
-- Explicit gates to pass for the next level per dimension
-- Table: action, dimension, effort, suggested skill
+**1. About This Assessment**
 
-**Footer:**
-- "Run `/audit:deep` with GSC + Webflow access for a complete audit with data-backed prioritization."
+Brief methodology section (3-4 sentences):
+- What was analyzed (homepage, pillar page if provided, blog post if provided, sitemap, robots.txt)
+- How scoring works (4 dimensions, 5 maturity levels, evidence-based)
+- What this assessment covers and what it doesn't (public signals only — no search analytics, no CMS data, no traffic numbers)
+- Confidence caveat: "A deep audit with search analytics and CMS access would increase confidence and reveal data-backed opportunities."
 
-### 4.2 Save to File
+---
+
+**2. Executive Summary**
+
+3-5 sentences that a decision-maker can read and understand immediately:
+- Current maturity level and what it means in plain language
+- The single biggest opportunity (framed as upside, not problem)
+- What's already strong (give credit — builds trust)
+- One sentence on what reaching the next level would unlock
+
+---
+
+**3. SEO & AEO Maturity Scorecard**
+
+Overall level (number + name) with a one-line interpretation.
+
+Table with NO check IDs:
+
+| Dimension | Score | Level | What's Working | Biggest Opportunity |
+|-----------|-------|-------|----------------|---------------------|
+| Content | X/5 | Name | [strength] | [opportunity] |
+| Technical | X/5 | Name | [strength] | [opportunity] |
+| Authority | X/5 | Name | [strength] | [opportunity] |
+| Measurement | X/5 | Name | [strength] | [opportunity] |
+
+Below the table:
+- Strongest dimension and why it matters
+- Weakest dimension and what it's costing
+
+---
+
+**4. Key Findings**
+
+For each dimension, write a **narrative paragraph** (not a pass/fail table):
+- Lead with what's working (builds credibility, shows you're fair)
+- Then describe what's missing and why it matters in business terms
+- Use evidence (quotes, counts, schema types found) but never check IDs
+- End each dimension with: what reaching the next level would require (outcome, not how-to)
+
+Example tone: "The site has a strong FAQ section with 11 question-answer pairs and proper schema markup — this is exactly what AI answer engines look for when selecting sources. However, there's no mechanism for visitors to discover related content, which means each page visit is a dead end instead of a journey deeper into the site."
+
+---
+
+**5. Opportunities & Business Impact**
+
+Table of the top 3-5 opportunities, framed as upside:
+
+| # | Opportunity | Impact | What You're Leaving on the Table |
+|---|-------------|--------|----------------------------------|
+| 1 | [opportunity] | High/Medium/Low | [business consequence in plain language] |
+
+Focus on:
+- Traffic and visibility impact
+- Competitive disadvantage
+- AI/AEO readiness gaps
+- User experience consequences
+
+Do NOT include how to fix these — that's the engagement.
+
+---
+
+**6. Quick Wins**
+
+2-3 items that can show visible results within the first week of an engagement. These build client confidence that progress is immediate.
+
+For each quick win:
+- What it is (outcome, not implementation)
+- Why it matters (business impact)
+- Effort level: Low (hours, not days)
+
+Frame as: "These are the first things we'd address — you'll see changes within days, not months."
+
+---
+
+**7. Roadmap to Next Level**
+
+Current level → target level (current + 1).
+
+Table showing what each dimension needs to advance:
+
+| Dimension | Current | Target | What's Needed | Effort |
+|-----------|---------|--------|---------------|--------|
+| [dim] | X | X+1 | [outcome description] | Low/Medium/High |
+
+Below the table: a brief narrative on what reaching the next level means for the business (more visibility, better AI coverage, competitive positioning).
+
+---
+
+**8. Recommended Next Steps**
+
+This is the proposal bridge. 2-3 clear options:
+
+**Option A: Deep Audit** (recommended if GSC + Webflow access available)
+- "With access to your search analytics and CMS, we can quantify these opportunities with traffic data, identify content gaps, and build a prioritized engagement plan with ROI estimates."
+
+**Option B: Quick Wins First**
+- "Start with the quick wins identified above, then reassess. This is a good option if you want to see results before committing to a larger engagement."
+
+**Option C: Full Engagement**
+- "Address all opportunities in a structured roadmap — quick wins in week 1, strategic improvements over 4-8 weeks, with weekly progress tracking."
+
+End with a single call-to-action line.
+
+---
+
+### 4.3 Save to File
 
 Save two files:
 - `./{domain}/reports/audit-quick-YYYY-MM-DD.md` (timestamped)
@@ -278,7 +391,7 @@ Save two files:
 
 Create directories if needed: `mkdir -p ./{domain}/reports/`
 
-### 4.3 Activity Log
+### 4.4 Activity Log
 
 Append to `./{domain}/reports/activity-log.md`:
 
@@ -294,8 +407,8 @@ Log even on early exit (e.g., "Aborted: URL not accessible").
 
 | Finding | Skill | When |
 |---------|-------|------|
+| Need data-backed audit | `/audit:deep` | After connecting GSC + Webflow |
 | Low CTR / bad meta tags | `/click-recovery` | After connecting GSC |
 | Outdated content | `/refresh-content {url}` | For specific pages |
 | Missing config | `/getting-started` | First-time setup |
-| Full data-backed audit | `/audit:deep` | After connecting GSC + Webflow |
 | Ongoing monitoring | `/weekly-report` | After fixing issues |

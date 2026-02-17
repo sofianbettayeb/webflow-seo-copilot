@@ -1,8 +1,8 @@
 ---
 name: audit-deep
-version: "1.0"
+version: "1.1"
 description: |
-  Deep SEO & AEO maturity audit with GSC + Webflow data. Full indexation cross-reference, content gaps, cannibalization, CMS template analysis, and data-backed scoring across 4 dimensions and 5 maturity levels.
+  Deep SEO & AEO maturity audit with GSC + Webflow data. Post-sale baseline that scores 4 dimensions across 5 maturity levels with data-backed evidence. Produces a client-ready report with quantified opportunities, engagement plan, and appendix data tables.
   Triggers: audit deep, deep audit, post-sale audit, implementation audit.
   Requires: GSC MCP server, Webflow MCP server. Optional: Keywords Everywhere for volume data.
   Workflow: Discover → Fetch → Check → Score → Report → Save.
@@ -11,7 +11,9 @@ description: |
 
 # Deep Audit Skill
 
-Full data-backed SEO and AEO maturity audit. Uses GSC search analytics, Webflow CMS data, and URL inspection to score 4 dimensions across 5 maturity levels. Produces a comprehensive report with metadata audit, content gaps, cannibalization analysis, and indexation cross-reference.
+Post-sale SEO and AEO maturity audit with full data access. Uses GSC search analytics, Webflow CMS data, and URL inspection to score 4 dimensions across 5 maturity levels. Produces a client-ready engagement baseline with quantified opportunities, a phased roadmap, and supporting data tables.
+
+This report is designed as a professional deliverable — the foundation for an engagement plan. It frames findings as business opportunities with data-backed impact estimates, and ends with a clear engagement structure.
 
 This skill is **read-only** — it never modifies Webflow content.
 
@@ -147,6 +149,8 @@ If available: top 30 queries by impressions — volume, CPC, competition, trend.
 
 Run all quick audit checks (see `/audit` skill) on the fetched homepage HTML, PLUS the deep-mode checks below. Every check produces: **Pass/Fail**, **Evidence**, **Source URL/template**.
 
+**IMPORTANT:** Check IDs (CD1, TD1, etc.) are for internal skill logic only. They must NEVER appear in the client-facing report. The report uses plain language descriptions and data evidence instead.
+
 ### Content Checks (Deep)
 
 | # | Check | Rule | Evidence |
@@ -278,53 +282,224 @@ Priority = (Impact × Confidence) / Effort
 
 ## Phase 4: REPORT & SAVE
 
-### 4.1 Report Structure
+### 4.1 Report Principles
+
+The report is a **professional client deliverable** — the foundation for an engagement. Follow these rules:
+
+1. **No check IDs** — Never write CD1, TD3, AD2, etc. in the report. Use plain language: "content gaps", "indexation coverage", "branded search trend".
+2. **Opportunities, not failures** — Frame findings as untapped potential with quantified upside. "You have X impressions going to pages without optimized titles — that's Y potential clicks per month" not "X pages have bad titles".
+3. **No implementation details** — Describe **what** needs attention and **why** it matters with data. Never describe **how** to fix it in Webflow/GSC. The how is the engagement.
+4. **Quantify everything** — Use GSC data to attach numbers: impressions, clicks, positions, trends. "500 monthly impressions with 0.8% CTR" is more persuasive than "low CTR".
+5. **Business language** — Revenue potential, competitive positioning, market visibility. Not technical jargon.
+6. **Lead to engagement plan** — The report should make the client confident that you understand their situation and have a plan.
+
+### 4.2 Report Structure
 
 Output a single markdown file with these sections:
 
+---
+
 **Header:**
-- Site, generated date, mode (Deep), GSC property, period (last 90 days)
-- Confidence: Medium–High
-- Data sources: GSC (days of data), Webflow (page/CMS item counts), KE (status), config (status)
+```
+# SEO & AEO Maturity Audit — {domain}
 
-**1. AEO Maturity Scorecard**
-- Overall level + name
-- Table: dimension, score 1–5, level name, key evidence, gap to next
-- Weakest/strongest dimension, fastest win
+**Prepared for:** {domain}
+**Date:** YYYY-MM-DD
+**Assessment type:** Deep (GSC + Webflow data)
+**Confidence:** Medium–High
+**Period analyzed:** Last 90 days
+**Data sources:** GSC ([X] days of data, [Y] pages, [Z] queries), Webflow ([N] pages, [M] CMS items across [K] collections), Keywords Everywhere ([status])
+```
 
-**2. Findings per Dimension**
-- Content: overview stats (total pages, avg queries/page, gaps, cannibalization), then detail
-- Technical: overview stats, then detail
-- Authority: brand presence metrics, E-E-A-T signal coverage
-- Measurement: GSC health, tracking coverage, reporting cadence
+---
 
-**3. What's Broken & Consequences**
-- Top issues with business impact (framed for executive communication)
-- Table: issue, dimension, impact, consequence
+**1. About This Assessment**
 
-**4. Action Plan (level-grouped, then prioritized within level)**
-- **Level 1 blockers first** — anything preventing Level 1
-- Then Level 2 requirements, Level 3, etc.
-- Within each level: order by Priority score (Impact × Confidence / Effort)
-- Each action: title, why (with data), impact, effort, steps, skill shortcut
+Brief methodology section (4-5 sentences):
+- What data sources were analyzed and their coverage
+- How scoring works (4 dimensions, 5 maturity levels, evidence-based with data backing)
+- Confidence level and what it means
+- How this relates to any prior quick audit (if `./{domain}/reports/latest-quick.md` exists: "This builds on the discovery assessment from [date], now with full data access.")
 
-**5. Roadmap to Next Level**
-- Current → target level
-- Explicit gates per dimension
-- Table: action, dimension, effort, skill
-- Estimated timeline
+---
 
-**Appendix Tables (deep mode only):**
+**2. Executive Summary**
 
-- **Metadata audit table**: page/template, title rule, description rule, OG rule, issues
-- **Content gaps table**: query cluster, impressions, suggested page type, proposed URL
-- **Cannibalization table**: query cluster, pages competing, recommended consolidation action
-- **Indexation cross-reference table**: Webflow URL, indexed yes/no, inspection status, notes
+5-7 sentences for a decision-maker:
+- Current maturity level and what it means for the business
+- Total search footprint (pages indexed, queries ranking, total impressions/clicks)
+- The single biggest opportunity with estimated impact (use GSC data)
+- What's already strong (give credit — builds trust and shows fairness)
+- Key risk if nothing changes (framed as competitive or visibility consequence)
+- What reaching the next level would unlock in business terms
 
-**Footer:**
-- Next steps: `/click-recovery`, `/refresh-content`, `/weekly-report`, re-run `/audit:deep` after changes
+---
 
-### 4.2 Save to File
+**3. SEO & AEO Maturity Scorecard**
+
+Overall level (number + name) with a one-line business interpretation.
+
+Table with NO check IDs:
+
+| Dimension | Score | Level | What's Working | Biggest Opportunity |
+|-----------|-------|-------|----------------|---------------------|
+| Content | X/5 | Name | [data-backed strength] | [quantified opportunity] |
+| Technical | X/5 | Name | [data-backed strength] | [quantified opportunity] |
+| Authority | X/5 | Name | [data-backed strength] | [quantified opportunity] |
+| Measurement | X/5 | Name | [data-backed strength] | [quantified opportunity] |
+
+Below the table:
+- Strongest dimension and why it's a competitive advantage
+- Weakest dimension and estimated business impact (use real numbers)
+
+---
+
+**4. Key Findings**
+
+For each dimension, write a **data-backed narrative** (not a pass/fail table):
+
+**Content:**
+- Lead with strengths (total content pages, queries ranking, strong topics)
+- Content gaps: queries with high impressions but no matching page (quantify with impressions)
+- Cannibalization: where pages compete against each other (list specific pages + queries)
+- Thin content: CMS items below quality thresholds
+- CMS field completeness: what's populated vs. what's missing across collections
+- End with: what a structured content strategy would unlock
+
+**Technical:**
+- Lead with strengths (indexation rate, schema coverage, clean URLs)
+- Indexation gaps: published pages not appearing in GSC
+- Metadata issues: duplicates, length problems, templates falling back to item name
+- Schema gaps: templates missing appropriate structured data
+- End with: what technical optimization would unlock (more indexed pages = more visibility)
+
+**Authority:**
+- Lead with strengths (branded queries, author presence, E-E-A-T signals)
+- Branded search trend (growing/stable/declining — with numbers)
+- Author attribution coverage across content
+- E-E-A-T consistency across the site
+- End with: what stronger authority signals would mean for AI citations and rankings
+
+**Measurement:**
+- Lead with strengths (GSC data quality, analytics coverage)
+- Tracking gaps across templates
+- Reporting cadence and whether data-driven decisions are possible
+- End with: what a measurement framework would enable
+
+---
+
+**5. Opportunities & Business Impact**
+
+Prioritized table of opportunities. Use ICE scoring internally but present as a clean priority list:
+
+| Priority | Opportunity | Estimated Impact | What You're Leaving on the Table |
+|----------|-------------|------------------|----------------------------------|
+| Must fix | [opportunity] | [quantified: impressions, clicks, pages affected] | [business consequence] |
+| High impact | [opportunity] | [quantified] | [business consequence] |
+| Nice to have | [opportunity] | [quantified] | [business consequence] |
+
+For each opportunity:
+- Quantify with GSC data where possible (impressions at risk, potential click gain from CTR improvement, etc.)
+- Frame as business outcomes (visibility, competitive position, AI readiness)
+- Do NOT include how to fix — that's the engagement
+
+---
+
+**6. Quick Wins**
+
+3-5 items that can show measurable results within the first 1-2 weeks. These build client confidence.
+
+For each quick win:
+- What it is (outcome, not implementation)
+- Estimated impact (use data: "X pages affected, Y impressions at stake")
+- Why it's quick (low effort, high confidence)
+
+Frame as: "These are the first things we'd address — you'll see changes in search performance within 2-3 weeks."
+
+---
+
+**7. Strategic Roadmap**
+
+Phased engagement plan:
+
+**Phase 1: Foundation (Weeks 1-2)**
+- Quick wins from Section 6
+- Must-fix items from Section 5
+- Expected outcome: [specific, measurable]
+
+**Phase 2: Optimization (Weeks 3-6)**
+- High-impact items from Section 5
+- Content gap priorities
+- Expected outcome: [specific, measurable]
+
+**Phase 3: Growth (Weeks 7-12)**
+- Nice-to-have items
+- Advanced schema, authority building
+- Expected outcome: [specific, measurable]
+
+**Ongoing: Monitoring**
+- Weekly performance tracking
+- Monthly progress reviews
+- Quarterly re-assessment
+
+Include a maturity progression target:
+```
+Current: Level X → Phase 1 target: Level Y → Phase 3 target: Level Z
+```
+
+---
+
+**8. Engagement Recommendation**
+
+Professional proposal bridge:
+
+"Based on this assessment, here's what we recommend:"
+
+**Recommended engagement:**
+- Scope: [what's included — reference the phases above]
+- Approach: [quick wins first, then strategic, with progress tracking]
+- Tracking: Weekly reports to measure impact, monthly reviews, quarterly deep audit re-run
+- Expected outcomes: [specific maturity level targets, visibility improvements]
+
+End with a confident closing line and clear next step (e.g., "Let's schedule a call to walk through the roadmap and align on priorities.").
+
+---
+
+**Appendix A: Metadata Audit**
+
+Table (no check IDs, clean data):
+
+| Page / Template | Title | Description | Open Graph | Issues |
+|-----------------|-------|-------------|------------|--------|
+| [page] | [title or rule] | [description or rule] | [status] | [plain language issue] |
+
+---
+
+**Appendix B: Content Gaps**
+
+| Query Cluster | Monthly Impressions | Current Coverage | Suggested Action |
+|---------------|---------------------|------------------|------------------|
+| [cluster] | [number] | No matching page / partial match | [create/expand/consolidate] |
+
+---
+
+**Appendix C: Cannibalization**
+
+| Query Cluster | Competing Pages | Positions | Suggested Action |
+|---------------|-----------------|-----------|------------------|
+| [cluster] | [page1, page2] | [pos1, pos2] | [consolidate/differentiate/redirect] |
+
+---
+
+**Appendix D: Indexation Cross-Reference**
+
+| URL | In Webflow | In GSC | Status | Notes |
+|-----|------------|--------|--------|-------|
+| [url] | Yes/No | Indexed/Not indexed | [status] | [plain language note] |
+
+---
+
+### 4.3 Save to File
 
 Save these files:
 - `./{domain}/reports/audit-deep-YYYY-MM-DD.md` (timestamped)
@@ -338,7 +513,7 @@ Optionally save supporting datasets as JSON under `./{domain}/reports/data/`:
 
 Create directories if needed: `mkdir -p ./{domain}/reports/data/`
 
-### 4.3 Activity Log
+### 4.4 Activity Log
 
 Append to `./{domain}/reports/activity-log.md`:
 
@@ -361,9 +536,9 @@ Log even on early exit.
 | Ongoing monitoring | `/weekly-report` | Track progress weekly |
 | Monthly progress | `/monthly-report` | Month-end review |
 
-**Workflow:**
-1. `/audit {url}` for pre-discovery quick assessment
-2. `/audit:deep` post-sale for full baseline
-3. Fix issues with `/click-recovery` and `/refresh-content`
-4. `/weekly-report` to track progress
+**Engagement workflow:**
+1. `/audit {url}` for pre-sale discovery
+2. `/audit:deep` post-sale for engagement baseline
+3. Quick wins with `/click-recovery` and `/refresh-content`
+4. `/weekly-report` to track and demonstrate progress
 5. Re-run `/audit:deep` quarterly to measure maturity progression

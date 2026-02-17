@@ -201,14 +201,17 @@ The full report covers 6 sections: executive summary (with monthly context), per
 
 [View full skill →](plugins/audit/skills/audit/SKILL.md)
 
-Quick SEO & AEO maturity assessment from a public URL. No MCP servers needed — just a URL. Scores 4 dimensions across 5 maturity levels using deterministic boolean checks.
+Pre-sale SEO & AEO maturity assessment from a public URL. No MCP servers needed — just a URL. Produces a client-ready report you can present and use to prepare a proposal.
 
 **What it does:**
-- Fetches homepage, optional pillar page, blog post, sitemap, robots.txt
-- Runs deterministic checks: content signals, technical signals, authority signals, measurement signals
-- Scores each dimension using the AEO Maturity Model rubric (level-by-level gate evaluation)
-- Outputs action plan grouped by maturity level (Level 1 blockers first, then Level 2, etc.)
+- Scores 4 dimensions (Content, Technical, Authority, Measurement) across 5 maturity levels
+- Identifies opportunities and quantifies business impact — framed for client conversations
+- Surfaces quick wins that show results in week 1
+- Provides a roadmap to the next maturity level
+- Ends with engagement recommendations — natural bridge to a proposal
 - Saves reports per site: `./{domain}/reports/audit-quick-YYYY-MM-DD.md`
+
+**Designed for:** Pre-sale discovery. Run it on a prospect's site, present the findings, close the deal.
 
 **Usage:**
 ```
@@ -221,17 +224,19 @@ Quick SEO & AEO maturity assessment from a public URL. No MCP servers needed —
 
 [View full skill →](plugins/audit-deep/skills/audit-deep/SKILL.md)
 
-Full data-backed SEO & AEO maturity audit with GSC + Webflow access. Same maturity model as `/audit` but with deep signals and higher confidence.
+Post-sale SEO & AEO maturity audit with GSC + Webflow data. Same maturity model as `/audit` but with data-backed evidence, quantified opportunities, and a phased engagement plan.
 
 **What it does:**
-- Full GSC search analytics (90 days): queries, pages, clicks, impressions, CTR, position
-- Webflow CMS analysis: collections, fields, template settings, SEO title mapping
-- URL inspection for top pages and key templates
+- Full search analytics (90 days): quantifies every opportunity with real traffic data
+- CMS analysis: collections, fields, templates, SEO configuration gaps
 - Content gap analysis, keyword cannibalization detection, thin content flagging
-- Indexation cross-reference (Webflow vs GSC)
-- CMS template audit (field completeness per collection type)
-- Impact/Confidence/Effort scoring for prioritization
+- Indexation cross-reference (Webflow vs GSC) with data tables
+- Prioritized opportunities with estimated business impact
+- Phased engagement roadmap: quick wins → optimization → growth
+- Appendix with supporting data: metadata audit, content gaps, cannibalization, indexation
 - Saves reports per site: `./{domain}/reports/audit-deep-YYYY-MM-DD.md`
+
+**Designed for:** Post-sale engagement baseline. Sets up the work plan with data-backed priorities.
 
 **Usage:**
 ```
@@ -245,8 +250,8 @@ Full data-backed SEO & AEO maturity audit with GSC + Webflow access. Same maturi
 | Scenario | Skill |
 |----------|-------|
 | First time setup | `/getting-started` — run once to capture brand voice & goals |
-| Quick site assessment (no MCP needed) | `/audit {url}` — public signals only, pre-discovery |
-| Full data-backed audit | `/audit:deep` — GSC + Webflow, post-sale |
+| Pre-sale site assessment (no MCP needed) | `/audit {url}` — client-ready report, proposal-ready |
+| Post-sale engagement baseline | `/audit:deep` — data-backed roadmap with GSC + Webflow |
 | Low CTR, content is fine | `/click-recovery` — fix the pitch |
 | Outdated content, rankings dropping | `/refresh-content` — full refresh |
 | Both issues | `/click-recovery` first, then `/refresh-content` |
@@ -264,15 +269,31 @@ In between, I ride my bikes and play with my kids in Bern, Switzerland.
 
 ## Changelog
 
+### v1.3.1 (2026-02-12)
+
+**`/audit`** (updated)
+- Reports are now client-facing and proposal-ready
+- Findings framed as opportunities with business impact, not pass/fail diagnostics
+- No check IDs or implementation details in reports — the "how" is the work you sell
+- New sections: About This Assessment, Executive Summary, Quick Wins, Recommended Next Steps
+- Engagement options (Deep Audit / Quick Wins First / Full Engagement) replace technical footer
+- GSC verification check now accounts for domain-level DNS verification
+- Measurement gate updated: any analytics tool (not just GA4/GTM) counts for Level 2
+
+**`/audit:deep`** (updated)
+- Reports are now professional client deliverables for engagement baseline
+- All opportunities quantified with GSC data (impressions, clicks, positions)
+- Phased engagement roadmap: Foundation (weeks 1-2), Optimization (3-6), Growth (7-12)
+- New section: Engagement Recommendation with scope, approach, and expected outcomes
+- Appendix tables use plain language, no check IDs
+- Designed to present to clients and set up a structured work plan
+
 ### v1.3.0 (2026-02-12)
 
 **`/audit`** (new)
 - Quick SEO & AEO maturity audit from any public URL — no MCP servers needed
 - 5-level maturity model across 4 dimensions (Content, Technical, Authority, Measurement)
-- Deterministic boolean checks with evidence logging (no heuristic scoring)
-- Action plan grouped by maturity level (Level 1 blockers first)
-- Optional pillar page and blog post URLs for deeper analysis
-- PageSpeed integration when available
+- Evidence-based checks with deterministic scoring
 - Per-site storage: `./{domain}/reports/audit-quick-YYYY-MM-DD.md` + `latest-quick.md`
 
 **`/audit:deep`** (new)
@@ -281,7 +302,6 @@ In between, I ride my bikes and play with my kids in Bern, Switzerland.
 - Content gap analysis, keyword cannibalization detection, thin content flagging
 - Indexation cross-reference (Webflow pages vs GSC indexed pages)
 - CMS template audit: field completeness, SEO title mapping, schema coverage
-- Branded query trend analysis and E-E-A-T signal consistency
 - Impact/Confidence/Effort prioritization within each maturity level
 - Appendix tables: metadata audit, content gaps, cannibalization, indexation
 - Per-site storage: `./{domain}/reports/audit-deep-YYYY-MM-DD.md` + `latest-deep.md`
