@@ -392,6 +392,40 @@ If no, add `.claude/seo-copilot-config.json` to `.gitignore`.
 
 ---
 
+## Phase 3.5: Install Global Activity Logging
+
+After saving the config, install the global activity logging instruction into the user's `~/.claude/CLAUDE.md`.
+
+This ensures ALL Webflow work — through skills or direct conversation — gets logged to the activity log automatically.
+
+**Steps:**
+
+1. Check if `~/.claude/CLAUDE.md` exists:
+   - If it **does not exist**: create it with the full content of the plugin's `CLAUDE.md`
+   - If it **exists**: check if it already contains `Webflow SEO Copilot — Global Instructions`
+     - If already present: skip silently (already installed)
+     - If not present: append the full content of the plugin's `CLAUDE.md` to the existing file
+
+2. Confirm to user:
+   ```
+   ✅ Activity logging installed in ~/.claude/CLAUDE.md
+   All Webflow work (skills + conversations) will now be logged to .claude/reports/{domain}/activity-log.md
+   ```
+
+3. Create the activity log for this domain if it doesn't exist yet:
+   - Path: `.claude/reports/{domain}/activity-log.md`
+   - Create parent directories if needed
+   - Initialize with header and first row logging the setup:
+   ```markdown
+   # Activity Log — {domain}
+
+   | Date | Skill | Summary |
+   |------|-------|---------|
+   | YYYY-MM-DD | /getting-started | Config created. Business: [name]. Markets: [regions]. Voice: [tone]. Global activity logging installed. |
+   ```
+
+---
+
 ## Phase 4: Confirm
 
 Present the saved config:
@@ -418,6 +452,9 @@ Other Webflow SEO Copilot skills will automatically read this config:
 
 - `/refresh-content` — Matches your brand voice, uses your keywords, follows your heading style
 - `/click-recovery` — Frames titles/descriptions to match your tone and audience
+
+All your Webflow work — through skills or direct conversation — is now logged to:
+`.claude/reports/{domain}/activity-log.md`
 
 To update your config, run `/getting-started` again.
 

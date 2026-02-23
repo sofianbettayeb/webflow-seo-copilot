@@ -18,6 +18,7 @@ Claude Code skills that turn your Webflow CMS into an SEO machine — refresh co
 /plugin install audit-deep@webflow-seo-copilot
 
 # First time? Run setup to capture your brand voice & SEO goals
+# This also installs global activity logging for all Webflow work
 /getting-started
 
 # Then use the SEO skills
@@ -32,6 +33,19 @@ Claude Code skills that turn your Webflow CMS into an SEO machine — refresh co
 # Deep audit (requires GSC + Webflow MCP)
 /audit:deep
 ```
+
+## Activity Logging
+
+Every session on a Webflow site is automatically logged to `.claude/reports/{domain}/activity-log.md` — whether you're using a skill or just working directly in conversation.
+
+Running `/getting-started` once installs a global instruction (`~/.claude/CLAUDE.md`) that activates this behavior across all sessions.
+
+The log tracks:
+- Skill executions (`/refresh-content`, `/click-recovery`, etc.)
+- Ad-hoc work (SEO fixes, page edits, content changes, GSC analysis)
+- What was changed and what was published
+
+Each skill reads the log at startup to avoid redundant work and surface recent context.
 
 **Requirements:**
 - [Webflow MCP server](https://developers.webflow.com/mcp/reference/overview) (required)
