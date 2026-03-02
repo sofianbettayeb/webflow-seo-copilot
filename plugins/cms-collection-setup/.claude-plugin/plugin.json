@@ -1,0 +1,11 @@
+{
+  "name": "cms-collection-setup",
+  "description": "Review or create a Webflow CMS collection optimized for SEO — audits existing schemas against a recommended field structure, or builds a new collection with the full set of Core, Content, Authority, Enhancement, and Social fields.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Sofian Bettayeb"
+  },
+  "homepage": "https://github.com/sofianbettayeb/webflow-seo-copilot",
+  "license": "MIT",
+  "keywords": ["webflow", "seo", "cms", "collection", "schema", "blog", "content-architecture"]
+}

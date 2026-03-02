@@ -793,12 +793,14 @@ Monthly Report is **read-only** — it identifies issues and recommends actions.
 | Missing metadata | `/click-recovery` | Quick metadata fixes |
 | Content gaps | Manual / `/refresh-content` | Create or update content for uncovered queries |
 | Keyword mismatches | `/click-recovery` | Align titles with actual search queries |
+| CMS schema gaps (missing fields, no keyword/OG/author fields) | `/cms-collection-setup:review` | Score field coverage and add missing fields to existing collections |
 
 **Workflow:**
 1. Run `/monthly-report` monthly to assess overall SEO health
 2. Use the Action Plan to prioritize work
 3. Execute with `/click-recovery` and `/refresh-content`
-4. Re-run `/monthly-report` next month to measure impact
+4. Fix structural gaps with `/cms-collection-setup:review` before re-running refreshes
+5. Re-run `/monthly-report` next month to measure impact
 
 ---
 

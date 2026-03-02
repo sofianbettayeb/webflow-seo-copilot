@@ -122,11 +122,25 @@ If not found: proceed with defaults, note "Run `/getting-started` for personaliz
 - For each CMS collection: fields, template settings, slug rules, SEO title/description mapping, Open Graph mapping
 - All static pages: name, path, SEO title, meta description
 
-**CMS field analysis per collection type:**
-Identify best-practice field gaps. Recommended fields by type:
-- **Blog**: keyword field, summary field, author reference, updated date, FAQ block support, schema toggles
-- **Case study**: industry, services, outcomes metrics, testimonial entity fields
-- **Landing page**: CTA field, hero text, social proof fields
+**CMS schema review per collection:**
+For each blog/article/case study collection, run the recommended schema check against the five groups defined in `/cms-collection-setup`:
+
+| Group | Fields checked | Weight |
+|-------|---------------|--------|
+| Core | H1 override, Meta SEO title, Meta SEO description | 30% |
+| Content | Main content (RichText), Main visual (Image), Alt text, Reading time, Updated date | 25% |
+| Authority | Author (ref/multi-ref), Category, Tags, Pillar page | 20% |
+| Enhancement | Primary keyword, Secondary keywords, Related posts, FAQ | 15% |
+| Social | OG title, OG description, OG image | 10% |
+
+Use alias matching — `seo-title`, `meta-title`, `og-title-seo` all count for Meta SEO Title, etc.
+
+For each collection, compute:
+- Per-group coverage score (0–100%)
+- Overall weighted schema score
+- List of missing fields by group
+
+Surface schema scores in the Technical section of the report and in the CMS field completeness check (CD5). Collections scoring below 60% overall are a "Must fix" level finding.
 
 **Template HTML:** Extract rendered HTML for key pages (one per collection type + homepage) to verify schema/tracking output matches config.
 
@@ -371,6 +385,7 @@ For each dimension, write a **data-backed narrative** (not a pass/fail table):
 - Indexation gaps: published pages not appearing in GSC
 - Metadata issues: duplicates, length problems, templates falling back to item name
 - Schema gaps: templates missing appropriate structured data
+- **CMS schema coverage**: for each content collection, report the schema score (Core/Content/Authority/Enhancement/Social) and overall %. Flag collections below 60% as a "Must fix" — they block `/refresh-content` from populating key fields. Point to `/cms-collection-setup:review` to fix.
 - End with: what technical optimization would unlock (more indexed pages = more visibility)
 
 **Authority:**
@@ -531,6 +546,8 @@ Log even on early exit.
 |---------|-------|------|
 | Low CTR / bad meta tags | `/click-recovery` | Quick metadata fixes |
 | Outdated content | `/refresh-content {url}` | Full content refresh |
+| CMS schema gaps (missing fields, low schema score) | `/cms-collection-setup:review` | Add missing fields to existing collections |
+| No blog collection yet | `/cms-collection-setup:create` | Build a new collection with the full recommended schema |
 | Missing config | `/getting-started` | First-time setup |
 | Quick pre-sale assessment | `/audit {url}` | Before connecting MCP |
 | Ongoing monitoring | `/weekly-report` | Track progress weekly |

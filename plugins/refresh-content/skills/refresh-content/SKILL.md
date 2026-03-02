@@ -162,6 +162,13 @@ Use Webflow MCP `get_collection_details` to discover:
   - Reading time field (if exists)
 - Flag any missing fields the refresh needs (e.g., no `last-updated` field)
 
+⚡ GUARD — **Core SEO fields missing:**
+If the collection is missing key fields that this refresh would populate (meta SEO title, meta SEO description, primary keyword, updated date, OG image):
+- List what's missing: "⚠️ This collection is missing [N] fields needed for a full refresh: [list]"
+- Offer: "Run `/cms-collection-setup:review` to audit the full schema and add missing fields before refreshing. Proceed anyway with available fields? (yes/no)"
+- If yes: proceed with whatever fields exist, skip steps that require the missing fields
+- If no: stop and direct user to `/cms-collection-setup:review`
+
 Store the field mapping for use in Phase 3.
 
 ⚡ GUARD — **Collection mapping cache:**
@@ -864,7 +871,7 @@ If issues arise after publishing:
 |-------|--------|
 | Webflow MCP unavailable | Stop and inform user to connect Webflow MCP |
 | GSC MCP unavailable | Use fallback keyword research (step 1.6), skip GSC submission steps |
-| CMS field not found | Check field mapping from step 1.1; recommend field structure if missing |
+| CMS field not found | Check field mapping from step 1.1; if multiple core fields are missing, recommend `/cms-collection-setup:review` to add them |
 | Schema validation fails | Show error, provide corrected schema |
 | Collection item not found | Search across all collections by slug, then ask user |
 | Publish fails | Show error, confirm item is not in draft-only state |

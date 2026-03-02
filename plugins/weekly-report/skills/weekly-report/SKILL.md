@@ -189,11 +189,25 @@ Calculate W vs W-1:
 
 ### 2.4 Template SEO Audit
 
-Check how CMS collections handle SEO titles:
-- For each collection, inspect the schema fields
-- **Flag if collection uses `name` field as the SEO title** instead of a dedicated `seo-title` or `meta-title` field
-- Note: "Collection '[name]' uses the `name` field for SEO titles. Consider adding a dedicated SEO title field for independent control over SERP presentation."
-- Check if `meta-description` field exists and is populated across items
+For each CMS collection, run a quick schema coverage check against the recommended fields from `/cms-collection-setup`:
+
+**Core fields (highest priority):**
+- Dedicated SEO title field present? Flag collections using `name` as the SEO title. Use alias matching — `seo-title`, `meta-title`, `titile` all count.
+- Meta SEO description field present?
+- H1 override field present?
+
+**Key SEO fields:**
+- Primary keyword field present?
+- Updated date field present?
+- OG image field present?
+- Author reference present?
+
+For each collection, output a brief line:
+```
+Blog Posts: Core ✅ | Keyword ❌ | OG image ❌ | Author ✅ — Schema score: ~60%
+```
+
+Flag collections below 70% coverage in the report. Recommend `/cms-collection-setup:review` for gaps — it scores all five field groups (Core, Content, Authority, Enhancement, Social) and can add missing fields directly.
 
 ### 2.5 Metadata Audit
 
@@ -309,7 +323,7 @@ The saved report is a Markdown file with these sections:
 - Top 10 pages, top 5 growing, top 5 declining, content gaps
 
 **Section 4 — Technical SEO Health:**
-- Template SEO audit (seo-title vs name field usage)
+- Template SEO audit: schema coverage per collection (Core/Keyword/OG/Author) with % score
 - Indexation cross-reference (not indexed, indexed orphans)
 - Metadata audit (missing, duplicate, length issues)
 
@@ -358,7 +372,7 @@ Weekly Report is **read-only**. Other skills execute.
 | Missing metadata | `/click-recovery` | Quick metadata fixes |
 | Content gaps | Manual / `/refresh-content` | Create or update content |
 | Keyword mismatches | `/click-recovery` | Align titles with search queries |
-| Template SEO issues | Manual | Add dedicated SEO title fields to CMS collections |
+| Template SEO issues / schema gaps | `/cms-collection-setup:review` | Audit and add missing fields to existing collections |
 
 **Cadence:**
 1. `/weekly-report` every week for pulse

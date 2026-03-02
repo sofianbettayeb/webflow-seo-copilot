@@ -10,6 +10,7 @@ Claude Code skills that turn your Webflow CMS into an SEO machine — refresh co
 
 # Install skills
 /plugin install getting-started@webflow-seo-copilot
+/plugin install cms-collection-setup@webflow-seo-copilot
 /plugin install refresh-content@webflow-seo-copilot
 /plugin install click-recovery@webflow-seo-copilot
 /plugin install monthly-report@webflow-seo-copilot
@@ -20,6 +21,9 @@ Claude Code skills that turn your Webflow CMS into an SEO machine — refresh co
 # First time? Run setup to capture your brand voice & SEO goals
 # This also installs global activity logging for all Webflow work
 /getting-started
+
+# Set up or audit your blog collection schema
+/cms-collection-setup
 
 # Then use the SEO skills
 /refresh-content https://yoursite.com/blog/article-slug
@@ -87,6 +91,31 @@ One-time setup that captures your business context and saves it to a persistent 
 **Usage:**
 ```
 /getting-started
+```
+
+---
+
+### `/cms-collection-setup`
+
+[View full skill →](plugins/cms-collection-setup/skills/cms-collection-setup/SKILL.md)
+
+Review an existing Webflow CMS collection against the recommended SEO schema — or create a new one from scratch with all the fields that matter for rankings, authority, and sharing.
+
+**What it does:**
+- Audits an existing collection field-by-field against the recommended schema (Core, Content, Authority, Enhancement, Social)
+- Scores coverage per group with an overall SEO schema health score
+- Detects exact matches, alias matches, and type mismatches
+- Flags missing fields with explanations of why each one matters
+- Offers to add missing fields to an existing collection in one step
+- Creates a new collection from scratch with all 20+ recommended fields
+- Handles flexible fields: Author (single ref or multi), Tags (option list or multi-ref), FAQ (multi-ref or inline), Pillar page (external or self-reference)
+- Skips reference fields gracefully when the target collection doesn't exist yet
+
+**Usage:**
+```
+/cms-collection-setup          — guided: choose review or create
+/cms-collection-setup:review   — audit an existing collection
+/cms-collection-setup:create   — build a new collection
 ```
 
 ---
@@ -264,6 +293,8 @@ Post-sale SEO & AEO maturity audit with GSC + Webflow data. Same maturity model 
 | Scenario | Skill |
 |----------|-------|
 | First time setup | `/getting-started` — run once to capture brand voice & goals |
+| New blog collection | `/cms-collection-setup:create` — build a fully optimized schema from scratch |
+| Audit existing collection schema | `/cms-collection-setup:review` — score coverage, find gaps, add missing fields |
 | Pre-sale site assessment (no MCP needed) | `/audit {url}` — client-ready report, proposal-ready |
 | Post-sale engagement baseline | `/audit:deep` — data-backed roadmap with GSC + Webflow |
 | Low CTR, content is fine | `/click-recovery` — fix the pitch |
@@ -282,6 +313,19 @@ By night, I build tools like [AI SEO Copilot](https://webflow.com/apps/detail/ai
 In between, I ride my bikes and play with my kids in Bern, Switzerland.
 
 ## Changelog
+
+### v1.4.0 (2026-03-02)
+
+**`/cms-collection-setup`** (new)
+- Review an existing CMS collection against the recommended SEO schema with per-group coverage scoring
+- Alias matching — detects common field name variations (e.g., `seo-title`, `meta-title` map to Meta SEO Title)
+- Type compatibility check — flags fields that exist but with the wrong type
+- Offer to add missing fields to an existing collection after the audit
+- Create mode builds a new collection with all Core, Content, Authority, Enhancement, and Social fields
+- Handles flexible fields: Author (single Reference or MultiReference), Tags (Option or MultiReference), FAQ (MultiReference or RichText), Pillar page (external or self-reference)
+- Skips reference fields gracefully when target collection doesn't exist yet
+- Progress tracker during field creation
+- Activity log appended after every execution
 
 ### v1.3.1 (2026-02-12)
 
