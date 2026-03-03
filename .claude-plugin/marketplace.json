@@ -85,6 +85,28 @@
       },
       "category": "seo",
       "tags": ["seo", "aeo", "audit", "deep", "maturity", "gsc", "webflow", "indexation", "scorecard", "mcp"]
+    },
+    {
+      "name": "cms-collection-setup",
+      "source": "./plugins/cms-collection-setup",
+      "description": "Review or create a Webflow CMS collection optimized for SEO — audits existing schemas against a recommended field structure, or builds a new collection with the full set of Core, Content, Authority, Enhancement, and Social fields.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Sofian Bettayeb"
+      },
+      "category": "seo",
+      "tags": ["webflow", "seo", "cms", "collection", "schema", "blog", "content-architecture", "mcp"]
+    },
+    {
+      "name": "keywords-opportunity",
+      "source": "./plugins/keywords-opportunity",
+      "description": "Discover keyword opportunities using GSC and Keywords Everywhere — surfaces striking distance keywords already ranking on pages 1-3 and uncovers new keywords worth targeting.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Sofian Bettayeb"
+      },
+      "category": "seo",
+      "tags": ["webflow", "seo", "keywords", "keyword-research", "gsc", "keywords-everywhere", "striking-distance", "mcp"]
     }
   ]
 }
