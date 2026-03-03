@@ -370,7 +370,8 @@ Weekly Report is **read-only**. Other skills execute.
 | Low CTR pages | `/click-recovery` | Fix meta titles and descriptions |
 | Declining content | `/refresh-content [URL]` | Full content refresh |
 | Missing metadata | `/click-recovery` | Quick metadata fixes |
-| Content gaps | Manual / `/refresh-content` | Create or update content |
+| Content gaps | `/keywords-opportunity:discover` | Uncover new keyword topics to target |
+| Striking distance keywords | `/keywords-opportunity:striking` | Page 1-3 rankings with traffic upside |
 | Keyword mismatches | `/click-recovery` | Align titles with search queries |
 | Template SEO issues / schema gaps | `/cms-collection-setup:review` | Audit and add missing fields to existing collections |
 

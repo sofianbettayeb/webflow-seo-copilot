@@ -546,6 +546,9 @@ Log even on early exit.
 |---------|-------|------|
 | Low CTR / bad meta tags | `/click-recovery` | Quick metadata fixes |
 | Outdated content | `/refresh-content {url}` | Full content refresh |
+| Striking distance keywords (positions 4-30) | `/keywords-opportunity:striking` | Prioritized page 1-3 rankings with volume data |
+| Content gaps / new keyword topics | `/keywords-opportunity:discover` | KE-powered new keyword discovery |
+| Full keyword opportunity map | `/keywords-opportunity` | Striking distance + new discovery |
 | CMS schema gaps (missing fields, low schema score) | `/cms-collection-setup:review` | Add missing fields to existing collections |
 | No blog collection yet | `/cms-collection-setup:create` | Build a new collection with the full recommended schema |
 | Missing config | `/getting-started` | First-time setup |

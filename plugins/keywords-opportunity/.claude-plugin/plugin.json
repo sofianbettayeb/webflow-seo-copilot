@@ -1,0 +1,11 @@
+{
+  "name": "keywords-opportunity",
+  "description": "Discover keyword opportunities using GSC and Keywords Everywhere — surfaces striking distance keywords already ranking on pages 1-3 and uncovers new keywords worth targeting.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Sofian Bettayeb"
+  },
+  "homepage": "https://github.com/sofianbettayeb/webflow-seo-copilot",
+  "license": "MIT",
+  "keywords": ["webflow", "seo", "keywords", "keyword-research", "gsc", "google-search-console", "keywords-everywhere", "striking-distance"]
+}

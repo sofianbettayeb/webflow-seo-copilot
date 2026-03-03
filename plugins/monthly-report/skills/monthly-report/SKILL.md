@@ -791,7 +791,9 @@ Monthly Report is **read-only** — it identifies issues and recommends actions.
 | Low CTR pages | `/click-recovery` | Fix meta titles and descriptions |
 | Declining content | `/refresh-content [URL]` | Full content refresh with updated keywords |
 | Missing metadata | `/click-recovery` | Quick metadata fixes |
-| Content gaps | Manual / `/refresh-content` | Create or update content for uncovered queries |
+| Content gaps / new keyword opportunities | `/keywords-opportunity:discover` | Uncover new topics to target with volume + intent data |
+| Striking distance keywords (positions 4-30) | `/keywords-opportunity:striking` | Page 1-3 rankings with traffic upside — prioritized by volume |
+| Full keyword strategy refresh | `/keywords-opportunity` | Striking distance + new discovery in one report |
 | Keyword mismatches | `/click-recovery` | Align titles with actual search queries |
 | CMS schema gaps (missing fields, no keyword/OG/author fields) | `/cms-collection-setup:review` | Score field coverage and add missing fields to existing collections |
 

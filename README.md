@@ -11,6 +11,7 @@ Claude Code skills that turn your Webflow CMS into an SEO machine — refresh co
 # Install skills
 /plugin install getting-started@webflow-seo-copilot
 /plugin install cms-collection-setup@webflow-seo-copilot
+/plugin install keywords-opportunity@webflow-seo-copilot
 /plugin install refresh-content@webflow-seo-copilot
 /plugin install click-recovery@webflow-seo-copilot
 /plugin install monthly-report@webflow-seo-copilot
@@ -26,6 +27,7 @@ Claude Code skills that turn your Webflow CMS into an SEO machine — refresh co
 /cms-collection-setup
 
 # Then use the SEO skills
+/keywords-opportunity          # find striking distance + new keyword opportunities
 /refresh-content https://yoursite.com/blog/article-slug
 /click-recovery
 /monthly-report
@@ -91,6 +93,30 @@ One-time setup that captures your business context and saves it to a persistent 
 **Usage:**
 ```
 /getting-started
+```
+
+---
+
+### `/keywords-opportunity`
+
+[View full skill →](plugins/keywords-opportunity/skills/keywords-opportunity/SKILL.md)
+
+Find keywords worth targeting — both rankings you already have that deserve more traffic, and new topics you're not targeting yet.
+
+**What it does:**
+- Pulls 90 days of GSC query data and classifies rankings into three striking distance tiers (positions 4-10, 11-20, 21-30)
+- Enriches every query with Keywords Everywhere: monthly volume, CPC, competition, trend
+- Identifies content gaps — GSC queries with impressions but no dedicated page
+- Expands into new keywords via Keywords Everywhere related and long-tail suggestions for your top topics
+- Clusters long-tail GSC queries into consolidation candidates (one article for a whole cluster)
+- Scores every opportunity by Impact × Confidence / Effort and routes to the right skill
+- Saves a timestamped report per site, referenced by weekly/monthly reports
+
+**Usage:**
+```
+/keywords-opportunity             — full: striking distance + new discovery
+/keywords-opportunity:striking    — page 1-3 wins only (fastest ROI)
+/keywords-opportunity:discover    — new keywords not yet targeted
 ```
 
 ---
@@ -295,6 +321,9 @@ Post-sale SEO & AEO maturity audit with GSC + Webflow data. Same maturity model 
 | First time setup | `/getting-started` — run once to capture brand voice & goals |
 | New blog collection | `/cms-collection-setup:create` — build a fully optimized schema from scratch |
 | Audit existing collection schema | `/cms-collection-setup:review` — score coverage, find gaps, add missing fields |
+| Find keywords to target (striking distance + new) | `/keywords-opportunity` — full keyword map with volume and action plan |
+| Already ranking page 1-2, want more traffic | `/keywords-opportunity:striking` — fastest ROI, positions 4-20 |
+| Looking for entirely new topics to target | `/keywords-opportunity:discover` — KE expansion + content gap analysis |
 | Pre-sale site assessment (no MCP needed) | `/audit {url}` — client-ready report, proposal-ready |
 | Post-sale engagement baseline | `/audit:deep` — data-backed roadmap with GSC + Webflow |
 | Low CTR, content is fine | `/click-recovery` — fix the pitch |
@@ -313,6 +342,20 @@ By night, I build tools like [AI SEO Copilot](https://webflow.com/apps/detail/ai
 In between, I ride my bikes and play with my kids in Bern, Switzerland.
 
 ## Changelog
+
+### v1.5.0 (2026-03-03)
+
+**`/keywords-opportunity`** (new)
+- Striking distance analysis: positions 4-30 classified into Tier A (page 1, not top 3), Tier B (page 2), Tier C (page 3)
+- Keywords Everywhere enrichment: volume, CPC, competition, trend for every ranked query
+- Content gap detection: GSC queries with impressions but position > 30 and no dedicated page
+- KE expansion: related and long-tail keyword suggestions for top-ranking topics
+- Long-tail cluster consolidation: groups of GSC queries that could be served by one article
+- ICE scoring (Impact × Confidence / Effort) with priority buckets (must pursue / high value / worth tracking)
+- Decision guide mapping each finding to the right execution skill
+- Saves timestamped report per site: `.claude/reports/{domain}/keywords-opportunity-YYYY-MM-DD.md`
+- Modes: full (striking + discover), `:striking` (page 1-3 wins), `:discover` (new topics only)
+- Cadence guidance: re-run every 4-6 weeks, after `/refresh-content` runs wait 3-4 weeks to measure
 
 ### v1.4.0 (2026-03-02)
 
