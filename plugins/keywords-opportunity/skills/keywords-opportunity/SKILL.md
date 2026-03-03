@@ -1,11 +1,11 @@
 ---
 name: keywords-opportunity
-version: "1.0"
+version: "1.1"
 description: |
   Discover keyword opportunities using GSC + Keywords Everywhere. Surfaces striking distance keywords already ranking on pages 1-3 and uncovers new keywords worth targeting through content creation or expansion.
   Triggers: keyword opportunities, keyword research, keyword gaps, striking distance, new keywords, rank opportunities, keyword discovery, find keywords.
   Requires: Google Search Console MCP server. Optional but strongly recommended: Keywords Everywhere MCP server.
-  Workflow: Discover → Fetch → Enrich → Analyze → Score → Report → Save.
+  Workflow: Discover → Fetch → Clean → Enrich → Analyze → Score → Report → Save.
   Modes: /keywords-opportunity (full: striking distance + new discovery), /keywords-opportunity:striking (page 1-3 wins only), /keywords-opportunity:discover (new keywords only).
 ---
 
@@ -35,7 +35,7 @@ This skill surfaces both. It's read-only — it points you to `/refresh-content`
 
 - **Required**: [Google Search Console MCP server](https://github.com/sofianbettayeb/gsc-mcp-server)
 - **Strongly recommended**: [Keywords Everywhere MCP server](https://github.com/hithereiamaliff/mcp-keywords-everywhere) — without it, volume data is unavailable and discovery is limited to GSC impressions only
-- **Optional**: [Webflow MCP server](https://developers.webflow.com/mcp/reference/overview) — used to cross-reference existing pages for gap detection
+- **Optional**: [Webflow MCP server](https://developers.webflow.com/mcp/reference/overview) — used to cross-reference existing pages for gap detection and diagnosis
 
 ---
 
@@ -52,7 +52,7 @@ This skill surfaces both. It's read-only — it points you to `/refresh-content`
 ## Workflow Overview
 
 ```
-DISCOVER → FETCH → ENRICH → ANALYZE → SCORE → REPORT → SAVE
+DISCOVER → FETCH → CLEAN → ENRICH → ANALYZE → SCORE → REPORT → SAVE
 ```
 
 ---
@@ -71,14 +71,14 @@ At the start of execution, check if `.claude/seo-copilot-config.json` exists:
 - Proceed, but add a prominent warning to the report header:
   ```
   ⚠️ Keywords Everywhere not connected.
-  Search volume and CPC data unavailable — opportunities are ranked by GSC impressions only.
-  For volume-backed prioritization, connect KE: https://github.com/hithereiamaliff/mcp-keywords-everywhere
+  Volume data unavailable — opportunities ranked by GSC impressions only.
+  Connect KE for volume-backed prioritization: https://github.com/hithereiamaliff/mcp-keywords-everywhere
   ```
-- In discovery mode without KE, limit new opportunity output to GSC-derived content gaps only. Skip the KE expansion section.
+- In discovery mode without KE: limit new opportunity output to GSC-derived content gaps only. Skip the KE expansion section.
 
 ⚡ GUARD — **Webflow MCP unavailable:**
 - Continue without page cross-reference.
-- Note: "Webflow MCP not connected — skipping page-to-keyword mapping. Gap detection based on GSC query patterns only."
+- Note: "Webflow MCP not connected — skipping keyword-to-page diagnosis. Gap detection based on GSC query patterns only."
 
 ⚡ GUARD — **User requests abort:**
 - Confirm exit. Output any partial results already computed.
@@ -101,15 +101,16 @@ Use GSC to list available properties. If multiple: ask user to select. Set `{dom
 ### 0.3 Review Activity Log
 
 Check `.claude/reports/{domain}/activity-log.md`:
-- If it exists: read the last 10 entries. Surface:
-  - Recent keyword opportunity runs (if run within 30 days → warn: "Ran `/keywords-opportunity` on [date]. Rankings shift slowly — consider waiting 4+ weeks between full runs.")
-  - Recent `/refresh-content` runs (note which pages were optimized — these may now rank higher)
-  - Recent `/click-recovery` runs (those pages had CTR fixed — check if position also improved)
-- If not found: proceed silently
+- If it exists: read all entries and build a **resolved-issues set** — a list of URLs, keywords, or issue types that were logged as fixed (e.g., "Fixed cannibalization on /webflow-seo", "Refreshed /best-plugins"). This set is used in Phase 3 to suppress false positives.
+- Surface a brief summary of recent activity:
+  - If `/keywords-opportunity` was run within 30 days → warn: "Ran `/keywords-opportunity` on [date]. Rankings shift slowly — consider waiting 4+ weeks between full runs."
+  - Note recent `/refresh-content` runs (pages optimized may now rank higher)
+  - Note recent `/click-recovery` runs (CTR fixes — check if position also improved)
+- If not found: proceed silently (resolved-issues set is empty)
 
 ### 0.4 Load Config
 
-Load `.claude/seo-copilot-config.json` if it exists. Extract primary keywords and competitors for use in Phase 2.
+Load `.claude/seo-copilot-config.json` if it exists. Extract primary keywords and competitors.
 
 ### 0.5 Mode Confirmation
 
@@ -133,9 +134,8 @@ Fetch two datasets:
 **Query-level data** (the primary dataset):
 - All queries with at least 1 impression in the last 90 days
 - Fields: query, page, clicks, impressions, CTR, average position
-- This is the raw material for both striking distance and gap analysis
 
-**Page-level data** (for context):
+**Page-level data** (for context and 0-click detection):
 - All pages with impressions > 10
 - Fields: page, clicks, impressions, CTR, average position
 
@@ -149,141 +149,272 @@ Fetch all published pages and CMS items:
 - Static pages: path, SEO title, meta description
 - CMS items (all collections): name, slug, meta title, meta description
 
-Build a normalized URL list: `{path} → {seo title or name}`. Used in Phase 3 for gap detection.
+Build a normalized URL→title map. Used in Phase 3 for gap detection and per-page diagnosis.
+
+---
+
+## Phase 1.3: DATA CLEANING
+
+**Run before enrichment.** Clean the raw GSC query dataset to remove noise that would pollute scoring.
+
+### Anomaly Filters
+
+Remove queries matching any of the following patterns:
+
+**Tracking ID leaks** — numeric or alphanumeric prefix followed by a colon or comma:
+- Pattern: `^\d+[:\,]` (e.g., "5603: keywords, to, track", "6473: track rankings of keywords")
+- These are instrumentation artifacts, not real search queries
+
+**Percent-encoded characters** — URL-encoded sequences in queries:
+- Pattern: `%[0-9A-Fa-f]{2}` (e.g., "webflow%20seo", "how%20to%20rank")
+- These are broken URL fragments, not actual user queries
+
+**Quoted anomalies** — queries that appear to be JSON fragments, code snippets, or structured data leaking into GSC:
+- Pattern: starts with `{`, `[`, `"`, or contains `=>`, `!=`, `&&`
+
+**Excessive punctuation** — queries with 3+ commas or semicolons (likely structured data):
+- Pattern: more than 2 commas, or contains `;`
+
+**Log all filtered queries:**
+After cleaning, note in the report header:
+```
+⚠️ [N] queries removed during data cleaning (tracking IDs, encoded characters, anomalous patterns).
+```
+Only log if N > 0. Don't list the filtered queries in the report — just the count.
 
 ---
 
 ## Phase 2: ENRICH WITH KEYWORDS EVERYWHERE
 
-**Run this phase before analysis.** Enrichment transforms raw GSC data into opportunity scores.
+**Run this phase before analysis.** Enrichment transforms raw GSC data into scoreable opportunities.
 
-### 2.1 Striking Distance Enrichment
+### 2.1 Volume Source Priority Rule
 
-For all GSC queries with average position 1–30:
-- Batch fetch from KE: monthly search volume, CPC, competition score, trend (up/flat/down)
-- Store alongside GSC data: `{query, position, impressions, CTR, volume, CPC, competition, trend}`
+**GSC impressions are ground truth. KE volume is a supplement.**
+
+Apply this rule to every query before scoring:
+
+```
+if KE_volume > 0:
+    use_volume = KE_volume          # KE provides sampled market volume
+    volume_source = "KE"
+elif GSC_impressions_90d >= 50:
+    use_volume = GSC_impressions_90d / 3   # rough monthly proxy (90d ÷ 3)
+    volume_source = "GSC (KE=0)"    # flag: KE says 0 but GSC confirms real demand
+else:
+    use_volume = 0
+    volume_source = "none"
+    # consider filtering from striking distance unless impressions ≥ 200
+```
+
+When `volume_source = "GSC (KE=0)"`, label the query in the report as **"GSC-confirmed"** — it has real search demand that KE's sample missed. Treat it as equivalent to a low-volume KE result (50–100/month). Do NOT discard it or label it "emerging" and move on.
+
+Examples of this rule in practice:
+- "llm citation monitoring": KE=0, GSC impressions=140 → use_volume = 47/mo, flag as GSC-confirmed
+- "webflow seo plugin": KE=320, GSC impressions=900 → use KE volume = 320/mo
+
+### 2.2 Striking Distance Enrichment
+
+For all cleaned GSC queries with average position 1–30:
+- Batch fetch from KE: monthly search volume, CPC, competition score, 12-month trend data
+- Apply the Volume Source Priority Rule (2.1) to each query
+- Store: `{query, position, impressions, CTR, use_volume, volume_source, CPC, competition, trend_direction, trend_pct}`
+
+**Trend direction classification** (required for every query — not optional):
+```
+if trend shows > 15% growth over last 6 months:  trend_direction = "↑ rising"
+elif trend shows > 15% decline over last 6 months: trend_direction = "↓ declining"
+else:                                              trend_direction = "→ flat"
+```
+Store trend_direction on every query. If KE returns no trend data for a query (unavailable), default to "→ unknown".
 
 ⚡ GUARD — **KE rate limits or API errors:**
-- If a batch fails: retry once with smaller batch (50 queries). If it fails again: proceed with partial enrichment, note affected queries in report.
+- Retry once with smaller batch (50 queries). If it fails again: proceed with partial enrichment, apply Volume Source Priority Rule for failed queries using GSC impressions.
 
-### 2.2 Discovery Expansion
+### 2.3 Discovery Expansion
 
 For the top 20 topics by GSC impressions (group by primary keyword of each page):
 - Fetch KE related keywords for each topic
 - Fetch KE long-tail suggestions
-- Store: `{related_keyword, topic_source, volume, CPC, competition, trend}`
+- Store: `{related_keyword, topic_source, volume, CPC, competition, trend_direction}`
 
 Filter out:
 - Keywords already in the GSC dataset with position ≤ 30 (already captured in striking distance)
 - Branded queries (queries containing `business.name` from config or site domain)
-- Volume < 50/month (too small to prioritize unless CPC > $5)
-- Declining trend > 30% YoY (dying queries)
+- Volume < 50/month (too small unless CPC > $5)
+- Declining trend ↓ > 30% YoY
 
-### 2.3 Compute Benchmarks
+### 2.4 Compute Benchmarks
 
 From the enriched dataset, compute:
 - Site average CTR by position bracket (1-3, 4-10, 11-20)
+- Total clicks across all pages (used for 0-click detection)
+- Total impressions in the striking distance window (positions 4-30)
 - Median monthly volume across all enriched queries
-- Total impression volume in the striking distance window (positions 4-30)
 
 ---
 
 ## Phase 3: ANALYZE
 
-### 3.1 Striking Distance Classification
+### 3.1 Site-Wide CTR Signal Detection
 
-Classify all queries with average position 1–30 into tiers:
+**Run before any other analysis.** Compute:
 
-| Tier | Position Range | Label | Effort | Strategy |
-|------|---------------|-------|--------|----------|
-| A | 4–10 | Page 1 — not top 3 | Low | CTR fix or minor content tweak |
-| B | 11–20 | Page 2 | Medium | Content refresh to hit page 1 |
-| C | 21–30 | Page 3 | High | Significant content work or new dedicated page |
+```
+total_clicks    = sum of clicks across all GSC pages
+total_impressions = sum of impressions across all GSC pages
+site_ctr        = total_clicks / total_impressions
+```
 
-**Additional filters for each tier:**
+⚡ GUARD — **Zero-click or near-zero-click site:**
+
+If `total_clicks < 10` AND `total_impressions > 500`:
+- Set flag: `ctr_crisis = True`
+- This is a **defining context** for the entire report — the site has search visibility but no traffic
+- This changes the framing: the problem isn't just rankings, it's CTR
+- The action plan must include `/click-recovery` as a parallel priority alongside `/refresh-content`
+- This flag surfaces at the very top of the report — not buried at the bottom
+
+### 3.2 Page-Level Consolidation
+
+**The page is the unit of action — not the individual query.**
+
+Group all cleaned, enriched queries by the ranking page URL:
+
+For each page:
+```
+page_total_impressions = sum of impressions across all queries ranking from this page
+page_top_position      = min(avg_position) across all queries for this page
+page_total_clicks      = sum of clicks across all queries for this page
+page_queries           = list of all queries, sorted by use_volume desc
+page_tier              = tier of the highest-scoring query for this page (A, B, or C)
+page_priority_score    = highest priority score across all queries for this page
+```
+
+**Why this matters:** A page ranking for 4 queries all in striking distance has 4× the leverage of a page ranking for 1 query. The combined impressions signal is stronger than any single query. Group before scoring.
+
+For each page, select up to 5 representative queries to display (sorted by use_volume desc). Show combined impressions and total queries in the page header.
+
+### 3.3 Per-Page Keyword-to-Title Diagnosis
+
+For each page in the striking distance set (Webflow MCP required for full diagnosis):
+
+1. Fetch the page's current SEO title and meta description (from Webflow inventory or GSC page title)
+2. For the top 3 queries by volume on this page, check:
+   - Is the query (or its root phrase) present in the SEO title?
+   - Is the query (or its root phrase) present in the meta description?
+3. Classify:
+   - **Keyword absent from title** → CTR issue + ranking signal issue → `/click-recovery` first
+   - **Keyword in title, CTR low** → pitch problem → `/click-recovery`
+   - **Keyword in title and description, CTR ok, ranking stuck** → content depth → `/refresh-content`
+   - **Multiple keywords, all absent from title** → significant on-page gap → `/click-recovery` then `/refresh-content`
+
+Store diagnosis per page. This feeds the per-action-item diagnostic in the report.
+
+### 3.4 Activity Log Cross-Reference
+
+Before flagging any issue (cannibalization, schema gap, missing field, etc.):
+
+Check the resolved-issues set built from the activity log (Phase 0.3):
+- If a URL or keyword cluster appears in the resolved-issues set within the last 90 days → skip the flag and note "(previously addressed — verify still accurate)" instead
+- If the log shows `/refresh-content` was run on a specific page within 30 days → lower confidence on striking distance findings for that page (the refresh may not be indexed yet)
+
+This prevents surfacing issues that were already fixed in prior sessions.
+
+### 3.5 Tier Classification
+
+After grouping by page (3.2), classify each page into tiers based on its best-ranking query's position:
+
+| Tier | Position of best query | Label | Effort |
+|------|----------------------|-------|--------|
+| A | 4–10 | Page 1 — not top 3 | Low |
+| B | 11–20 | Page 2 | Medium |
+| C | 21–30 | Page 3 | High |
+
+**Volume/impression thresholds (page-level):**
 
 Tier A:
-- Keep if volume ≥ 100/month OR impressions ≥ 200 in 90 days
-- Sort by: volume × (1 - CTR) — queries with high volume and low CTR are the biggest mismatch
+- Keep page if: any query has use_volume ≥ 100/mo OR page_total_impressions ≥ 200
 
 Tier B:
-- Keep if volume ≥ 200/month OR impressions ≥ 500 in 90 days
-- Sort by: volume × position_gap (20 - avg_position) — closer to page 1 = higher priority
+- Keep page if: any query has use_volume ≥ 200/mo OR page_total_impressions ≥ 400
 
 Tier C:
-- Keep if volume ≥ 500/month — high bar since effort is significant
-- Sort by: volume × CPC — prioritize commercially valuable queries
+- Keep page if: any query has use_volume ≥ 500/mo (high bar — significant effort)
 
-**Deduplication**: if a page ranks for multiple queries in the same tier, group them under that page. Show top 3 queries per page.
+Sort pages within each tier by `page_total_impressions` descending — the most-exposed pages appear first.
 
-### 3.2 Map Queries to Pages
+### 3.6 Quick Wins Selection
 
-For each query in the striking distance tiers:
-1. Use the GSC `page` field to identify the ranking URL
-2. Cross-reference with Webflow page inventory to get current SEO title and meta description
-3. Compute: is the primary query in the current title? In the meta description? In the H1 (infer from page name)?
+From the full striking distance set, auto-select 2–3 quick wins using:
 
-Flag:
-- **Keyword absent from title** → high-impact fix
-- **Keyword absent from meta description** → medium fix
-- **Keyword present in both** → content depth issue → `/refresh-content`
+```
+quick_win_score = page_total_impressions × (1 / page_top_position) × volume_confidence_factor
+```
 
-### 3.3 New Keyword Discovery
+Where:
+- `volume_confidence_factor` = 1.5 if KE volume confirmed, 1.0 if GSC-confirmed, 0.5 if no volume data
+- Rank all pages by quick_win_score
+- Take top 2–3 that are NOT already in the resolved-issues set
+
+These surface at the very top of the report before any tier tables.
+
+### 3.7 New Keyword Discovery
 
 **Source A — GSC content gaps:**
-Queries that appear in GSC with impressions > 50 AND average position > 30:
-- These queries are visible to Google but you don't have a strong page for them
+From the cleaned dataset, queries with average position > 30 AND impressions ≥ 50:
+- Apply Volume Source Priority Rule — GSC impressions > 50 = real demand
 - Group by semantic topic (cluster queries sharing 2+ words or intent)
-- For each cluster: sum total impressions, take the highest-volume query as the "primary" keyword
+- For each cluster: sum total impressions, take the highest-use_volume query as the "primary" keyword
+- Cross-reference with resolved-issues set — skip clusters already addressed
 
 **Source B — KE expansion keywords (if KE available):**
-From Phase 2.2, filter to:
+From Phase 2.3, filter to:
 - Volume ≥ 200/month
 - Not already in GSC dataset (positions 1–30)
 - Competition ≤ 0.7 (attainable)
-- Group by source topic (which existing page/topic spawned this suggestion)
+- Trend ↑ or → (exclude ↓ declining)
+- Group by source topic
 
 **Source C — Long-tail cluster consolidation:**
-From GSC, identify clusters of 3+ queries that:
-- Share a root phrase (e.g., "webflow seo", "webflow seo tips", "webflow seo checklist")
+From GSC, clusters of 3+ queries that:
+- Share a root phrase
 - All rank position > 15
 - Total cluster impressions > 200
 
-Flag these as candidates for a single consolidated article (or expansion of an existing thin page).
+### 3.8 Opportunity Scoring
 
-### 3.4 Opportunity Scoring
-
-Score every opportunity using the same ICE model used across other skills:
-
-**Striking distance — opportunity score:**
+**Striking distance — page-level priority score:**
 ```
-volume_score    = min(volume / 500, 5)          # capped at 5
-position_score  = (30 - avg_position) / 5       # closer to page 1 = higher
-ctr_gap         = expected_ctr(position) - actual_ctr
-impact          = round((volume_score + position_score + ctr_gap * 10) / 3, 1)
-confidence      = 4 if volume > 0 else 2        # lower without KE data
-effort          = tier_effort[tier]             # A=1, B=2, C=3
+volume_score    = min(page_max_volume / 500, 5)        # highest-volume query for this page
+position_score  = (30 - page_top_position) / 5         # best position across page queries
+impression_score = min(page_total_impressions / 200, 5) # combined exposure signal
+trend_modifier  = 1.2 if any query ↑ rising else (0.8 if all queries ↓ declining else 1.0)
+impact          = round(((volume_score + position_score + impression_score) / 3) × trend_modifier, 1)
+confidence      = 4 if KE_volume > 0 else (3 if GSC_confirmed else 2)
+effort          = tier_effort[tier]                    # A=1, B=2, C=3
 priority        = (impact × confidence) / effort
 ```
 
-Expected CTR by position:
-- Position 1: 28%, 2: 15%, 3: 11%, 4: 8%, 5: 7%, 6-10: 3-5%, 11-20: 1-2%
+Expected CTR by position (for gap calculation):
+- Position 1: 28%, 2: 15%, 3: 11%, 4: 8%, 5: 7%, 6-10: ~4%, 11-20: ~1.5%
 
 **New discovery — opportunity score:**
 ```
-volume_score  = min(volume / 1000, 5)
-intent_score  = min(CPC / 2, 5) if CPC > 0 else 2   # CPC as intent proxy
-gap_score     = 5 if no page exists else 3            # full gap vs thin coverage
-impact        = round((volume_score + intent_score + gap_score) / 3, 1)
-confidence    = 4 if from_KE else 2                   # KE-sourced = higher confidence
-effort        = 2 if existing_page else 4             # expand vs create new
+volume_score  = min(use_volume / 1000, 5)
+intent_score  = min(CPC / 2, 5) if CPC > 0 else 2
+gap_score     = 5 if no page exists else 3
+trend_modifier = 1.2 if ↑ rising else (0.8 if ↓ declining else 1.0)
+impact        = round(((volume_score + intent_score + gap_score) / 3) × trend_modifier, 1)
+confidence    = 4 if from_KE else (3 if GSC_confirmed else 2)
+effort        = 2 if existing_page else 4
 priority      = (impact × confidence) / effort
 ```
 
-Priority buckets (same as other skills):
-- **Must pursue** (priority ≥ 8.0): act now
-- **High value** (priority ≥ 4.0): next sprint
-- **Worth tracking** (priority ≥ 1.5): backlog
+Priority buckets:
+- **Must pursue** (priority ≥ 8.0)
+- **High value** (priority ≥ 4.0)
+- **Worth tracking** (priority ≥ 1.5)
 
 ---
 
@@ -297,152 +428,205 @@ Priority buckets (same as other skills):
 **Date:** YYYY-MM-DD
 **Period analyzed:** Last 90 days
 **Data sources:**
-- ✅ GSC: Connected — [X] queries, [Y] pages, [Z] total impressions
-- ✅ Keywords Everywhere: Connected — volume enriched [or ⚠️ Not connected]
-- ✅ Webflow: Connected — [N] pages mapped [or ⚠️ Not connected — no page cross-reference]
+- ✅ GSC: [X] queries analyzed, [Y] pages, [Z] total impressions, [W] total clicks
+- ✅ Keywords Everywhere: Volume enriched for [N] queries [or ⚠️ Not connected — GSC impressions used as volume proxy]
+- ✅ Webflow: [N] pages mapped for diagnosis [or ⚠️ Not connected — diagnosis limited]
 - ✅ SEO Copilot Config: Loaded [or ℹ️ Not found]
+- [N] queries removed during data cleaning (tracking IDs, anomalous patterns) [only if N > 0]
 
-**Summary:**
-- Striking distance: [N] keywords across [M] pages — estimated +[X] clicks/month if optimized
-- New opportunities: [N] keywords — [X] total monthly searches addressable
+**Snapshot:**
+- Striking distance: [N] pages across Tiers A/B/C — [X] combined impressions in window
+- New opportunities: [N] keyword clusters — ~[X] monthly searches addressable
 - Action plan: [N] must-pursue, [N] high-value, [N] worth tracking
+```
+
+⚡ **If `ctr_crisis = True`**, insert immediately after the header — before anything else:
+
+```
+---
+🚨 SITE-WIDE CTR ISSUE
+
+This site has [Z] impressions but only [W] clicks ([X]% CTR) over 90 days.
+Normal CTR for page-1 rankings is 3–8%. This signals a structural title/description problem
+affecting nearly all pages — not just isolated keyword gaps.
+
+**This changes the priority of everything below.**
+Before optimizing for rankings, fix CTR:
+→ Run `/click-recovery` first to update meta titles and descriptions across high-impression pages.
+→ Then use this report's striking distance findings to drive content improvements.
+
+Striking distance analysis still applies — but `/click-recovery` should run in parallel.
+---
 ```
 
 ---
 
-### 4.2 Part 1 — Striking Distance
+### 4.2 Quick Wins (Always First)
 
-**Intro line**: "These keywords already rank on pages 1–3. You're earning impressions but leaving clicks on the table. Ranked by traffic potential."
+Before any tier tables, show the 2–3 highest-confidence, highest-exposure opportunities. These are pre-decided — the reader doesn't need to parse the full report to find the best move.
+
+```
+## ⚡ Quick Wins — Do These First
+
+Selected by: highest combined impressions + lowest position + confirmed demand.
+
+### 1. {Page title or URL}
+**Page**: {URL}
+**Combined impressions**: {N} across {K} queries
+**Best position**: {pos} for "{top query}" ({volume}/mo {↑/→/↓})
+**Diagnosis**: {one-line reason — e.g., "Primary keyword absent from title" / "Ranking stuck at position 7 despite matching title — content depth issue" / "4 related queries all ranking 12-18, single refresh could consolidate"}
+**Action**: Run `/refresh-content {URL}` [or `/click-recovery`]
+**Expected lift**: +{X} clicks/month (conservative estimate)
+
+### 2. {Page title or URL}
+[same format]
+
+### 3. {Page title or URL}
+[same format]
+```
+
+---
+
+### 4.3 Part 1 — Striking Distance
+
+**Intro line**: "These pages already rank on pages 1–3. Sorted by combined impressions — highest exposure first."
 
 #### Tier A — Page 1, Positions 4–10 (Fastest ROI)
 
-For each page with Tier A keywords (sorted by priority score descending):
+For each page in Tier A, sorted by `page_total_impressions` descending:
 
 ```
 ### {Page Title or URL path}
-**Current ranking URL**: {URL}
+**URL**: {URL}
 **SEO title**: "{current title}"
+**Combined impressions**: {N} ({K} queries ranking from this page)
+**Diagnosis**: {one-line from Phase 3.3 — e.g., "Primary keyword not in title", "Keyword present but CTR is 0.8% vs expected 5% at position 6 — title hook issue", "All keywords in title, ranking stuck — content depth problem"}
 
-| Query | Position | Volume/mo | CTR | Expected CTR | Gap | Trend |
-|-------|----------|-----------|-----|--------------|-----|-------|
-| {query} | {pos} | {vol} | {ctr}% | {expected}% | {gap}% | ↑/→/↓ |
-| ...   |          |           |     |              |     |       |
+| Query | Position | Volume/mo | CTR | Expected CTR | Gap | Trend | Source |
+|-------|----------|-----------|-----|--------------|-----|-------|--------|
+| {query} | {pos} | {vol} | {ctr}% | {exp}% | {gap}% | ↑/→/↓ | KE / GSC-confirmed |
+| ...   |          |           |     |              |     |       |        |
 
-**Diagnosis**: [Is the keyword in the title? In the meta description? In the content?]
-
-**Recommended action**: [one of:]
-- "Keyword absent from title → run `/click-recovery` to update meta title + description"
-- "Keyword in title, CTR still low → title may need a stronger hook. Run `/click-recovery`."
-- "Keyword present in meta tags, ranking stuck → content depth issue. Run `/refresh-content {URL}`."
+**Action**: [one of:]
+- "Keyword absent from title → `/click-recovery`"
+- "Keyword in title, CTR low → `/click-recovery` (stronger hook)"
+- "Keyword + CTR ok, ranking stuck → `/refresh-content {URL}` (content depth)"
+- "CTR crisis + keyword gap → `/click-recovery` first, then `/refresh-content {URL}`"
 
 **Priority**: [Must pursue / High value / Worth tracking] (Score: {priority})
-**Estimated impact**: +[X] clicks/month (volume × CTR improvement)
+**Estimated impact**: +[X] clicks/month
 ```
 
 #### Tier B — Page 2, Positions 11–20 (High Potential)
 
-Summary table + top opportunities in full format:
+Summary table for all pages + full format for top 5 by priority:
 
 ```
-| Page | Top Query | Volume/mo | Position | Priority | Action |
-|------|-----------|-----------|----------|----------|--------|
-| {title} | {query} | {vol} | {pos} | {score} | `/refresh-content {url}` |
+| Page | Queries | Combined Impr. | Best Position | Top Query | Volume/mo | Trend | Priority | Action |
+|------|---------|---------------|--------------|-----------|-----------|-------|----------|--------|
+| {title} | {K} | {N} | {pos} | {query} | {vol} | ↑/→/↓ | {score} | `/refresh-content {url}` |
 ```
 
-For top 5 by priority: full format (same as Tier A above).
+Full format for top 5 (same structure as Tier A).
 
 #### Tier C — Page 3, Positions 21–30 (Worth Pursuing)
 
-Summary table only — these need significant work:
+Summary table only:
 
 ```
-| Page | Top Query | Volume/mo | Position | CPC | Priority |
-|------|-----------|-----------|----------|-----|----------|
+| Page | Queries | Combined Impr. | Best Position | Top Query | Volume/mo | Trend | Priority |
+|------|---------|---------------|--------------|-----------|-----------|-------|----------|
 ```
 
-Add note: "These keywords rank on page 3. To move them, run `/refresh-content {url}` for a full content refresh targeting these queries."
+Note: "These pages rank on page 3. High-volume keywords here warrant a full content refresh. Run `/refresh-content {url}` targeting the listed queries."
 
 ---
 
-### 4.3 Part 2 — New Keyword Opportunities
+### 4.4 Part 2 — New Keyword Opportunities
 
-**Intro line**: "Topics you're not currently targeting — or are barely visible for. Ranked by traffic potential and attainability."
+**Intro line**: "Topics you're not currently ranking for — or barely visible for. Ranked by traffic potential and attainability."
 
 #### Content Gaps (GSC-derived)
 
-Queries you appear for in Google but don't have a strong page for (position > 30):
-
 ```
-| Keyword Cluster | Top Query | Impressions/90d | Volume/mo | Intent | Action |
-|-----------------|-----------|-----------------|-----------|--------|--------|
-| {cluster name} | {query} | {impressions} | {vol} | info/commercial | Create new article |
-| ... | | | | | Expand existing page |
+| Keyword Cluster | Queries | Total Impr/90d | Est. Volume/mo | Trend | Intent | Action |
+|-----------------|---------|---------------|----------------|-------|--------|--------|
+| {cluster} | {K} | {N} | {vol} | ↑/→/↓ | info/commercial | Create new article / Expand {URL} |
 ```
 
-For each cluster with priority ≥ 8.0: show full cluster (all queries in the group) and a recommended article angle.
+For each cluster with priority ≥ 8.0: show all queries in the cluster + a recommended article angle.
+
+Volume column: show GSC estimate (impressions ÷ 3) with label "GSC-confirmed" if KE returned 0.
 
 #### Expansion Keywords (Keywords Everywhere)
-
-New keywords from KE related to your existing top topics — not yet in your GSC data:
 
 ```
 | Keyword | Volume/mo | CPC | Competition | Source Topic | Trend | Action |
 |---------|-----------|-----|-------------|--------------|-------|--------|
-| {keyword} | {vol} | ${cpc} | {0.0-1.0} | {topic} | ↑/→/↓ | Create / Expand |
+| {keyword} | {vol} | ${cpc} | {0.0-1.0} | {topic} | ↑/→/↓ | Create / Expand {URL} |
 ```
 
-Group by source topic. For each group, note: "You already rank for '{source topic}' — these are related keywords the same audience searches."
+Group by source topic. Note: "You already rank for '{source topic}' — these are related queries the same audience uses."
 
 #### Long-tail Cluster Consolidation
-
-Clusters of GSC queries that could be served by one consolidated article:
 
 ```
 ### Cluster: "{root phrase}"
 Queries in cluster:
-- "{query 1}" — position {X}, {Y} impressions
-- "{query 2}" — position {X}, {Y} impressions
-- "{query 3}" — position {X}, {Y} impressions
-Combined monthly searches: ~{Z} (estimated from KE)
-Recommendation: {Create a dedicated article / Expand existing page at {URL} to cover all these queries}
+- "{query 1}" — position {X}, {Y} impressions, {↑/→/↓}
+- "{query 2}" — position {X}, {Y} impressions, {↑/→/↓}
+- "{query 3}" — position {X}, {Y} impressions, {↑/→/↓}
+Combined est. monthly searches: ~{Z}
+Recommendation: {Create a dedicated article / Expand existing page at {URL}}
 ```
 
 ---
 
-### 4.4 Action Plan
-
-Consolidated action plan, sorted by priority score:
+### 4.5 Action Plan
 
 ```
 ## Action Plan
 
 ### Must Pursue
 
-| # | Keyword / Cluster | Volume/mo | Type | Action | Skill |
-|---|-------------------|-----------|------|--------|-------|
-| 1 | {keyword} | {vol} | Striking / New | {brief action} | `/refresh-content {url}` or `/click-recovery` |
+| # | Page / Cluster | Impr. | Volume/mo | Trend | Diagnosis | Action | Skill |
+|---|---------------|-------|-----------|-------|-----------|--------|-------|
+| 1 | {page or cluster} | {N} | {vol} | ↑/→/↓ | {one-line reason} | {what to do} | `/refresh-content {url}` |
 
 ### High Value
 
-[Same table format — condensed]
+[same table]
 
 ### Worth Tracking
 
-[Same table format — condensed]
+[same table — condensed, no diagnosis column needed]
+```
+
+**Diagnosis column** must be filled for every Must Pursue and High Value row. One line, no hedging. Examples:
+- "Primary keyword missing from title — CTR is 0.4× expected"
+- "Content thin relative to competitors ranking above — needs depth"
+- "4 related queries split across 2 pages — consolidate into one"
+- "GSC shows 140 impressions but 0 clicks — title likely mismatches intent"
+- "Ranking position 8 for [query] with no mention in meta description"
 
 ---
 
-## Decision Guide
+### 4.6 Decision Guide
 
+```
 | Situation | Right action | Skill |
 |-----------|-------------|-------|
-| Keyword in title, rank 4-10, CTR low | Fix the pitch — update title & description | `/click-recovery` |
-| Keyword in title, rank 4-10, CTR ok | Strengthen content depth for query | `/refresh-content {url}` |
-| Keyword not in title, rank 4-20 | Add keyword to title + strengthen content | `/click-recovery` then `/refresh-content` |
+| Site-wide CTR < 1% with impressions | Fix titles and descriptions site-wide first | `/click-recovery` |
+| Keyword absent from title, rank 4-20 | Add keyword to title | `/click-recovery` |
+| Keyword in title, CTR still low | Stronger hook needed | `/click-recovery` |
+| Keyword + CTR ok, rank stuck 4-20 | Strengthen content depth | `/refresh-content {url}` |
 | Keyword rank 21-30, high volume | Full content refresh targeting this query | `/refresh-content {url}` |
-| No page for keyword cluster (gap) | Create new article targeting the cluster | New content (manual or future skill) |
-| KE expansion keyword, no page | Create new article | New content |
-| Long-tail cluster, weak existing page | Expand existing page to cover all queries | `/refresh-content {url}` |
+| Multiple queries, same page, all rank 10-20 | Consolidated refresh to cover all | `/refresh-content {url}` |
+| GSC-confirmed keyword (KE=0), impressions > 50 | Real demand — treat as low-volume opportunity | `/refresh-content {url}` |
+| No page for keyword cluster | Create new article | New content |
+| Long-tail cluster, thin existing page | Expand existing page | `/refresh-content {url}` |
+| ↑ Rising keyword, mid-position | Prioritize over flat keywords — momentum is real | Act now |
+| ↓ Declining keyword | Deprioritize unless extremely high volume | Defer |
 ```
 
 ---
@@ -450,9 +634,8 @@ Consolidated action plan, sorted by priority score:
 ## Phase 5: SAVE
 
 Save two files:
-
 - `.claude/reports/{domain}/keywords-opportunity-YYYY-MM-DD.md` — full timestamped report
-- `.claude/reports/{domain}/latest-keywords-opportunity.md` — overwrite on each run (other skills can reference this)
+- `.claude/reports/{domain}/latest-keywords-opportunity.md` — overwrite on each run
 
 Create directories if needed.
 
@@ -460,41 +643,45 @@ After saving:
 ```
 Report saved to .claude/reports/{domain}/keywords-opportunity-YYYY-MM-DD.md
 
-Top 3 actions:
-1. [highest priority action]
-2. [second highest]
-3. [third highest]
+⚡ Quick wins:
+1. [top quick win — page + action]
+2. [second quick win]
+3. [third quick win]
+
+[If ctr_crisis]: 🚨 Site-wide CTR issue detected. Run `/click-recovery` before content work.
 
 Run `/refresh-content {url}` to execute content optimizations.
-Run `/click-recovery` to fix meta title/description for CTR gaps.
+Run `/click-recovery` to fix meta titles and descriptions for CTR gaps.
 ```
 
 ---
 
 ## Integration with Other Skills
 
-This skill is **read-only** — it identifies opportunities and routes you to the right execution skill.
+This skill is **read-only** — it identifies opportunities and routes to the right execution skill.
 
 | Finding | Right Skill | Why |
 |---------|-------------|-----|
-| Keyword not in title, rank 4-20 | `/click-recovery` | Fix the meta title — quickest position booster |
-| Keyword present, rank stuck 4-20 | `/refresh-content {url}` | Content depth needs strengthening |
-| Keyword rank 21-30 | `/refresh-content {url}` | Full refresh targeting the specific query |
+| Site-wide CTR crisis (0 or near-0 clicks) | `/click-recovery` | Fix titles and descriptions before anything else |
+| Keyword absent from title, rank 4-20 | `/click-recovery` | Fastest ranking and CTR fix |
+| Keyword present, rank stuck 4-20 | `/refresh-content {url}` | Content depth issue |
+| Keyword rank 21-30 | `/refresh-content {url}` | Full content refresh targeting the query |
+| Multiple queries same page, all rank 10-20 | `/refresh-content {url}` | Consolidated refresh |
 | High-volume new keyword gap | Manual content creation | No existing page to optimize |
-| Long-tail cluster, thin existing page | `/refresh-content {url}` | Expand to cover the full cluster |
-| CMS missing keyword fields | `/cms-collection-setup:review` | Add primary/secondary keyword fields before refreshing |
-| Page schema gaps blocking refresh | `/cms-collection-setup:review` | Fix schema before optimizing |
+| Long-tail cluster, thin existing page | `/refresh-content {url}` | Expand to cover the cluster |
+| CMS missing keyword fields | `/cms-collection-setup:review` | Add primary/secondary keyword fields first |
 
 **Recommended workflow:**
 1. Run `/keywords-opportunity` monthly to refresh the opportunity map
-2. Execute Tier A strikes immediately with `/click-recovery` (CTR fixes) or `/refresh-content` (content depth)
-3. Plan Tier B and new content work for the following sprint
-4. Re-run in 4-6 weeks to measure position movement
+2. If CTR crisis detected: run `/click-recovery` immediately (parallel to content work)
+3. Execute Tier A quick wins with `/click-recovery` (CTR fixes) or `/refresh-content` (content depth)
+4. Plan Tier B and new content for the following sprint
+5. Re-run in 4-6 weeks to measure position movement
 
 **Cadence guidance:**
-- Striking distance positions shift slowly — re-run every 4-6 weeks minimum
-- New discovery can run monthly (KE data is relatively stable)
-- After running `/refresh-content` on a page, wait 3-4 weeks before re-checking its positions
+- Re-run every 4-6 weeks minimum (rankings shift slowly)
+- After running `/refresh-content` on a page, wait 3-4 weeks before re-checking its position
+- After running `/click-recovery`, wait 2-3 weeks before checking CTR impact
 
 ---
 
@@ -505,13 +692,15 @@ This skill is **read-only** — it identifies opportunities and routes you to th
 | GSC MCP not connected | Stop. Direct user to connect GSC. |
 | GSC property not found | List available properties, ask user to select |
 | No data in date range | Try 28-day fallback. If still empty, inform user. |
-| KE API error / rate limit | Retry once with smaller batch. If fails again: proceed without volume data for affected queries, note in report. |
-| KE not connected | Proceed with GSC impressions as proxy for volume. Warn prominently. |
-| Webflow MCP not connected | Skip page cross-reference. Use GSC page URLs only. |
-| Zero striking distance results | "All your ranking keywords are in positions 1–3 or 31+. Either your top-3 rankings are solid, or more GSC data is needed. Check back after more impressions accumulate." |
-| Zero new discovery results | "No new keyword opportunities found above thresholds. Consider lowering volume minimum or expanding topics with Keywords Everywhere manually." |
-| KE expansion returns no results | Note in report. Suggest running KE manually on top-performing pages. |
-| Report directory creation fails | Output report to terminal only. Warn user about save failure. |
+| KE API error / rate limit | Retry once with smaller batch (50 queries). If fails again: apply Volume Source Priority Rule using GSC impressions for affected queries. |
+| KE not connected | Apply Volume Source Priority Rule throughout — GSC impressions > 50 treated as real demand. |
+| Webflow MCP not connected | Skip keyword-to-title diagnosis. Show page URLs only. |
+| Zero striking distance results | "No ranking keywords in positions 4-30 above thresholds. Either top-3 rankings dominate, or more GSC data is needed." |
+| Zero new discovery results | "No new keyword opportunities above thresholds. Consider lowering volume minimum." |
+| KE expansion returns no results | Note in report. Suggest running KE manually. |
+| All queries filtered by anomaly detection | This shouldn't happen — if > 50% of queries are filtered, log a warning and proceed with remaining. |
+| Activity log cross-reference suppresses all findings | Warn: "All findings appear in recent activity log as resolved. Run `/keywords-opportunity` again in 4-6 weeks to see new opportunities." |
+| Report directory creation fails | Output report to terminal only. Warn about save failure. |
 
 ---
 
@@ -519,16 +708,17 @@ This skill is **read-only** — it identifies opportunities and routes you to th
 
 | Threshold | Value | Rationale |
 |-----------|-------|-----------|
-| Tier A min volume | 100/month | Below this, traffic gain is marginal |
-| Tier A min impressions | 200/90d | Alternative qualifier without KE data |
-| Tier B min volume | 200/month | Higher bar — more effort required |
-| Tier B min impressions | 500/90d | Alternative qualifier |
-| Tier C min volume | 500/month | High bar — significant effort needed |
+| GSC impressions = real demand | ≥ 50/90d | Confirmed by Google's own data — KE=0 doesn't override |
+| Tier A min volume | 100/mo or 200 impr/90d | Either qualifier passes |
+| Tier B min volume | 200/mo or 400 impr/90d | Either qualifier passes |
+| Tier C min volume | 500/mo | High bar — significant effort |
 | New gap min impressions | 50/90d | Enough signal to act on |
-| KE expansion min volume | 200/month | Below this, new content ROI is low |
-| KE expansion max competition | 0.7 | Above this, attainability drops significantly |
-| Min volume for KE call | 50/month | Below this, filter before spending KE credits |
-| Declining trend filter | > 30% YoY decline | Don't invest in dying queries |
+| KE expansion min volume | 200/mo | Below this, new content ROI is low |
+| KE expansion max competition | 0.7 | Above this, attainability drops |
+| Rising trend threshold | > 15% growth in 6mo | Boosts confidence and priority score |
+| Declining trend threshold | > 15% decline in 6mo | Reduces priority score |
+| CTR crisis threshold | < 10 clicks, > 500 impressions | Site-wide CTR problem |
+| Resolved-issues lookback | 90 days | Issues fixed earlier may have re-emerged |
 
 ---
 
@@ -545,16 +735,14 @@ If the file doesn't exist, create it with the header:
 |------|-------|---------|
 ```
 
-Then append:
-
 **Full mode:**
 ```
-| YYYY-MM-DD | /keywords-opportunity | Striking distance: N keywords across M pages (+X est. clicks/mo). New discovery: N opportunities. Top action: [top priority action]. |
+| YYYY-MM-DD | /keywords-opportunity | Striking: N pages (Tier A: N, B: N, C: N). Discovery: N clusters. CTR crisis: [yes/no]. Top action: [top quick win one-liner]. |
 ```
 
 **Striking mode:**
 ```
-| YYYY-MM-DD | /keywords-opportunity:striking | Striking distance: N keywords across M pages. Tier A: N, Tier B: N, Tier C: N. |
+| YYYY-MM-DD | /keywords-opportunity:striking | Striking distance: N pages. Tier A: N, Tier B: N, Tier C: N. Top page: [URL] ({N} impr.). |
 ```
 
 **Discover mode:**
@@ -562,4 +750,4 @@ Then append:
 | YYYY-MM-DD | /keywords-opportunity:discover | New keyword discovery: N opportunities. Content gaps: N, KE expansion: N, Long-tail clusters: N. |
 ```
 
-Log even on early exit (e.g., "Aborted: KE not connected. GSC-only analysis returned N striking distance keywords.").
+Log even on early exit (e.g., "Aborted: KE not connected. GSC-only: N striking pages found.").
