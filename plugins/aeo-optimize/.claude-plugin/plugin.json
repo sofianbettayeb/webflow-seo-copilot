@@ -1,0 +1,11 @@
+{
+  "name": "aeo-optimize",
+  "description": "Transform any Webflow page or CMS item into an AEO-ready answer — query alignment, direct answers, question-based structure, FAQ + schema markup, and internal linking. Works on both CMS and static pages.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Sofian Bettayeb"
+  },
+  "homepage": "https://github.com/sofianbettayeb/webflow-seo-copilot",
+  "license": "MIT",
+  "keywords": ["webflow", "aeo", "answer-engine-optimization", "faq", "schema", "structured-data", "content-optimization", "mcp"]
+}

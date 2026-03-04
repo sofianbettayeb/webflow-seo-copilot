@@ -551,6 +551,7 @@ Log even on early exit.
 | Full keyword opportunity map | `/keywords-opportunity` | Striking distance + new discovery |
 | CMS schema gaps (missing fields, low schema score) | `/cms-collection-setup:review` | Add missing fields to existing collections |
 | No blog collection yet | `/cms-collection-setup:create` | Build a new collection with the full recommended schema |
+| Low AEO scores on key pages | `/aeo-optimize {url}` | Add FAQ, schema, direct answers, question H2s per page |
 | Missing config | `/getting-started` | First-time setup |
 | Quick pre-sale assessment | `/audit {url}` | Before connecting MCP |
 | Ongoing monitoring | `/weekly-report` | Track progress weekly |

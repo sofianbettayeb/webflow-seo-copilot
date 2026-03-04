@@ -667,6 +667,7 @@ This skill is **read-only** — it identifies opportunities and routes to the ri
 | Keyword present, rank stuck 4-20 | `/refresh-content {url}` | Content depth issue |
 | Keyword rank 21-30 | `/refresh-content {url}` | Full content refresh targeting the query |
 | Multiple queries same page, all rank 10-20 | `/refresh-content {url}` | Consolidated refresh |
+| Page ranked but getting 0 clicks — AEO gap | `/aeo-optimize {url}` | Structured content + FAQ + schema to win featured snippets |
 | High-volume new keyword gap | Manual content creation | No existing page to optimize |
 | Long-tail cluster, thin existing page | `/refresh-content {url}` | Expand to cover the cluster |
 | CMS missing keyword fields | `/cms-collection-setup:review` | Add primary/secondary keyword fields first |
