@@ -18,6 +18,7 @@ Claude Code skills that turn your Webflow CMS into an SEO machine — refresh co
 /plugin install weekly-report@webflow-seo-copilot
 /plugin install audit@webflow-seo-copilot
 /plugin install audit-deep@webflow-seo-copilot
+/plugin install aeo-optimize@webflow-seo-copilot
 
 # First time? Run setup to capture your brand voice & SEO goals
 # This also installs global activity logging for all Webflow work
@@ -28,6 +29,7 @@ Claude Code skills that turn your Webflow CMS into an SEO machine — refresh co
 
 # Then use the SEO skills
 /keywords-opportunity          # find striking distance + new keyword opportunities
+/aeo-optimize https://yoursite.com/blog/article-slug  # optimize any page for AEO
 /refresh-content https://yoursite.com/blog/article-slug
 /click-recovery
 /monthly-report
@@ -329,6 +331,8 @@ Post-sale SEO & AEO maturity audit with GSC + Webflow data. Same maturity model 
 | Low CTR, content is fine | `/click-recovery` — fix the pitch |
 | Outdated content, rankings dropping | `/refresh-content` — full refresh |
 | Both issues | `/click-recovery` first, then `/refresh-content` |
+| Page ranking but not getting clicks (AEO gap) | `/aeo-optimize` — FAQ, schema, direct answer, question H2s |
+| Audit AEO score only (no changes) | `/aeo-optimize:audit` — score 12 dimensions, get gap report |
 | Monthly performance review | `/monthly-report` — see what changed and what to do next |
 | Weekly performance check | `/weekly-report` — weekly pulse with monthly progress tracking |
 
@@ -342,6 +346,20 @@ By night, I build tools like [AI SEO Copilot](https://webflow.com/apps/detail/ai
 In between, I ride my bikes and play with my kids in Bern, Switzerland.
 
 ## Changelog
+
+### v1.6.0 (2026-03-04)
+
+**`/aeo-optimize`** (new)
+- Transforms any Webflow page or CMS item into an AEO-ready answer
+- Auto-detects primary query from GSC (user confirms before proceeding)
+- Supports both CMS items (rich text + schema CMS field) and static pages (text nodes + manual head code)
+- 12-dimension AEO audit with 0–24 scoring: query alignment, direct answer, question H2s, bullets/tables/steps, definitions, FAQ, schema, internal links, summary
+- Full rewrite proposal shown for approval before any change is made
+- JSON-LD schema generation: Article always, FAQPage when FAQ added, HowTo when steps added
+- Internal link insertion: 3–5 max, scoped to same section/category, descriptive anchors
+- Humanizer applied to all generated content before proposing
+- Modes: `/aeo-optimize {url}` (full), `/aeo-optimize:audit {url}` (score only)
+- Saves timestamped report: `.claude/reports/{domain}/aeo-optimize-{slug}-YYYY-MM-DD.md`
 
 ### v1.5.0 (2026-03-03)
 
