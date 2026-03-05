@@ -118,6 +118,17 @@
       },
       "category": "aeo",
       "tags": ["webflow", "aeo", "answer-engine-optimization", "faq", "schema", "structured-data", "content-optimization", "mcp"]
+    },
+    {
+      "name": "write-blog",
+      "source": "./plugins/write-blog",
+      "description": "Create a new SEO and AEO-optimized blog draft in Webflow CMS — keyword expansion, outline approval, AI tell-tales check, humanizer pass, AEO audit, and CMS item creation via Webflow MCP.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Sofian Bettayeb"
+      },
+      "category": "content",
+      "tags": ["webflow", "seo", "aeo", "blog", "content", "cms", "write", "humanizer", "mcp"]
     }
   ]
 }

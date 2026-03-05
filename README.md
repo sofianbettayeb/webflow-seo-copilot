@@ -19,6 +19,7 @@ Claude Code skills that turn your Webflow CMS into an SEO machine — refresh co
 /plugin install audit@webflow-seo-copilot
 /plugin install audit-deep@webflow-seo-copilot
 /plugin install aeo-optimize@webflow-seo-copilot
+/plugin install write-blog@webflow-seo-copilot
 
 # First time? Run setup to capture your brand voice & SEO goals
 # This also installs global activity logging for all Webflow work
@@ -29,6 +30,7 @@ Claude Code skills that turn your Webflow CMS into an SEO machine — refresh co
 
 # Then use the SEO skills
 /keywords-opportunity          # find striking distance + new keyword opportunities
+/write-blog                    # create a new SEO + AEO blog draft in Webflow CMS
 /aeo-optimize https://yoursite.com/blog/article-slug  # optimize any page for AEO
 /refresh-content https://yoursite.com/blog/article-slug
 /click-recovery
@@ -316,6 +318,32 @@ Post-sale SEO & AEO maturity audit with GSC + Webflow data. Same maturity model 
 
 ---
 
+### `/write-blog`
+
+[View full skill →](plugins/write-blog/skills/write-blog/SKILL.md)
+
+Create a new SEO and AEO-optimized blog draft in Webflow CMS — from keyword brief to published CMS item.
+
+**What it does:**
+- Runs a brief intake (primary keyword, search intent, article objective, CTA)
+- Expands keywords with Keywords Everywhere: related terms, long-tail, question queries
+- Proposes an outline for approval before writing anything
+- Writes a full draft following config brand voice and writing style rules
+- Runs the AI Writing Tell-Tales check (same rules as `/refresh-content`) — fixes structural patterns, filler phrases, and formatting tells automatically
+- Applies a mandatory humanizer pass before any content reaches Webflow
+- Runs an AEO audit across the same dimensions as `/aeo-optimize` and fixes gaps
+- Creates the CMS draft item with title, slug, meta title, meta description, and rich text body
+- Optionally publishes immediately with `/write-blog:publish`
+
+**Usage:**
+```
+/write-blog                    — full workflow: brief → outline → draft → audit → CMS draft
+/write-blog:outline            — stops after outline approval, no Webflow changes
+/write-blog:publish            — creates and publishes immediately after approval
+```
+
+---
+
 ### When to use each skill
 
 | Scenario | Skill |
@@ -326,6 +354,7 @@ Post-sale SEO & AEO maturity audit with GSC + Webflow data. Same maturity model 
 | Find keywords to target (striking distance + new) | `/keywords-opportunity` — full keyword map with volume and action plan |
 | Already ranking page 1-2, want more traffic | `/keywords-opportunity:striking` — fastest ROI, positions 4-20 |
 | Looking for entirely new topics to target | `/keywords-opportunity:discover` — KE expansion + content gap analysis |
+| Write a new blog post from scratch | `/write-blog` — brief → outline → draft → AI check → humanizer → AEO audit → CMS |
 | Pre-sale site assessment (no MCP needed) | `/audit {url}` — client-ready report, proposal-ready |
 | Post-sale engagement baseline | `/audit:deep` — data-backed roadmap with GSC + Webflow |
 | Low CTR, content is fine | `/click-recovery` — fix the pitch |
@@ -346,6 +375,22 @@ By night, I build tools like [AI SEO Copilot](https://webflow.com/apps/detail/ai
 In between, I ride my bikes and play with my kids in Bern, Switzerland.
 
 ## Changelog
+
+### v1.7.0 (2026-03-05)
+
+**`/write-blog`** (new)
+- Full blog creation workflow: brief intake → keyword expansion → outline approval → draft writing → CMS item creation
+- Keywords Everywhere integration: related keywords, long-tail variations, question queries for FAQ seed
+- Outline approval gate before any writing — angle, H1, CTA placement confirmed by user
+- AI Writing Tell-Tales check (Phase 4.5): auto-fixes structural patterns, filler phrases, and formatting tells inherited from `/refresh-content`
+- Mandatory humanizer pass (Phase 4.6) before AEO audit and before writing to Webflow — user confirms draft reads naturally
+- AEO audit pass using `/aeo-optimize` dimensions — pass/partial/fail table with auto-fixes applied
+- Creates Webflow CMS draft with title, slug, meta title, meta description, and rich text body
+- Schema and FAQ field population when collection schema supports it
+- Modes: `/write-blog` (full), `/write-blog:outline` (stops after outline, no Webflow changes), `/write-blog:publish` (creates + publishes immediately)
+- Reads `.claude/seo-copilot-config.json` for brand voice, audience, and SEO constraints
+- Checks activity log at startup to avoid duplicate content on the same topic cluster
+- Logs to `.claude/reports/{domain}/activity-log.md` after each execution
 
 ### v1.6.0 (2026-03-04)
 
