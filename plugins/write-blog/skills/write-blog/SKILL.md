@@ -225,18 +225,24 @@ Before invoking the humanizer, scan the full draft and fix all violations automa
 - Every paragraph starting with the product/brand name
 - Perfectly uniform paragraph lengths
 
-#### Tables — Webflow HTML format required
+#### Tables — not supported in Webflow CMS rich text via API
 
-If the draft includes a comparison table or data table, it **must use the Webflow rich text table format** — a `<figure>` wrapper with a `<div>` inside, then the standard `<table>` tags. Plain text or markdown tables will not render. Write every table as:
+Webflow's CMS rich text renderer **strips `<table>` tags entirely** when content is submitted via the API. This includes the `<figure class="w-richtext-figure-type-table">` wrapper format. Tables created via API will appear blank in the rendered output.
+
+**Instead, represent comparison data as per-item structured lists:**
 
 ```html
-<figure class="w-richtext-figure-type-table"><div><table>
-  <thead><tr><th>Col 1</th><th>Col 2</th></tr></thead>
-  <tbody><tr><td>Cell</td><td>Cell</td></tr></tbody>
-</table></div></figure>
+<p><strong>Tool Name ($$)</strong></p>
+<ul>
+  <li><strong>Best for:</strong> Description</li>
+  <li><strong>Engines tracked:</strong> List</li>
+  <li><strong>Automation model:</strong> Type</li>
+</ul>
 ```
 
-The `w-richtext-figure-type-table` class triggers Webflow's default table styles automatically.
+Repeat the block for each item being compared. This renders correctly in all Webflow rich text elements and is scannable for readers.
+
+If a real table is required, it must be added manually in the Webflow Designer after the CMS item is created — it cannot be delivered via the API.
 
 #### Headings vs bold — use the right element
 
