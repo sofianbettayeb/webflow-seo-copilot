@@ -1,6 +1,6 @@
 # /write-blog
 
-Create a new SEO and AEO-optimized blog draft in Webflow CMS. Follows project conventions from `/getting-started`, applies the AEO dimensions from `/aeo-optimize`, runs the AI Writing Tell-Tales check from `/refresh-content`, and mandates a `/humanizer` pass before writing to Webflow.
+Create a new SEO and AEO-optimized blog draft in Webflow CMS. Follows project conventions from `/getting-started`, applies the AEO dimensions from `/aeo-optimize`, runs the AI Writing Tell-Tales check from `/refresh-content`, invokes the `/humanizer` skill before writing to Webflow, and includes an open revision loop until the user explicitly approves the draft.
 
 ---
 
@@ -30,7 +30,7 @@ If Keywords Everywhere is not available, proceed with a GSC-only or reasoning-on
 
 | Mode | Command | Behavior |
 |------|---------|----------|
-| Default | `/write-blog` | Full workflow: brief → keywords → outline approval → draft → AI tell-tales check → humanizer → AEO audit → Webflow CMS draft |
+| Default | `/write-blog` | Full workflow: brief → keywords → outline → draft → Tell-Tales → /humanizer → revision loop → AEO audit → verification → Webflow draft |
 | Outline only | `/write-blog:outline` | Stops after outline approval. No Webflow changes. |
 | Auto-publish | `/write-blog:publish` | Creates CMS draft and publishes immediately after user approval. |
 
@@ -44,10 +44,11 @@ If Keywords Everywhere is not available, proceed with a GSC-only or reasoning-on
 - **Target collection** — confirm default blog collection or ask
 - **Primary CTA** — optional but recommended
 - **Internal links to include** — optional
+- **Quote, stat, or personal experience to feature** — ask explicitly, do not treat as optional (see Phase 1)
 
 ## Optional inputs (strongly encourage)
 
-- User insights, opinions, research, quotes, frameworks, personal examples
+- Additional user insights, opinions, research, frameworks, personal examples
 - Audience notes (if not already in config)
 - Competitors to reference (if not already in config)
 
@@ -82,12 +83,16 @@ How to use the result:
 - Extract secondary keywords (semantic + long-tail)
 - Extract question keywords for FAQ and definition blocks
 
-### `/aeo-optimize` rubric — mandatory
+### `/humanizer` — mandatory (Phase 4.6)
+
+Invoke the `/humanizer` skill on the full draft after the Tell-Tales check. Do not apply humanizer rules manually — call the skill so the user sees the pass output.
+
+### `/aeo-optimize` rubric — mandatory (Phase 5)
 
 Apply the same AEO dimensions and checks as `/aeo-optimize`, adapted for pre-publish drafting:
 - Use the user-provided primary keyword as the primary query
-- Run the AEO audit pass on the draft before writing to Webflow
-- Output a short pass/partial/fail table and apply fixes automatically
+- Run the AEO audit pass on the final approved draft before writing to Webflow
+- Output a scored table with severity and auto-fix vs approval-required flags
 
 The goal is content that would pass `/aeo-optimize:audit` with minimal changes after publication.
 
@@ -100,18 +105,27 @@ The goal is content that would pass `/aeo-optimize:audit` with minimal changes a
 1. Verify Webflow MCP is connected. If missing, stop and tell the user.
 2. Load `.claude/seo-copilot-config.json` if available.
 3. Read `.claude/reports/{domain}/activity-log.md` and surface any recent work on the same topic cluster to avoid duplicates.
+4. **Map the target collection schema.** Fetch the collection fields and check for:
+   - SEO title field (e.g. `seo-title`, `meta-title`) — warn if missing, note that meta title won't be set
+   - Meta description field — warn if missing
+   - Image fields (e.g. `main-image`, `thumbnail-image`) — note if present, flag as required before publishing
+   - FAQ fields — note if present and how many (shapes Phase 5 FAQ output)
+   - Schema markup field — note if present
+
+   Surface a one-line schema summary: *"Collection has: meta description ✓, FAQ fields (5) ✓, main image ✓, no SEO title field ⚠"*
 
 ---
 
 ### Phase 1 — Brief intake (human input required)
 
-Ask only for missing required fields:
+Ask only for missing required fields. Always ask ALL of the following — do not skip any:
+
 - Primary keyword
-- Search intent
-- Article objective
+- Search intent (informational / commercial investigation / product-focused / mixed)
+- Article objective (rank / educate / capture leads / support positioning)
 - Any specific angle, constraints, or things to avoid
 - Internal links and CTA
-- **Ask explicitly for insights, quotes, research, personal POV** — this is what separates the article from generic AI output
+- **Quote, personal stat, or first-hand experience to feature** — ask this explicitly: *"Do you have a quote, specific number, or personal experience you want featured prominently? This is what keeps the article from sounding generic."* Do not bury this as optional.
 
 Stop and wait for user confirmation before proceeding.
 
@@ -151,7 +165,7 @@ Ask the user to approve:
 - The angle
 - The CTA placement
 
-Do not proceed to draft until approved.
+**The user may replace the outline entirely with their own structure. Accept it and proceed.** Do not proceed to draft until approved.
 
 ---
 
@@ -163,7 +177,7 @@ Do not proceed to draft until approved.
 - Concrete explanations over abstract claims.
 - No hype, no filler, no AI vocabulary.
 - Follow the brand voice and audience level from config.
-- Use user-provided insights, quotes, and examples — these are mandatory inputs, not optional flavour.
+- Use user-provided quotes, stats, and examples — inject them prominently, not as afterthoughts.
 
 #### Default structure
 
@@ -180,7 +194,7 @@ Do not proceed to draft until approved.
 
 ### Phase 4.5 — AI Writing Tell-Tales check (mandatory)
 
-Before humanizer and AEO audit, scan the full draft against the following. Fix all violations automatically.
+Before invoking the humanizer, scan the full draft and fix all violations automatically.
 
 #### Structural patterns to AVOID
 
@@ -225,56 +239,108 @@ Before humanizer and AEO audit, scan the full draft against the following. Fix a
 
 ### Phase 4.6 — Humanizer pass (mandatory)
 
-Run a full humanizer pass on the draft before the AEO audit and before writing to Webflow.
+**Invoke the `/humanizer` skill on the full draft.** Do not apply humanizer rules manually — call the skill so the output is explicit and visible.
 
-Apply the following rules to every sentence:
+The `/humanizer` skill will:
+- Remove AI vocabulary (seamless, robust, delve, comprehensive, leverage, harness, empower, transformative, streamline, cutting-edge, game-changing, innovative)
+- Enforce em-dash limit (max 2–3 per article)
+- Break rule-of-three padding
+- Remove inflated symbolism and vague metaphors
+- Eliminate excessive conjunctive phrases (Furthermore, Moreover, In addition to, It is worth noting that)
+- Remove negative parallelisms (not only X, but also Y)
+- Strip promotional superlatives without evidence
+- Enforce short, direct sentences
 
-- No AI vocabulary: no "seamless", "robust", "delve", "comprehensive", "leverage", "harness", "empower", "transformative", "streamline", "cutting-edge", "game-changing", "innovative"
-- No em-dash overuse — max 2–3 per article (already checked in Phase 4.5, confirm here)
-- No rule-of-three padding — avoid listing exactly three parallel items just to fill a pattern
-- No inflated symbolism or vague metaphors
-- No excessive conjunctive phrases ("Furthermore", "Moreover", "In addition to", "It is worth noting that")
-- No negative parallelisms ("not only X, but also Y")
-- No promotional superlatives without evidence
-- Short, direct sentences — if a sentence has more than two clauses, split it
+Present the humanized draft output to the user. Then move immediately to the revision loop (Phase 4.7) — do not skip to the AEO audit.
 
-If a sentence fails multiple checks, rewrite it. Do not patch — rewrite.
+---
 
-Present the humanized draft to the user before proceeding. Ask: "Does this read the way you'd write it? Any adjustments before I run the AEO audit?"
+### Phase 4.7 — Revision loop (human input required)
+
+**This phase stays open until the user explicitly approves the draft.**
+
+Present the humanized draft and ask:
+*"Does this read the way you'd write it? List any changes — content, tone, structure, missing points, anything. I'll revise and come back. Reply 'approved' when it's ready for the AEO audit."*
+
+For each round of feedback:
+1. Apply all requested changes
+2. Re-run Tell-Tales check on changed sections only (do not re-run full Phase 4.5)
+3. Re-present the updated draft with a summary of what changed
+4. Ask again: *"Any further changes, or approved?"*
+
+Do not proceed to Phase 5 until the user says "approved" or equivalent confirmation.
+
+**Typical revision rounds: 2–5. Do not treat the first feedback round as the last.**
 
 ---
 
 ### Phase 5 — AEO audit pass
 
-Evaluate the humanized draft across the `/aeo-optimize` dimensions. Output a short table:
+Evaluate the approved draft across the `/aeo-optimize` dimensions. Output a scored table with severity:
 
-| Dimension | Status | Note |
-|-----------|--------|------|
-| Definition block | Pass / Partial / Fail | One-line note |
-| FAQ coverage | Pass / Partial / Fail | One-line note |
-| E-E-A-T signals | Pass / Partial / Fail | One-line note |
-| Heading structure | Pass / Partial / Fail | One-line note |
-| Internal links | Pass / Partial / Fail | One-line note |
-| Meta title + description | Pass / Partial / Fail | One-line note |
-| Schema opportunity | Pass / Partial / Fail | One-line note |
+| Dimension | Status | Severity | Action |
+|-----------|--------|----------|--------|
+| Definition block | Pass / Partial / Fail | — | Auto-fix / Needs approval / Info only |
+| FAQ coverage | Pass / Partial / Fail | — | Auto-fix / Needs approval / Info only |
+| E-E-A-T signals | Pass / Partial / Fail | — | Auto-fix / Needs approval / Info only |
+| Heading structure | Pass / Partial / Fail | — | Auto-fix / Needs approval / Info only |
+| Internal links | Pass / Partial / Fail | — | Auto-fix / Needs approval / Info only |
+| Meta title + description | Pass / Partial / Fail | — | Auto-fix / Needs approval / Info only |
+| Schema opportunity | Pass / Partial / Fail | — | Auto-fix / Needs approval / Info only |
 
-Apply fixes automatically unless a fix changes meaning — in that case, ask for approval.
+**Severity levels:**
+- **Auto-fix** — fix is safe to apply without changing meaning (e.g. add missing schema type, reorder a heading). Apply and note.
+- **Needs approval** — fix changes content meaning or tone (e.g. rewrite a paragraph, change a claim). Show proposed change and ask.
+- **Info only** — gap exists but cannot be resolved without user input or post-publish data (e.g. no E-E-A-T signals available, schema field missing from collection).
+
+---
+
+### Phase 5.5 — External claims verification gate
+
+Before writing to Webflow, scan the final draft for:
+- References to third-party tools, products, or services
+- Pricing claims (any $ amount or tier description)
+- Feature comparisons attributing capabilities to external tools
+- Statistics or data points not sourced from the user's own data
+
+If any are found, surface a verification checklist:
+
+```
+⚠️ Verify before publishing:
+- [ ] [Tool name]: pricing tier described as [X] — confirm current pricing
+- [ ] [Tool name]: engines tracked listed as [X] — confirm current coverage
+- [ ] [Stat]: "[claim]" — confirm source or remove
+```
+
+Do not proceed to Webflow creation until the user confirms or removes flagged items.
 
 ---
 
 ### Phase 6 — Webflow CMS draft creation
 
-1. Identify the blog collection.
-2. Create a CMS item as a draft with:
-   - Title
-   - Slug (lowercase, hyphenated, includes primary keyword)
-   - Meta title (50–60 chars, includes primary keyword)
-   - Meta description (120–155 chars, benefit-led)
-   - Rich text body
-   - FAQ field (if the collection schema supports it)
-   - Schema markup field (if present)
+1. Use the collection schema mapped in Phase 0.
+2. Create a CMS item as a draft with all available fields:
 
-If the collection schema is unknown or inconsistent, recommend running `/cms-collection-setup` first.
+   **Always populate:**
+   - Title (`name`)
+   - Slug (lowercase, hyphenated, includes primary keyword)
+   - Rich text body (`post-body` or equivalent)
+   - Meta description (if field exists)
+   - Keywords and secondary keywords (if fields exist)
+   - Topic (if field exists)
+   - Read time estimate (if field exists)
+   - Author (if field exists and author ID is known)
+   - FAQ fields Q1–Q5 (if fields exist — populate from FAQ section of article)
+
+   **Populate if field exists:**
+   - SEO title / meta title (50–60 chars, includes primary keyword)
+   - Schema markup (if dedicated field exists)
+
+   **Flag as missing after creation:**
+   - Image fields (`main-image`, `thumbnail-image`, or equivalent) — if present in schema but not populated, output: *"⚠️ Draft created without images. Add main image and thumbnail before publishing."*
+   - SEO title field — if not present in collection: *"⚠️ No SEO title field found. Meta title won't be set via API — update manually in Designer or run `/cms-collection-setup:review` to add the field."*
+
+3. If the collection schema is unknown or inconsistent, recommend running `/cms-collection-setup` first.
 
 ---
 
@@ -294,7 +360,7 @@ If the user did not request references and config does not require them, skip.
 Append to `.claude/reports/{domain}/activity-log.md`:
 
 ```
-| YYYY-MM-DD | /write-blog | Drafted "[article title]". Primary keyword: "[keyword]". Collection: [name]. CMS item ID: [id]. Status: draft / published. |
+| YYYY-MM-DD | /write-blog | Drafted "[article title]". Primary keyword: "[keyword]". Collection: [name]. CMS item ID: [id]. Status: draft / published. Pending: [image / SEO title / publish] if applicable. |
 ```
 
 ---
@@ -304,10 +370,10 @@ Append to `.claude/reports/{domain}/activity-log.md`:
 Return to the user:
 - CMS item name
 - Slug
-- Meta title
+- Meta title (or warning if field missing)
 - Meta description
-- Draft URL or item ID (if available)
-- Final article body as written to Webflow
+- Draft item ID
+- Any pending actions before publishing (images, SEO title, Designer bindings)
 
 ---
 
