@@ -225,9 +225,27 @@ Before invoking the humanizer, scan the full draft and fix all violations automa
 - Every paragraph starting with the product/brand name
 - Perfectly uniform paragraph lengths
 
-#### Tables — HTML required
+#### Tables — Webflow HTML format required
 
-If the draft includes a comparison table or data table, it **must be written as valid HTML** using `<table>`, `<thead>`, `<tbody>`, `<tr>`, `<th>`, `<td>` tags. Plain text or markdown tables will not render in Webflow's rich text field. Write the table as HTML directly in the draft.
+If the draft includes a comparison table or data table, it **must use the Webflow rich text table format** — a `<figure>` wrapper with a `<div>` inside, then the standard `<table>` tags. Plain text or markdown tables will not render. Write every table as:
+
+```html
+<figure class="w-richtext-figure-type-table"><div><table>
+  <thead><tr><th>Col 1</th><th>Col 2</th></tr></thead>
+  <tbody><tr><td>Cell</td><td>Cell</td></tr></tbody>
+</table></div></figure>
+```
+
+The `w-richtext-figure-type-table` class triggers Webflow's default table styles automatically.
+
+#### Headings vs bold — use the right element
+
+`<p><strong>Label</strong><br>Text</p>` is **not a heading**. It has no semantic structure and will not be picked up by AEO engines or navigated by screen readers.
+
+Rules:
+- If a label introduces a distinct sub-topic with its own explanation (e.g. evaluation criteria, features, categories): use `<h3>Label</h3><p>Explanation</p>`
+- If a label is a lead-in within a paragraph (e.g. one sentence calling out a benefit): `<strong>Label.</strong> Rest of paragraph.` is acceptable
+- Never use `<strong>X</strong><br>` as a substitute for a heading
 
 #### Add human signals (actively inject these)
 
