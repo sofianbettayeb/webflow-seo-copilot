@@ -220,10 +220,14 @@ Before invoking the humanizer, scan the full draft and fix all violations automa
 
 #### Formatting to AVOID
 
-- Excessive em-dashes (—) — limit to 2–3 per article
+- Excessive em-dashes (—) — **hard limit: 2–3 per article**. Count them. If you have more than 3, replace the rest with commas, colons, or periods. This check is mandatory before Phase 4.6 — do not rely on the humanizer to catch a count you haven't verified.
 - Bold on every key phrase
 - Every paragraph starting with the product/brand name
 - Perfectly uniform paragraph lengths
+
+#### Tables — HTML required
+
+If the draft includes a comparison table or data table, it **must be written as valid HTML** using `<table>`, `<thead>`, `<tbody>`, `<tr>`, `<th>`, `<td>` tags. Plain text or markdown tables will not render in Webflow's rich text field. Write the table as HTML directly in the draft.
 
 #### Add human signals (actively inject these)
 
@@ -330,7 +334,7 @@ Do not proceed to Webflow creation until the user confirms or removes flagged it
    - Topic (if field exists)
    - Read time estimate (if field exists)
    - Author (if field exists and author ID is known)
-   - FAQ fields Q1–Q5 (if fields exist — populate from FAQ section of article)
+   - FAQ fields Q1–Q5 (if fields exist — populate from FAQ section of article, then **remove the FAQ section from the rich text body**. Leaving FAQ in both the body and dedicated fields causes duplication when the template renders both.)
 
    **Populate if field exists:**
    - SEO title / meta title (50–60 chars, includes primary keyword)
