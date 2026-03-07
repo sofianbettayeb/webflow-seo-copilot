@@ -705,6 +705,16 @@ Add to the checklist:
 - [ ] Run SEO tool (e.g., Synqpro) to verify score improved after refresh
 - [ ] Compare: old score [X] → new score [check]
 
+⚡ GUARD — **AEO optimization recommended:**
+Trigger if ANY of these are true for the refreshed article:
+- A FAQ section was added or expanded during this refresh
+- The article has > 500 monthly impressions in GSC
+- The primary keyword is a question-form query ("how to", "what is", "best way", "vs")
+- AEO-related fields (FAQ, schema) were populated during this refresh
+
+If triggered, add to the checklist:
+- [ ] **AEO check**: Run `/aeo-optimize:audit {url}` 3–7 days after publish (once indexed) to score AI answer engine readiness and identify any remaining gaps. Run `/aeo-optimize {url}` to apply fixes.
+
 ---
 
 ## Image Workflow Guidance

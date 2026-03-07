@@ -105,7 +105,11 @@ The goal is content that would pass `/aeo-optimize:audit` with minimal changes a
 1. Verify Webflow MCP is connected. If missing, stop and tell the user.
 2. Load `.claude/seo-copilot-config.json` if available.
 3. Read `.claude/reports/{domain}/activity-log.md` and surface any recent work on the same topic cluster to avoid duplicates.
-4. **Map the target collection schema.** Fetch the collection fields and check for:
+4. **Map the target collection schema.** Before fetching live, check if `.claude/collection-mappings/[collection-id].json` exists (use the collection name to look up the ID if not yet known):
+   - If cache exists: load the mapping and show: "Using cached schema for [Collection Name] (last mapped [date])." Ask: "Use cached schema or re-scan?" — if re-scan: do full discovery and update the cache. If use cache: skip the live schema fetch.
+   - If no cache: run full schema discovery, then save the mapping to `.claude/collection-mappings/[collection-id].json` using the same format as `/refresh-content` Phase 1.1.
+
+   Then check for:
    - SEO title field (e.g. `seo-title`, `meta-title`) — warn if missing, note that meta title won't be set
    - Meta description field — warn if missing
    - Image fields (e.g. `main-image`, `thumbnail-image`) — note if present, flag as required before publishing
@@ -225,11 +229,13 @@ Before invoking the humanizer, scan the full draft and fix all violations automa
 - Every paragraph starting with the product/brand name
 - Perfectly uniform paragraph lengths
 
-#### Tables — not supported in Webflow CMS rich text via API
+#### Tables — manual insertion required
 
-Webflow's CMS rich text renderer **strips `<table>` tags entirely** when content is submitted via the API. This includes the `<figure class="w-richtext-figure-type-table">` wrapper format. Tables created via API will appear blank in the rendered output.
+Webflow's CMS rich text renderer **strips `<table>` tags entirely** when content is submitted via the API. Tables cannot be delivered via the Webflow MCP.
 
-**Instead, represent comparison data as per-item structured lists:**
+**When a comparison table is appropriate in the article, do both:**
+
+1. **In the rich text body sent via API** — use per-item structured lists as a placeholder so the content is readable even before the table is added:
 
 ```html
 <p><strong>Tool Name ($$)</strong></p>
@@ -240,9 +246,14 @@ Webflow's CMS rich text renderer **strips `<table>` tags entirely** when content
 </ul>
 ```
 
-Repeat the block for each item being compared. This renders correctly in all Webflow rich text elements and is scannable for readers.
+2. **Generate an HTML table for manual insertion** — produce a complete `<table>` with inline `style` attributes only (no class names, no reusable CSS). Present it to the user with this exact note:
 
-If a real table is required, it must be added manually in the Webflow Designer after the CMS item is created — it cannot be delivered via the API.
+> ⚠️ **Manual step required:** In Webflow Designer, open the blog post, place an HTML Embed element where the table should appear, and paste this HTML. You can remove the structured list placeholder once the embed is in place.
+
+**Table styling rules:**
+- Use inline `style` attributes only — no class names
+- Each article gets its own visual treatment — vary border style, header background, row alternation, font size, padding. Do not reuse a fixed template
+- Keep it clean and readable: clear header row, consistent cell padding, subtle row separation
 
 #### Headings vs bold — use the right element
 
@@ -303,6 +314,8 @@ Do not proceed to Phase 5 until the user says "approved" or equivalent confirmat
 ---
 
 ### Phase 5 — AEO audit pass
+
+**Note:** This rubric mirrors the 12 AEO dimensions in `/aeo-optimize`. If the rubric is updated in `/aeo-optimize`, reflect those changes here. This pre-publish check operates on draft content only — it cannot verify rendering, schema injection, or live performance signals. After publication, run `/aeo-optimize:audit {url}` for the definitive live-page assessment.
 
 Evaluate the approved draft across the `/aeo-optimize` dimensions. Output a scored table with severity:
 
@@ -389,6 +402,23 @@ Append to `.claude/reports/{domain}/activity-log.md`:
 
 ```
 | YYYY-MM-DD | /write-blog | Drafted "[article title]". Primary keyword: "[keyword]". Collection: [name]. CMS item ID: [id]. Status: draft / published. Pending: [image / SEO title / publish] if applicable. |
+```
+
+### Post-Publish Monitoring Schedule
+
+Include this in the completion output after the CMS item summary:
+
+```
+## Post-Publish Monitoring
+
+| When | What to check | Action if needed |
+|------|---------------|-----------------|
+| 1 week | Is the page indexed? (`site:{url}` in Google) | Request indexing in GSC if missing |
+| 2–3 weeks | Impressions appearing in GSC? | If 0 impressions: check for crawl/indexing issues |
+| 4 weeks | CTR < 2% at position 1–10? | Run `/click-recovery` to improve the title hook |
+| 4 weeks | Cited in AI answers for the target query? | Run `/aeo-optimize:audit {url}` to check |
+| 8 weeks | Position still > 15? | Run `/refresh-content {url}` to deepen content |
+| 8 weeks | AEO score < 14/24 after publication? | Run `/aeo-optimize {url}` for full optimization |
 ```
 
 ---

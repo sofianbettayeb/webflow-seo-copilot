@@ -551,7 +551,7 @@ Note: "These pages rank on page 3. High-volume keywords here warrant a full cont
 ```
 | Keyword Cluster | Queries | Total Impr/90d | Est. Volume/mo | Trend | Intent | Action |
 |-----------------|---------|---------------|----------------|-------|--------|--------|
-| {cluster} | {K} | {N} | {vol} | ↑/→/↓ | info/commercial | Create new article / Expand {URL} |
+| {cluster} | {K} | {N} | {vol} | ↑/→/↓ | info/commercial | Run `/write-blog` / Expand {URL} |
 ```
 
 For each cluster with priority ≥ 8.0: show all queries in the cluster + a recommended article angle.
@@ -668,7 +668,7 @@ This skill is **read-only** — it identifies opportunities and routes to the ri
 | Keyword rank 21-30 | `/refresh-content {url}` | Full content refresh targeting the query |
 | Multiple queries same page, all rank 10-20 | `/refresh-content {url}` | Consolidated refresh |
 | Page ranked but getting 0 clicks — AEO gap | `/aeo-optimize {url}` | Structured content + FAQ + schema to win featured snippets |
-| High-volume new keyword gap | Manual content creation | No existing page to optimize |
+| High-volume new keyword gap | `/write-blog` | New article — run `/write-blog` targeting the cluster keyword |
 | Long-tail cluster, thin existing page | `/refresh-content {url}` | Expand to cover the cluster |
 | CMS missing keyword fields | `/cms-collection-setup:review` | Add primary/secondary keyword fields first |
 
@@ -676,8 +676,9 @@ This skill is **read-only** — it identifies opportunities and routes to the ri
 1. Run `/keywords-opportunity` monthly to refresh the opportunity map
 2. If CTR crisis detected: run `/click-recovery` immediately (parallel to content work)
 3. Execute Tier A quick wins with `/click-recovery` (CTR fixes) or `/refresh-content` (content depth)
-4. Plan Tier B and new content for the following sprint
-5. Re-run in 4-6 weeks to measure position movement
+4. For new keyword gaps with no matching page: run `/write-blog` targeting the cluster keyword
+5. Plan Tier B and new content for the following sprint
+6. Re-run in 4-6 weeks to measure position movement
 
 **Cadence guidance:**
 - Re-run every 4-6 weeks minimum (rankings shift slowly)

@@ -172,6 +172,24 @@ Check if `.claude/reports/{domain}/monthly-report-YYYY-MM.md` already exists for
 - If yes: Ask user: "A report for [Month] already exists. Overwrite it?"
 - If user declines: Stop execution
 
+### 0.7 Load Last 4 Weekly Reports
+
+Search for recent weekly reports at `.claude/reports/{domain}/weekly-report-*.md`:
+- Load the last 4 by date (most recent first)
+- For each, extract: week label, health trend, must-fix and high-impact action items
+- Build a **carry-forward set**: action items that appeared in any of the last 4 weeklies AND were not subsequently logged as completed in the activity log
+- These surface in Section 7 (Action Plan) labelled "[carried from W-XX]" — so open work from weekly reports doesn't get lost at month-end
+- If no weekly reports found: proceed without, note "No weekly reports found. Run `/weekly-report` weekly for continuous tracking."
+
+### 0.8 Load Latest Keyword Opportunity Report
+
+Check `.claude/reports/{domain}/latest-keywords-opportunity.md`:
+- If found and < 60 days old:
+  - Extract: report date, striking distance findings, new opportunity clusters, action plan
+  - Store as `keyword_opportunity_context` — reference in Sections 2.3 (content gaps) and 2.5 (striking distance) instead of independently re-deriving the same findings from GSC impressions
+  - Note in report header: "Keyword opportunity report from [date] loaded — referenced in content gaps and striking distance sections."
+- If not found or > 60 days old: run standard gap analysis in Phase 2 as usual, and suggest running `/keywords-opportunity` for enriched volume + intent data
+
 ---
 
 ## Phase 1: Fetch Data

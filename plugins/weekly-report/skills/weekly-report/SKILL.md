@@ -110,7 +110,17 @@ Search for the most recent `.claude/reports/{domain}/monthly-report-*.md`:
 - If found: extract executive summary metrics (clicks, impressions, CTR, position), health trend, and action plan items
 - If not found: proceed without, note "No monthly report found. Run `/monthly-report` for month-level context."
 
-### 0.6 Calculate Date Boundaries
+### 0.6 Load Latest Keyword Opportunity Report
+
+Check `.claude/reports/{domain}/latest-keywords-opportunity.md`:
+- If found and < 30 days old:
+  - Extract: report date, quick wins list, top action plan items (must-pursue + high-value)
+  - Store as `keyword_opportunity_context` — reference it in Sections 3 and 5 instead of re-deriving the same findings
+  - Note in the report header: "Keyword opportunity report from [date] loaded — [N] striking distance pages, [N] new opportunities. Full detail in `latest-keywords-opportunity.md`."
+  - In Section 5 (On-Page SEO Opportunities): surface the top 3 quick wins from the keywords-opportunity report, clearly labelled as sourced from that report. Do NOT re-run a full striking distance analysis — reference the existing findings instead.
+- If not found or > 30 days old: run the standard striking distance analysis in Phase 2.6 as usual, and suggest: "Run `/keywords-opportunity` for a full volume-enriched analysis."
+
+### 0.7 Calculate Date Boundaries
 
 Compute 7-day windows (Mon–Sun). If today is mid-week, use the most recent complete window as W.
 

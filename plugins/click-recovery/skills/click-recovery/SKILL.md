@@ -145,6 +145,7 @@ Check `.claude/reports/{domain}/activity-log.md`:
   - 2026-02-05 /click-recovery — Updated meta titles on 5 pages.
   ```
 - **Redundancy check**: if `/click-recovery` was run in the last 7 days → warn: "You ran `/click-recovery` on [date]. CTR changes typically take 2-3 weeks to show in GSC. Run again anyway?"
+- **Content refresh check**: scan all entries for `/refresh-content` runs in the last 14 days. Extract any page URLs mentioned. Store as `recently_refreshed_pages` — used in Phase 5.4 to warn before overwriting titles that were just set by a full content refresh.
 - If the log doesn't exist: proceed silently
 
 Use recent activity as context (e.g., if `/weekly-report` flagged specific CTR issues, prioritize those pages).
@@ -526,6 +527,12 @@ Publish these changes to Webflow? (yes/no)
 - ✅ **70-155 chars**: Optimal length
 
 If any warnings exist, ask user: "Some titles/descriptions have length issues. Proceed anyway, or revise first?"
+
+⚡ GUARD — **Page recently refreshed by `/refresh-content`:**
+For each page in the approval list, check if its URL appears in `recently_refreshed_pages` (built in Phase 1.2):
+- If yes: add a row-level warning in the table: "⚠️ `/refresh-content` ran on [date] — meta title was updated as part of a full content refresh"
+- Before publishing that specific page, ask: "This page was recently refreshed — overwriting its title may undo that change. Proceed with this page anyway? (yes/no/skip)"
+- If user says skip: remove the page from the publish batch and continue with others
 
 **Wait for explicit user confirmation before publishing.**
 

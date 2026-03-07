@@ -125,7 +125,7 @@ Score each dimension. Output a table showing pass ✅ / partial ⚠️ / fail �
 | 2 | Direct answer (≤100 words) | Body opens with a self-contained answer to the primary query | High |
 | 3 | Question-based sections | ≥60% of H2s phrased as questions | Medium |
 | 4 | Bullet lists | Dense paragraphs (>4 lines) replaced with bullets where content permits | Medium |
-| 5 | Tables | Comparison or multi-attribute content formatted as tables | Medium |
+| 5 | Tables | Comparison or multi-attribute content formatted as tables (note: tables require manual insertion via Designer — cannot be pushed via API) | Medium |
 | 6 | Step-by-step sections | Procedural content uses numbered lists or Step format | Medium |
 | 7 | Definition sentences | Key concepts have explicit "X is Y" or "X refers to Y" definitions | Medium |
 | 8 | Short paragraphs | No paragraph exceeds 4 sentences; avg ≤ 2.5 sentences | Medium |
@@ -200,6 +200,25 @@ PROPOSED (reformatted):
 ```
 
 For procedural content, propose numbered step format. Each step: one sentence + one optional detail sentence.
+
+**When a table is the right format for comparison or multi-attribute content:**
+
+Webflow's CMS API strips `<table>` tags — tables cannot be pushed via the API or MCP. When a table is warranted:
+
+1. Propose a per-item structured list as the body content (what gets saved via API):
+```html
+<p><strong>Option Name</strong></p>
+<ul>
+  <li><strong>Attribute 1:</strong> Value</li>
+  <li><strong>Attribute 2:</strong> Value</li>
+</ul>
+```
+
+2. Also generate the full HTML table with inline `style` attributes only (no class names) and present it with this note:
+
+> ⚠️ **Manual step required:** In Webflow Designer, open this page, place an HTML Embed element where the table should appear, and paste this HTML. Replace the structured list with the embed once it's in place.
+
+Table styling must use inline styles only. Vary the visual treatment per article — do not reuse a fixed template.
 
 ### 3.5 Definition sentences
 For each technical term or concept in the primary keyword cluster, propose a one-sentence definition to insert at first use:
