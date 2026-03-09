@@ -207,7 +207,7 @@ Recommended weekly cadence:
 
 ## About
 
-Built by [Sofian Bettayeb](https://www.checklist-seo.com) — martech consultant, creator of [AI SEO Copilot](https://webflow.com/apps/detail/ai-seo-copilot) and [AEO Copilot](https://www.aeo-copilot.com), author of [Webflow SEO Checklist](https://www.checklist-seo.com).
+Built by [Sofian Bettayeb](https://www.sofianbettayeb.com) — Marketing expert, creator of [AI SEO Copilot](https://webflow.com/apps/detail/ai-seo-copilot) and [AEO Copilot](https://www.aeo-copilot.com), author of [Webflow SEO Checklist](https://www.checklist-seo.com).
 
 ## License
 
