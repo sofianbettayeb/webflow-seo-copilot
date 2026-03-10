@@ -75,10 +75,10 @@ Find keywords worth targeting. Pulls 90 days of GSC data, classifies rankings in
 
 ### `/write-blog`
 
-Create a new SEO and AEO-optimized blog post in Webflow CMS. Runs a brief intake, expands keywords, proposes an outline for approval, writes a full draft, applies an AI tells check and humanizer pass, runs an AEO audit, then creates the CMS item. Checks the activity log to avoid duplicate content on the same topic.
+Create a new SEO and AEO-optimized blog post in Webflow CMS. Runs a brief intake, then recommends the best article format for your keyword and intent — tutorial, direct comparison, alternatives page, listicle, case study, pillar page, and more. Expands keywords, proposes an outline for approval, writes a full draft, applies an AI tells check and humanizer pass, runs an AEO audit, then creates the CMS item. Checks the activity log to avoid duplicate content on the same topic.
 
 ```
-/write-blog                    — full workflow: brief → outline → draft → audit → CMS draft
+/write-blog                    — full workflow: brief → format recommendation → outline → draft → audit → CMS draft
 /write-blog:outline            — stops after outline approval, no Webflow changes
 /write-blog:publish            — creates and publishes immediately after approval
 ```

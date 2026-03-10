@@ -1,6 +1,6 @@
 {
   "name": "write-blog",
-  "description": "Create a new SEO and AEO-optimized blog draft in Webflow CMS — keyword expansion, outline approval, humanized draft writing, AEO audit pass, and CMS item creation via Webflow MCP.",
+  "description": "Create a new SEO and AEO-optimized blog draft in Webflow CMS — article format recommendation, keyword expansion, outline approval, humanized draft writing, AEO audit pass, and CMS item creation via Webflow MCP.",
   "version": "1.0.0",
   "author": {
     "name": "Sofian Bettayeb"

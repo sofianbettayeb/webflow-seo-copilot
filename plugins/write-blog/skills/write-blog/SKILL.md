@@ -135,6 +135,19 @@ Stop and wait for user confirmation before proceeding.
 
 ---
 
+### Phase 1.5 — Format recommendation
+
+Using the keyword, intent, and objective from Phase 1, infer the 1–2 best-fit article formats from the taxonomy below. Present them briefly — one sentence of rationale each — and ask for confirmation before proceeding.
+
+**Example output:**
+> Based on your keyword and commercial intent, the strongest format here is a **direct comparison** (Type 4). A **brand alternatives** page (Type 3) could also work if you want to capture readers who've already evaluated competitors. Which direction fits your goal?
+
+Adjust the outline, structure, CTA placement, and scannable elements in Phases 3–4 based on the confirmed format.
+
+Do not proceed to Phase 2 until the user confirms a format.
+
+---
+
 ### Phase 2 — Keyword expansion (best-effort)
 
 1. Expand with Keywords Everywhere:
@@ -432,6 +445,34 @@ Return to the user:
 - Meta description
 - Draft item ID
 - Any pending actions before publishing (images, SEO title, Designer bindings)
+
+---
+
+## Article type taxonomy (internal reference — AI use only, do not present as a menu)
+
+Use this to reason about format recommendations in Phase 1.5. Match by intent signal + keyword type. Never show this table wholesale to the user.
+
+| # | Format | Trigger signals | What it shapes |
+|---|--------|----------------|----------------|
+| 1 | **Best [X] for [Audience]** — Listicles / Roundups | Commercial investigation, "best", "top", affiliate angle | Numbered sections, comparison table, CTA per item |
+| 2 | **How to [Achieve Outcome]** — Tutorials | Informational, "how to", practitioner expertise, long-tail | Step-by-step H2s, code/screenshots, ordered flow |
+| 3 | **[Tool/Brand] Alternatives** — Comparison pages | Commercial investigation, competitor name in keyword, shopping-stage readers | Per-alternative structured list, positioning angle, strong CTA |
+| 4 | **[X] vs [Y]** — Direct comparisons | Bottom-of-funnel, two specific tools/options named, product-focused | Side-by-side table, verdict section, internal link to pricing |
+| 5 | **What is [Concept]** — Definitional / educational | Informational, emerging or unfamiliar term, topical authority goal | Definition block (AEO-first), concept breakdown, FAQ |
+| 6 | **[Year] State of / Trends** — Annual reports | Brand building, linkability goal, user has original data or observations | Data sections, year in title, prediction close, shareable framing |
+| 7 | **Checklist / Audit Template** — Actionable tools | Informational, "checklist", "template", "audit", evergreen intent | Numbered checklist, downloadable framing, minimal prose |
+| 8 | **Case Study / Real result** — Proof content | Trust-building, user has real client or project data, positioning goal | Problem → process → result structure, specific numbers, anonymised if needed |
+| 9 | **[Topic] for [Specific Audience]** — Niche-down evergreens | Narrow audience stated, low-competition niche, differentiation goal | Audience-specific framing throughout, avoids generic advice |
+| 10 | **Ultimate Guide / Pillar page** — Authority hub | Broad informational, topic cluster anchor, long-form budget | Multiple H2 sections, internal links to sub-topics, table of contents |
+
+**Intent → format heuristics:**
+- Commercial investigation → lean toward 1, 3, 4
+- Informational + emerging concept → lean toward 5, possibly 10
+- Informational + how-to / practical → lean toward 2, 7
+- Trust / proof → lean toward 8
+- Brand building + linkability → lean toward 6
+- Narrow audience + differentiation → lean toward 9
+- Broad topic + authority goal → lean toward 10
 
 ---
 
