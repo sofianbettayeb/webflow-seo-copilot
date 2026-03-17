@@ -1,11 +1,11 @@
 ---
 name: seo-structure-mapper
-version: "1.0"
+version: "1.1"
 description: |
-  Convert keyword exports, URL lists, and performance data into a structured SEO page architecture — with cluster maps, keyword ownership, gap analysis, cannibalization detection, and a 90-day editorial calendar.
+  Convert keyword exports, URL lists, and performance data into a structured SEO page architecture — with a page inventory table, cluster maps, keyword ownership, new topic suggestions, gap analysis, cannibalization detection, and a 90-day editorial calendar.
   Triggers: seo structure, site architecture, keyword map, pillar pages, topic clusters, content map, seo map, page structure, editorial calendar, content plan, keyword ownership, content gaps.
-  Requires: A page list (manual, Webflow MCP, or GSC) + a keyword list. Optional: GSC MCP for performance data, Keywords Everywhere for volume enrichment.
-  Workflow: Intake → Normalize → Cluster → Map → Roles → Gaps → Cannibalization → Prioritize → Output.
+  Requires: A page list (manual, Webflow MCP, or GSC) + a keyword list. Strongly recommended: Keywords Everywhere for topic discovery and volume enrichment.
+  Workflow: Intake → Normalize → Cluster → KE Enrichment & Topic Discovery → Map → Roles → Gaps → Cannibalization → Prioritize → Output.
   Modes: /seo-structure-mapper (full analysis + editorial calendar), /seo-structure-mapper:audit (existing structure only, no gap analysis), /seo-structure-mapper:quick (structure map only, no editorial calendar).
 ---
 
@@ -75,9 +75,33 @@ Collect all inputs, check tool availability, load config.
 Search for available tools:
 - **Webflow MCP** (optional): Search `+webflow data cms`. If available → use for auto-fetching pages.
 - **GSC MCP** (optional): Search `+gsc search analytics`. If available → use for query data and performance.
-- **Keywords Everywhere** (optional): Search `+keywords everywhere volume`. If available → use for volume/CPC enrichment.
+- **Keywords Everywhere** (strongly recommended): Search `+keywords everywhere volume`.
 
-Note availability in the report header. Proceed with whatever is available.
+**Keywords Everywhere is critical for this skill.** It powers two things that can't be done without it:
+1. Real search volume on every keyword — without it, impressions are the only signal
+2. New topic discovery — related keywords, PASF (People Also Search For), and long-tail expansions the site isn't targeting yet
+
+If Keywords Everywhere is **not connected**, ask the user before proceeding:
+
+```
+⚠️ Keywords Everywhere is not connected.
+
+This skill uses it to suggest new keywords and topics you're not targeting yet —
+not just map what you already have. Without it, topic discovery runs on
+reasoning only (no volume data).
+
+Options:
+1. Connect Keywords Everywhere now → https://github.com/hithereiamaliff/mcp-keywords-everywhere
+2. Continue without it — I'll suggest new topics based on GSC data and reasoning,
+   but won't have search volume to validate them
+
+Which would you prefer?
+```
+
+If the user chooses to continue without KE: proceed, mark every topic suggestion as "volume unvalidated", and include a reminder in the report header.
+If the user connects KE: re-check availability before continuing.
+
+Note all tool availability in the report header.
 
 ### 0.2 Load Config
 
@@ -241,6 +265,77 @@ Identify it by:
 - Usually maps to the brand's primary product/service category
 
 If no clear homepage keyword is identifiable from the keyword list, flag this as a gap: "No clear homepage target keyword found. Consider: what query should someone type to land on your homepage?"
+
+---
+
+## Phase 2.5: KE ENRICHMENT & TOPIC DISCOVERY
+
+Enrich existing keywords with real volume data, then discover new keywords and topics the site isn't targeting yet. This phase runs after clustering so KE queries are focused on confirmed topic areas.
+
+**Run this phase regardless of how small the initial keyword set is.** Even if the user only has 10 GSC keywords, KE can surface 50+ relevant keywords and topics they're missing.
+
+### 2.5.1 Enrich Existing Keywords
+
+If Keywords Everywhere is available, for each keyword in the normalized set:
+- Fetch: monthly search volume, CPC, competition score, trend (rising/flat/declining)
+- Update the normalized keyword record with these values
+- Flag high-value keywords: volume > 500/month OR CPC > $2 (strong commercial signal)
+- Flag declining keywords: trend down > 30% YoY — deprioritize in planning
+
+If KE is not available: note "Volume unvalidated" on all keywords. Use GSC impressions as the only demand signal.
+
+### 2.5.2 Expand Existing Clusters with Related Keywords
+
+For each cluster identified in Phase 2, use KE to discover additional keywords the site could target:
+
+1. Take the top 2–3 keywords per cluster
+2. Run `get_related_keywords` on each
+3. Run `get_pasf_keywords` (People Also Search For) on each
+4. Filter results: keep keywords with volume > 100/month (or top 10 by volume if data is limited)
+5. Match against existing pages — any keyword not already covered = potential gap or expansion
+
+Add discovered keywords to the relevant cluster with tag `[KE discovered]`. These feed directly into Phase 6 (Gap Analysis).
+
+### 2.5.3 Discover New Topic Clusters
+
+Beyond expanding existing clusters, actively look for topics the site should be targeting but isn't:
+
+1. For each cluster pillar keyword, run `get_related_keywords` with broad scope
+2. Look for keyword groups that form a coherent new cluster (3+ related keywords with combined volume > 300/month)
+3. Cross-check against current page inventory — if no page covers this topic → it's a new topic opportunity
+
+For each new topic opportunity found:
+```
+New topic: "{topic name}"
+Seed keyword: "{keyword}" ({volume}/month)
+Related keywords: "{kw1}" ({vol}), "{kw2}" ({vol}), "{kw3}" ({vol})
+Total cluster volume: ~{sum}/month
+Recommended page: {proposed URL and title}
+Audience fit: {why this topic fits the site's audience}
+```
+
+### 2.5.4 Compile KE Enrichment Summary
+
+Before moving to Phase 3, output a brief summary:
+
+```
+## Keywords Everywhere Enrichment Summary
+
+**Existing keywords enriched**: [N] keywords updated with volume data
+**High-value keywords identified**: [N] (volume > 500/month or CPC > $2)
+**Declining keywords flagged**: [N] (deprioritized)
+**New keywords discovered**: [N] added to clusters via related/PASF expansion
+**New topic opportunities**: [N] clusters the site isn't targeting yet
+
+[List new topic opportunities with top keyword + volume]
+```
+
+If KE is not available, output instead:
+```
+⚠️ Keywords Everywhere not connected — topic discovery ran on reasoning only.
+New topic suggestions below are based on site context and GSC signals, not validated volume.
+Connect KE and re-run for volume-backed topic discovery.
+```
 
 ---
 
@@ -430,16 +525,46 @@ Each scored recommendation:
 
 Build and save the full structure map, plus editorial calendar.
 
-### 8.1 Cluster Map (Visual Hierarchy)
+### 8.1 Page Inventory Table
 
-Render the site's topic architecture as an indented tree:
+**This is the first and mandatory output.** Render before anything else. Every page gets exactly one row. No exceptions.
+
+```
+## Page Inventory — {domain}
+
+| URL | Page Title | Page Type | Primary Keyword | Volume/Imp | Secondary Keywords | Status | Notes |
+|-----|------------|-----------|-----------------|------------|--------------------|--------|-------|
+| / | Homepage title | Homepage | "primary kw" | 1,200/mo | "kw2", "kw3" | ✅ Existing | — |
+| /blog/topic | "Article Title" | Pillar page | "main topic" | 850 imp | "variant 1", "variant 2" | ✅ Existing | — |
+| /blog/subtopic | "Support Article" | Support page | "specific topic" | 320 imp | "long tail" | ✅ Existing | ⚠️ Cannibalization risk with /blog/topic |
+| /pricing | "Pricing" | Landing page | "tool pricing" | 200/mo | "plans", "cost" | ✅ Existing | — |
+| — | "Proposed Page Title" | Support page | "gap keyword" | 500/mo | "variant 1" | ❌ Gap — create | — |
+| — | "Planned Page Title" | Pillar page | "planned topic" | 800/mo | — | ⏳ Planned — not live | In sitemap but 404 |
+```
+
+**Status values:**
+- `✅ Existing` — page is live
+- `❌ Gap` — topic has demand but no page exists
+- `⏳ Planned` — page is in sitemap or planned but not created yet
+- `⚠️ Orphan` — page exists but no keywords map to it
+- `🚫 Cannibalization` — keyword is split across 2+ pages
+
+**Page Type values:** Homepage · Pillar page · Support page · Landing page · Index page · Programmatic · Standalone · Utility (404, privacy, etc.)
+
+**Volume/Imp column:** use monthly search volume if KE is connected; use GSC impressions if not. Label accordingly.
+
+Sort order: Homepage first, then by cluster (all pages in a cluster together), then gaps for that cluster, then next cluster.
+
+### 8.2 Cluster Map (Visual Hierarchy)
+
+Render the site's topic architecture as an indented tree. This comes after the Page Inventory Table and shows relationships:
 
 ```
 ## SEO Cluster Map — {domain}
 
 ### Homepage
   / — "{Homepage title}"
-    Primary keyword: "{keyword}" ({volume} searches/month or {impressions} impressions)
+    Primary keyword: "{keyword}" ({volume}/month or {impressions} impressions)
     Role: Homepage | Status: Existing
 
 ### Cluster: Webflow SEO [PILLAR]
@@ -448,24 +573,19 @@ Render the site's topic architecture as an indented tree:
     Primary keyword: "webflow seo checklist" (850 imp, pos 8.2)
   /blog/webflow-seo-settings — "Webflow SEO Settings Explained"
     Role: Support page | Status: Existing | Keywords: 4
-  /blog/webflow-page-speed — "How to Improve Page Speed in Webflow"
-    Role: Support page | Status: Existing | Keywords: 3
-
-### Cluster: CMS Setup [PILLAR]
-  /blog/webflow-cms-tutorial — "Webflow CMS Tutorial"
-    Role: Pillar page | Status: Existing | Keywords: 8
-  /blog/webflow-cms-collections — "Webflow CMS Collections Guide"
-    Role: Support page | Status: Existing | Keywords: 5
   [MISSING] /blog/webflow-cms-dynamic-lists — "Webflow CMS Dynamic Lists"
-    Role: Support page | Status: GAP — create new page
-    Target keywords: "webflow dynamic list" (320 imp), "cms dynamic content webflow" (180 imp)
+    Role: Support page | Status: GAP
+    Target keywords: "webflow dynamic list" (320/mo), "cms dynamic content webflow" (180/mo)
 
-### Cluster: Pricing [STANDALONE]
-  /pricing — "Pricing"
-    Role: Landing page | Status: Existing | Keywords: 2
+### New Topic Opportunities [from KE discovery]
+  [NOT TARGETED] Topic: "Webflow Multilingual SEO"
+    Proposed page: /blog/webflow-multilingual-seo
+    Top keyword: "webflow multilingual" (880/mo)
+    Related: "webflow localization" (590/mo), "webflow multiple languages" (320/mo)
+    Total opportunity: ~1,790/mo
 ```
 
-### 8.2 Keyword Ownership Table
+### 8.3 Keyword Ownership Table
 
 Full table mapping every keyword to its assigned page:
 
