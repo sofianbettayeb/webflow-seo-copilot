@@ -1,6 +1,12 @@
 # /write-blog
 
-Create a new SEO and AEO-optimized blog draft in Webflow CMS. Follows project conventions from `/getting-started`, applies the AEO dimensions from `/aeo-optimize`, runs the AI Writing Tell-Tales check from `/refresh-content`, invokes the `/humanizer` skill before writing to Webflow, and includes an open revision loop until the user explicitly approves the draft.
+Create a new SEO and AEO-optimized blog draft in Webflow CMS.
+
+**This skill is for new posts only.** It creates a CMS item that doesn't exist yet. To update an existing post with outdated facts, stats, or tool references, use `/refresh-content` instead.
+
+Workflow: brief → keyword research → outline → draft → Tell-Tales check → `/humanizer` → revision loop → AEO audit → Webflow draft.
+
+See CLAUDE.md for standard MCP discovery, config loading, and abort guard.
 
 ---
 
@@ -19,10 +25,10 @@ Create a new SEO and AEO-optimized blog draft in Webflow CMS. Follows project co
 | Tool | Required | Used for |
 |------|----------|----------|
 | Webflow MCP | Yes | Create CMS item draft, write fields, set SEO fields |
-| Keywords Everywhere MCP | Strongly recommended | Keyword expansion — related keywords, long-tail, questions |
-| Google Search Console MCP | Optional | Validate intent and query patterns if a matching page already exists |
+| Keywords Everywhere | Strongly recommended | Keyword expansion — related keywords, long-tail, questions |
+| GSC MCP | Optional | Validate intent if a related page already exists |
 
-If Keywords Everywhere is not available, proceed with a GSC-only or reasoning-only approach and warn that volume data is missing.
+Follow CLAUDE.md standard pattern for MCP discovery and Keywords Everywhere prompt.
 
 ---
 

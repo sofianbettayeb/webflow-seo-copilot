@@ -259,39 +259,37 @@ For sites with < 5,000 weekly impressions, replace absolute thresholds with rela
 
 ## Phase 3: SCORE
 
-Same scoring engine as `/monthly-report`, with weekly confidence adjustments.
+Use the priority buckets from CLAUDE.md. No numeric formula — assign buckets based on observable criteria.
 
-### 3.1 Scoring Dimensions
+**Weekly data note:** Single-week observations only qualify for High Value, not Must Do, unless the issue is structural (broken page, confirmed cannibalization). Must Do requires either a multi-week confirmed trend or a structural problem visible in the data.
 
-| Dimension | Scale | Criteria |
-|-----------|-------|----------|
-| **Impact** | 1-5 | Clicks at risk or recoverable, % of total site traffic, conversion proximity |
-| **Confidence** | 1-5 | Data strength, multi-week confirmation, source reliability. **Capped for weekly data** (see below). |
-| **Effort** | 1-5 | 1 = metadata change, 2 = content tweak, 3 = section rewrite, 4 = new section/FAQ, 5 = full page creation |
+### 3.1 Priority Buckets
 
-### 3.2 Weekly Confidence Caps
+See CLAUDE.md for full criteria. Weekly-specific additions:
 
-| Condition | Max Confidence |
-|-----------|---------------|
-| Single-week observation only | 3 |
-| 2 consecutive weeks same direction | 4 |
-| 3+ weeks same direction | 5 |
-| Weekly impressions < 50 for a page | 2 |
-| Trend confirmed in last monthly report | 5 |
+**Must do** (this week) — structural or confirmed:
+- Page in sitemap returning 404
+- GSC confirms same keyword on 2+ pages simultaneously
+- Indexation error on a page with existing traffic
+- Trend confirmed across 3+ consecutive weeks AND impressions > 50
 
-### 3.3 Priority & Buckets
+**High value** (schedule within 3 days):
+- Keyword cluster in top 20% of site impressions with no matching page
+- Page CTR < half expected for its position bracket (confirmed in GSC this week)
+- Primary keyword missing from title on a page with 50+ weekly impressions
+- Cluster has 2+ support posts but no pillar page
 
-```
-Priority = (Impact × Confidence) / Effort
-```
+**Nice to have** — everything else qualifying. Items with no data signal are excluded.
 
-| Bucket | Criteria | Action |
-|--------|----------|--------|
-| **Must fix** | Priority ≥ 8.0 AND (Impact ≥ 4 OR indexation issue) | Address this week |
-| **High impact** | Priority ≥ 4.0 AND Impact ≥ 3 | Schedule within 3 days |
-| **Nice to have** | Priority ≥ 1.5 | Add to backlog |
+### 3.2 Recommendation Format
 
-Recommendations with Priority < 1.5 are excluded (noise reduction).
+Each recommendation:
+1. **Action title** — specific and directive
+2. **Why** — 1–2 lines with the observable metric that triggered it
+3. **Expected impact** — what changes if this is fixed
+4. **Effort** — Low / Medium / High
+5. **Skill shortcut** — which skill to run
+6. **Cross-reference** — if flagged in last monthly report, note "Still open from monthly report"
 
 ### 3.4 Recommendation Format
 

@@ -287,25 +287,23 @@ Flag high-value queries:
 
 ## Phase 4: Prioritize & Recommend
 
-### 4.1 Scoring Model
+### 4.1 Ranking Model
 
-Score each page opportunity (0-100):
+Rank pages by CTR opportunity using these signals (higher = do first):
 
-| Factor | Weight | Scoring |
-|--------|--------|---------|
-| Wasted impressions | 30% | Log scale, max at 10k |
-| Position | 25% | Higher score for positions 1-10 |
-| CTR gap | 20% | Current CTR vs. expected CTR for position |
-| Keyword value | 15% | Based on volume × CPC (if available) |
-| Quick fix potential | 10% | Title missing primary keyword = +10 |
+1. **Wasted impressions** — pages with the most impressions getting no clicks
+2. **CTR gap** — how far below the expected CTR for their position bracket
+3. **Position** — positions 1–10 have higher recovery potential than 11+
+4. **Keyword value** — volume × CPC as a tiebreaker when KE is connected
+5. **Quick fix** — title missing the primary keyword = bump up
 
 ### 4.2 Rank Opportunities
 
-Sort pages by score, descending. Group into tiers:
+Sort pages by rank, group into buckets using CLAUDE.md criteria:
 
-- **Tier 1 (Score 70+)**: Immediate action — significant wasted traffic
-- **Tier 2 (Score 50-69)**: High priority — solid improvement potential
-- **Tier 3 (Score 30-49)**: Worth doing — incremental gains
+- **Must do** — page CTR is less than half the expected rate for its position (confirmed in GSC) AND impressions > site average
+- **High value** — meaningful CTR gap with 50+ weekly impressions, or primary keyword missing from title on a high-impression page
+- **Nice to have** — small CTR gap, low impressions, or marginal improvement potential
 
 ### 4.3 Generate Recommendations
 
@@ -375,7 +373,7 @@ Present findings as a structured report:
 
 ---
 
-## Tier 1: Immediate Action
+## Must Do
 
 ### 1. [Page Title]
 **URL**: [page URL]
@@ -405,12 +403,12 @@ Present findings as a structured report:
 
 ---
 
-[Repeat for each Tier 1 page]
+[Repeat for each Must Do page]
 
-## Tier 2: High Priority
+## High Value
 [Summary table with key metrics, current titles, suggested titles]
 
-## Tier 3: Worth Doing
+## Nice to Have
 [Summary table with key metrics]
 
 ## Ranking Opportunities (Position 21-50)
@@ -425,7 +423,7 @@ These pages have high impressions but need more than meta tag fixes to reach pag
 
 ## Next Steps
 
-1. Review and approve Tier 1 recommendations
+1. Review and approve Must Do recommendations
 2. Publish approved changes directly (this skill handles it)
 3. For ranking opportunities: run `/refresh-content [URL]`
 4. Monitor CTR in GSC after 2-4 weeks
@@ -434,7 +432,7 @@ These pages have high impressions but need more than meta tag fixes to reach pag
 
 ### 4.5 Competitor SERP Analysis (Optional)
 
-For Tier 1 pages, offer to analyze the SERP:
+For Must Do pages, offer to analyze the SERP:
 
 1. Web search the primary keyword
 2. Extract titles and descriptions of top 5 results
@@ -457,7 +455,7 @@ After presenting the report, ask the user:
 
 ```
 Which pages would you like to update?
-1. All Tier 1 pages ([N] pages)
+1. All Must Do pages ([N] pages)
 2. Select specific pages
 3. Review only — don't publish yet
 ```

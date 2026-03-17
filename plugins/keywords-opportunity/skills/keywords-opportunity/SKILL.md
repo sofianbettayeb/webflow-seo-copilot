@@ -411,10 +411,10 @@ effort        = 2 if existing_page else 4
 priority      = (impact × confidence) / effort
 ```
 
-Priority buckets:
-- **Must pursue** (priority ≥ 8.0)
-- **High value** (priority ≥ 4.0)
-- **Worth tracking** (priority ≥ 1.5)
+Priority buckets (see CLAUDE.md for criteria):
+- **Must do** (priority ≥ 8.0) — structural gap or confirmed cannibalization
+- **High value** (priority ≥ 4.0) — cluster with 50+ impressions and no matching page, or keyword missing from title
+- **Nice to have** (priority ≥ 1.5) — incremental coverage improvements
 
 ---
 
@@ -513,7 +513,7 @@ For each page in Tier A, sorted by `page_total_impressions` descending:
 - "Keyword + CTR ok, ranking stuck → `/refresh-content {URL}` (content depth)"
 - "CTR crisis + keyword gap → `/click-recovery` first, then `/refresh-content {URL}`"
 
-**Priority**: [Must pursue / High value / Worth tracking] (Score: {priority})
+**Priority**: [Must do / High value / Nice to have] (Score: {priority})
 **Estimated impact**: +[X] clicks/month
 ```
 

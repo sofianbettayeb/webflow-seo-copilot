@@ -4,7 +4,7 @@ version: "1.0"
 description: |
   Monthly SEO report — what changed, why it matters, and what to do next. Compares Month M vs M-1, scores recommendations by impact/confidence/effort, and outputs an actionable report for founders and executives.
   Triggers: monthly report, seo report, monthly review, performance report, traffic report, monthly analysis.
-  Requires: Google Search Console MCP server, Webflow MCP server. Optional: Keywords Everywhere API for volume/intent enrichment.
+  Requires: Google Search Console MCP server. Optional: Webflow MCP server (for page inventory and metadata audit), Keywords Everywhere API for volume/intent enrichment.
   Workflow: Configure → Fetch → Analyze → Score → Report → Save.
   Modes: /monthly-report (full report), /monthly-report:quick (executive summary + action plan only).
 ---
@@ -18,7 +18,7 @@ This skill is **read-only** — it analyzes GSC + Webflow data but never modifie
 ## Prerequisites
 
 - **Required**: [Google Search Console MCP server](https://github.com/sofianbettayeb/gsc-mcp-server)
-- **Required**: [Webflow MCP server](https://developers.webflow.com/mcp/reference/overview) (for page inventory and metadata audit)
+- **Optional**: [Webflow MCP server](https://developers.webflow.com/mcp/reference/overview) (for page inventory and metadata audit — GSC-only analysis runs without it)
 - **Optional**: [Keywords Everywhere MCP server](https://github.com/hithereiamaliff/mcp-keywords-everywhere) (needs API key — for search volume and intent enrichment on top queries)
 
 ## Skill Modes
@@ -72,9 +72,9 @@ This skill requires GSC data. If unavailable:
 - Stop execution — GSC is a hard requirement
 
 ⚡ GUARD — **Webflow MCP unavailable:**
-This skill requires Webflow data for page inventory, indexation cross-reference, and metadata audit. If unavailable:
-- Inform user: "Monthly Report requires Webflow MCP for page inventory and metadata analysis. Please connect Webflow MCP and try again."
-- Stop execution — Webflow is a hard requirement
+Webflow data enriches the indexation cross-reference and metadata audit. If unavailable:
+- Note: "Webflow MCP not connected — skipping page inventory, indexation cross-reference, and metadata audit. Connect it for a full report."
+- Continue with GSC-only analysis — do not stop execution
 
 ⚡ GUARD — **Keywords Everywhere unavailable:**
 If KE API is not available:
@@ -108,9 +108,9 @@ How would you like to run the Monthly Report?
 - Search: `+gsc search analytics`
 - If missing: Stop and inform user: "Monthly Report requires GSC MCP. Install from: https://github.com/sofianbettayeb/gsc-mcp-server"
 
-**Webflow MCP** (required):
+**Webflow MCP** (optional):
 - Search: `+webflow data cms`
-- If missing: Stop and inform user: "Monthly Report requires Webflow MCP. Install from: https://developers.webflow.com/mcp/reference/overview"
+- If missing: note it and continue without page inventory / metadata sections
 
 **Keywords Everywhere** (optional but check):
 - Search: `+keywords everywhere volume`
@@ -396,31 +396,26 @@ If body content is not available or not in a parseable format:
 
 ## Phase 3: Score Recommendations
 
-### 3.1 Scoring Engine
+### 3.1 Priority Buckets
 
-Every recommendation gets scored on three dimensions:
+Use the priority buckets from CLAUDE.md. No numeric formula — assign buckets based on observable criteria.
 
-| Dimension | Scale | Criteria |
-|-----------|-------|----------|
-| **Impact** | 1-5 | Clicks at risk or recoverable, % of total site traffic, conversion proximity |
-| **Confidence** | 1-5 | Data strength (sample size), multi-month confirmation (consistent trend), data source reliability |
-| **Effort** | 1-5 | 1 = metadata change, 2 = content tweak, 3 = section rewrite, 4 = new section/FAQ, 5 = full page creation |
+**Monthly-specific additions:**
 
-### 3.2 Priority Calculation
+**Must do** (address this month) — structural or multi-month confirmed:
+- Page in sitemap returning 404
+- GSC confirms same keyword on 2+ pages simultaneously over multiple months
+- Indexation error on a page with existing traffic
+- Trend confirmed across 3+ consecutive months AND impressions > 100
 
-```
-Priority = (Impact × Confidence) / Effort
-```
+**High value** (schedule within 2 weeks):
+- Keyword cluster in top 20% of site impressions with no matching page
+- Page CTR < half expected for its position bracket (confirmed in GSC this month)
+- Primary keyword missing from title on a page with 100+ monthly impressions
+- Cluster has 2+ support posts but no pillar page
+- A page losing clicks 3+ months in a row with no content changes
 
-### 3.3 Bucket Assignment
-
-| Bucket | Criteria | Action |
-|--------|----------|--------|
-| **Must fix** | Priority ≥ 8.0 AND (Impact ≥ 4 OR indexation issue) | Address this month |
-| **High impact** | Priority ≥ 4.0 AND Impact ≥ 3 | Schedule within 2 weeks |
-| **Nice to have** | Priority ≥ 1.5 | Add to backlog |
-
-Recommendations with Priority < 1.5 are excluded from the report (noise reduction).
+**Nice to have** — everything else qualifying. Items with no data signal are excluded.
 
 ### 3.4 Recommendation Format
 
@@ -733,7 +728,7 @@ Provide a monitoring checklist at the end of the report:
 | Error | Action |
 |-------|--------|
 | GSC MCP not connected | Stop and instruct user to connect GSC |
-| Webflow MCP not connected | Stop and instruct user to connect Webflow |
+| Webflow MCP not connected | Note it, skip page inventory and metadata sections, continue with GSC data |
 | GSC property not found | List available properties, ask user to select |
 | No data for date range | Try shorter range (28 days), warn about limited data |
 | Multiple GSC properties | List all, ask user to select |

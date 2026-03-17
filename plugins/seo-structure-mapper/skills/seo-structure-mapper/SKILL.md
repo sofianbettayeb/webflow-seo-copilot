@@ -477,28 +477,25 @@ Beyond individual keywords, identify structural gaps:
 
 ## Phase 7: PRIORITIZE
 
-Score every recommendation using the same engine as `/weekly-report` and `/monthly-report`.
+Use the priority buckets from CLAUDE.md. No numeric formula — assign buckets based on observable criteria.
 
-### 7.1 Scoring Dimensions
+### 7.1 Priority Buckets
 
-| Dimension | Scale | Criteria |
-|-----------|-------|----------|
-| **Impact** | 1–5 | Total keyword volume or impressions at stake, click potential, commercial intent |
-| **Confidence** | 1–5 | Quality of data backing the recommendation (GSC confirmed = 5, volume-only = 3, reasoning-only = 2) |
-| **Effort** | 1–5 | 1 = metadata fix, 2 = content tweak, 3 = section addition, 4 = page expansion/merge, 5 = new page creation |
+**Must do** — at least one structural problem confirmed in the data:
+- GSC confirms same keyword ranking on 2+ pages simultaneously (cannibalization)
+- A page in the sitemap is returning a 404
+- An indexation error on a page with existing traffic
 
-### 7.2 Priority Formula
+**High value** — clear opportunity with data backing:
+- A keyword cluster in the top 20% of site impressions with no matching page
+- The primary keyword for a page doesn't appear in its title
+- A cluster has 2+ support posts but no pillar page
+- A page that exists in the architecture is missing from GSC entirely
 
-```
-Priority = (Impact × Confidence) / Effort
-```
-
-| Bucket | Criteria |
-|--------|----------|
-| **Must do** | Priority ≥ 8.0 AND Impact ≥ 4 |
-| **High value** | Priority ≥ 4.0 AND Impact ≥ 3 |
-| **Nice to have** | Priority ≥ 1.5 |
-| **Excluded** | Priority < 1.5 — too low signal to act on |
+**Nice to have** — everything else:
+- Coverage gaps on existing pages (missing sub-topics)
+- Metadata length issues with no confirmed traffic impact
+- Orphan pages with no internal links
 
 ### 7.3 Recommendation Types Scored
 

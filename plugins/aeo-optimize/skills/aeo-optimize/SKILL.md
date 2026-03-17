@@ -1,39 +1,35 @@
-# /aeo-optimize
-
-Transform any Webflow page or CMS item into an AEO-ready answer. Takes a single page, identifies its primary query via GSC, audits 12 AEO dimensions, proposes a full rewrite, gets approval, then publishes directly to Webflow.
-
+---
+name: aeo-optimize
+version: "1.1"
+description: |
+  Transform any page into an AEO-ready answer. Audits 12 AEO dimensions, proposes a full rewrite, gets approval, then publishes to Webflow.
+  Triggers: aeo optimize, aeo optimization, optimize for ai, answer engine optimization, aeo audit, optimize for chatgpt.
+  Requires: Webflow MCP. Optional: GSC MCP for keyword discovery.
+  Modes: /aeo-optimize (full workflow), /aeo-optimize:audit (score only).
 ---
 
-## Trigger phrases
+# AEO Optimize
 
+Transform any page into an AEO-ready answer. Audits 12 dimensions, proposes targeted rewrites, gets one approval, then publishes.
+
+**Modes:**
 - `/aeo-optimize` — full workflow: audit → propose → approve → publish
-- `/aeo-optimize:audit` — audit and score only, no changes proposed
+- `/aeo-optimize:audit` — score only, no changes proposed
 
----
+See CLAUDE.md for standard MCP discovery, config loading, and abort guard.
 
-## MCP requirements
-
-| Tool | Used for |
-|------|----------|
-| Webflow MCP | Read page content, update CMS items or static pages, publish |
-| Google Search Console MCP | Fetch queries for the target page |
-
----
-
-## Modes
-
-### `/aeo-optimize` (default)
-Full workflow. Audits the page, generates a complete AEO rewrite proposal across all 12 dimensions, shows it for approval, then publishes on confirmation.
-
-### `/aeo-optimize:audit`
-Audit only. Scores the page on all 12 AEO dimensions and outputs a prioritized gap report. No changes made.
+**MCP requirements:** Webflow MCP (required). GSC MCP (optional — if unavailable, ask user for the primary keyword).
 
 ---
 
 ## Phase 0 — Setup
 
-### 0.1 MCP check
-Verify Webflow MCP and GSC MCP are connected. If GSC is unavailable, note it — the skill can proceed but will ask the user to provide the primary keyword manually.
+### 0.1 MCP check & config
+Follow CLAUDE.md standard pattern. Load config — use `business.name` and author info for schema generation (Phase 3.9).
+
+⚡ GUARD — **Webflow MCP unavailable:** Stop. "AEO Optimize requires Webflow MCP to read and update page content."
+
+⚡ GUARD — **GSC unavailable:** Note it, continue. Ask user for the primary keyword in Phase 1.2 if needed.
 
 ### 0.2 Page input
 Ask the user for the target page:
@@ -295,13 +291,13 @@ Generate the complete schema block.
   "description": "{meta description}",
   "author": {
     "@type": "Person",
-    "name": "Sofian Bettayeb",
-    "url": "https://www.checklist-seo.com/about-us"
+    "name": "{author name from config or ask user}",
+    "url": "{author URL from config}"
   },
   "publisher": {
     "@type": "Organization",
-    "name": "Webflow SEO Checklist",
-    "url": "https://www.checklist-seo.com"
+    "name": "{business.name from config}",
+    "url": "https://{domain}"
   },
   "datePublished": "{original publish date or today}",
   "dateModified": "{today}"
@@ -478,7 +474,7 @@ Append to `.claude/reports/{domain}/activity-log.md`:
 
 | Situation | Recommended next step |
 |-----------|----------------------|
-| Page needs fresh content before AEO | Run `/refresh-content` first, then `/aeo-optimize` |
+| Page has outdated facts or stale content | Run `/refresh-content` first (actualizes content), then `/aeo-optimize` |
 | Page has CTR problem after AEO | Run `/click-recovery` — AEO changes may shift the optimal title |
 | Collection missing schema field | Run `/cms-collection-setup:review` first |
 | Want to find which pages to AEO-optimize | Run `/keywords-opportunity` — pages with striking distance queries are best candidates |
