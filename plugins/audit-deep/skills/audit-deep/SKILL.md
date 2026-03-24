@@ -1,10 +1,10 @@
 ---
 name: audit-deep
-version: "1.1"
+version: "1.2"
 description: |
-  Deep SEO & AEO maturity audit with GSC + Webflow data. Post-sale baseline that scores 4 dimensions across 5 maturity levels with data-backed evidence. Produces a client-ready report with quantified opportunities, engagement plan, and appendix data tables.
+  Deep SEO & AEO maturity audit with GSC + Webflow data. Post-sale baseline that scores 4 dimensions across 5 maturity levels with data-backed evidence. Produces a client-ready report with quantified opportunities, engagement plan, and appendix data tables. Works with Webflow, WordPress, and other CMS platforms.
   Triggers: audit deep, deep audit, post-sale audit, implementation audit.
-  Requires: GSC MCP server, Webflow MCP server. Optional: Keywords Everywhere for volume data.
+  Requires: GSC MCP server. Recommended: Webflow MCP server. Optional: PageSpeed MCP, Keywords Everywhere.
   Workflow: Discover → Fetch → Check → Score → Report → Save.
   Command: /audit:deep
 ---
@@ -20,7 +20,8 @@ This skill is **read-only** — it never modifies Webflow content.
 ## Prerequisites
 
 - **Required**: [Google Search Console MCP server](https://github.com/sofianbettayeb/gsc-mcp-server)
-- **Required**: [Webflow MCP server](https://developers.webflow.com/mcp/reference/overview)
+- **Recommended**: [Webflow MCP server](https://developers.webflow.com/mcp/reference/overview) — enables CMS schema checks (TD1–TD3, TD5, CD3, CD5). If unavailable, the skill runs in GSC-only mode and skips Webflow-dependent checks. Works with any CMS (WordPress, Webflow, Squarespace, etc.).
+- **Optional**: [PageSpeed MCP](https://github.com/your-pagespeed-mcp) (for Core Web Vitals — LCP, TBT, CLS, mobile score)
 - **Optional**: [Keywords Everywhere MCP server](https://github.com/hithereiamaliff/mcp-keywords-everywhere) (for volume/intent enrichment)
 
 ## Maturity Model Reference
@@ -35,7 +36,8 @@ See `references/maturity-model.md` for the full rubric. Same model as `/audit` b
 - Stop: "Deep audit requires GSC. Connect GSC MCP and try again, or run `/audit {url}` for a quick assessment."
 
 ⚡ GUARD — **Webflow MCP unavailable:**
-- Stop: "Deep audit requires Webflow MCP. Connect Webflow MCP and try again."
+- Warn: "Webflow MCP not connected. Running in GSC-only mode — CMS schema checks (field completeness, indexation cross-reference, template schema) will be skipped. Connect Webflow MCP for full coverage, or continue with reduced scope."
+- Continue with GSC + web signals. Mark all Webflow-dependent checks as `N/A — GSC-only mode` in the report.
 
 ⚡ GUARD — **Low traffic (< 500 impressions in 90 days):**
 - Warn: "Low traffic site. Statistical confidence is reduced."
@@ -53,10 +55,30 @@ See `references/maturity-model.md` for the full rubric. Same model as `/audit` b
 Search for tools BEFORE starting:
 
 - **GSC MCP** (required): Search `+gsc search analytics`. If missing → stop.
-- **Webflow MCP** (required): Search `+webflow data cms`. If missing → stop.
+- **Webflow MCP** (recommended): Search `+webflow data cms`. If missing → warn and continue in GSC-only mode.
+- **PageSpeed MCP** (optional): Search `+pagespeed performance audit`. If missing → note, will skip Core Web Vitals section.
 - **Keywords Everywhere** (optional): Search `+keywords everywhere volume`. If missing → note in report, proceed.
 
-### 0.2 User Input
+### 0.2 CMS Platform Detection
+
+Before prompting for user input, detect the CMS platform from the homepage HTML. Fetch the homepage and look for:
+
+| Signal | Platform |
+|--------|----------|
+| `/wp-content/uploads/` or `wp-json` in HTML | WordPress |
+| `data-wf-site` attribute or `webflow.com` script | Webflow |
+| `cdn.shopify.com` | Shopify |
+| `static.wixstatic.com` | Wix |
+| `squarespace-cdn.com` | Squarespace |
+| No match | Unknown / Custom |
+
+Record `{platform}` and use it to:
+- Determine which CMS checks are applicable (see Phase 2 check tags)
+- Adapt the report header data sources line
+- If Webflow is **not** detected but Webflow MCP is connected → warn: "Webflow MCP is connected but this site does not appear to be Webflow. CMS checks will be skipped."
+- If WordPress is detected but Webflow MCP is the only CMS MCP → automatically enter GSC-only mode without asking
+
+### 0.3 User Input
 
 Prompt for:
 
@@ -72,7 +94,7 @@ Then use MCP to discover:
 If multiple matches: present a numbered selection list and ask user to choose.
 If unique: auto-select and confirm.
 
-### 0.3 Set {domain}
+### 0.4 Set {domain}
 
 Extract domain from the selected GSC property URL. Normalize: strip `www.`, lowercase.
 
@@ -81,7 +103,7 @@ The `{domain}` is used for:
 - **Latest pointer**: `./{domain}/reports/latest-deep.md`
 - **Activity log**: `./{domain}/reports/activity-log.md`
 
-### 0.4 Review Activity Log
+### 0.5 Review Activity Log
 
 Check `./{domain}/reports/activity-log.md`:
 - If it exists: show recent activity summary (last 10 entries)
@@ -89,7 +111,7 @@ Check `./{domain}/reports/activity-log.md`:
 - Note if a quick audit exists (`./{domain}/reports/latest-quick.md`) — reference it for comparison
 - If not found: proceed silently
 
-### 0.5 Load Config
+### 0.6 Load Config
 
 Load `.claude/seo-copilot-config.json` if it exists. Extract:
 - `business.name` → branded query detection
@@ -115,7 +137,15 @@ If not found: proceed with defaults, note "Run `/getting-started` for personaliz
 
 **Coverage/indexing signals** (if available via API surface).
 
-### 1.2 Webflow Data
+**Large dataset handling:** If query+page data is very large (thousands of rows), do not read the full file into context. Instead, extract targeted analyses:
+- Top 100 queries by impressions
+- Top 50 queries by clicks
+- Cannibalization candidates: queries where 2+ pages appear — use a targeted script (`jq` or `python3`) rather than reading the raw file
+- Sample first 200 rows for pattern analysis
+
+Note any sampling in the report footnote.
+
+### 1.2 Webflow Data `[Webflow only — skip if GSC-only mode]`
 
 **Pages and collections:**
 - `get_collection_list` → `list_collection_items` per collection
@@ -146,14 +176,56 @@ Surface schema scores in the Technical section of the report and in the CMS fiel
 
 Sample first 100 items if a collection is large. Note limitation in report.
 
-### 1.3 Web Data
+### 1.3 PageSpeed Data (Optional)
+
+If PageSpeed MCP is available, run audits on:
+- Homepage
+- Top 2 pages by GSC impressions
+
+Extract and record:
+- Mobile performance score (0–100)
+- Desktop performance score (0–100)
+- LCP (Largest Contentful Paint)
+- TBT (Total Blocking Time)
+- CLS (Cumulative Layout Shift)
+- Key diagnostics: render-blocking resources, image sizes, unused JS
+
+Surface scores in the Technical section. Mobile score below 50 is a "Must fix" finding.
+
+If PageSpeed MCP is unavailable, note: "Core Web Vitals data not available — connect PageSpeed MCP for performance diagnostics."
+
+### 1.4 Crawl Tool Data (Optional)
+
+Ask the user once:
+> "Do you have a Screaming Frog or Sitebulb export? If so, share the path to the issues overview CSV and I'll incorporate it."
+> Options: 1. Yes — provide path  2. No — skip
+
+If provided, read the CSV and map these issue types to the existing check framework:
+
+| Crawl Tool Issue | Maps to Check |
+|-----------------|---------------|
+| H1: Missing | C2 / H1 coverage |
+| Meta Description: Missing | TD7 / metadata completeness |
+| Page Titles: Below 30 Characters | TD7 / metadata completeness |
+| Images: Over 100 KB | Performance |
+| Images: Missing Size Attributes | CLS / performance |
+| Images: Missing Alt Text | Accessibility / SEO |
+| Content: Lorem Ipsum Placeholder | Content quality |
+| Directives: Noindex | TD1 / indexation |
+| Links: Internal Nofollow Outlinks | Internal linking equity |
+| Content: Low Content Pages | CD3 / thin content |
+| Security: Missing X-Frame-Options/CSP/HSTS | Security (low SEO impact) |
+
+When crawl data is available, it takes precedence over web-signal estimates. Note in the report: "Structural issues confirmed by [Tool] crawl of [N] pages."
+
+### 1.5 Web Data
 
 Fetch via WebFetch:
 - Homepage HTML (for schema, tracking scripts, site-wide signals)
 - sitemap.xml (try `/sitemap_index.xml` as fallback)
 - robots.txt
 
-### 1.4 Keywords Everywhere (Optional)
+### 1.6 Keywords Everywhere (Optional)
 
 If available: top 30 queries by impressions — volume, CPC, competition, trend.
 
@@ -167,25 +239,29 @@ Run all quick audit checks (see `/audit` skill) on the fetched homepage HTML, PL
 
 ### Content Checks (Deep)
 
-| # | Check | Rule | Evidence |
-|---|-------|------|----------|
-| CD1 | Query-to-page alignment | For each top GSC query, a relevant page exists (query appears in page's title or description) | Unmatched queries = content gaps |
-| CD2 | No cannibalization | No query cluster has 2+ pages ranking within 5 positions of each other | Conflicting pages + positions |
-| CD3 | No thin content | All CMS items have body content ≥ 300 words (or ≥ 50% of fields populated) | Items below threshold |
-| CD4 | Topic coverage | GSC query clusters all have corresponding content pages | Uncovered clusters |
-| CD5 | CMS field completeness | Per collection: % of items with all SEO fields populated (title, description, keywords) | Completion rate per collection |
+| # | Check | Rule | Evidence | Requires |
+|---|-------|------|----------|----------|
+| CD1 | Query-to-page alignment | For each top GSC query, a relevant page exists (query appears in page's title or description) | Unmatched queries = content gaps | GSC |
+| CD2 | No cannibalization | No query cluster has 2+ pages ranking within 5 positions of each other | Conflicting pages + positions | GSC |
+| CD3 | No thin content | All CMS items have body content ≥ 300 words (or ≥ 50% of fields populated) | Items below threshold | Webflow or crawl tool |
+| CD4 | Topic coverage | GSC query clusters all have corresponding content pages | Uncovered clusters | GSC |
+| CD5 | CMS field completeness | Per collection: % of items with all SEO fields populated (title, description, keywords) | Completion rate per collection | Webflow |
+| CD6 | Editorial → product linking | For each editorial/blog page ranking in GSC, at least one contextual in-content link points to a relevant product/service page | Pages with no product link = missed conversion path | GSC + WebFetch |
 
 ### Technical Checks (Deep)
 
-| # | Check | Rule | Evidence |
-|---|-------|------|----------|
-| TD1 | Indexation cross-reference | All Webflow published pages appear in GSC | Not-indexed list, orphan-indexed list |
-| TD2 | Metadata completeness | All CMS templates have title/description rules, not falling back to `name` only | Templates using `name` as title |
-| TD3 | Schema coverage per template | Each content template type has appropriate schema (Article for blog, etc.) | Templates missing schema |
-| TD4 | Crawl freshness | Top pages crawled within last 30 days | Pages with stale crawl |
-| TD5 | Sitemap vs live pages | Sitemap URL count matches Webflow published page count (within 10%) | Mismatch count |
-| TD6 | No duplicate meta titles | Zero duplicate `<title>` values across all pages | Duplicate groups |
-| TD7 | No metadata length issues | All titles 30–60 chars, all descriptions 70–155 chars | Pages outside range |
+| # | Check | Rule | Evidence | Requires |
+|---|-------|------|----------|----------|
+| TD1 | Indexation cross-reference | All published pages appear in GSC | Not-indexed list, orphan-indexed list | Webflow |
+| TD2 | Metadata completeness | All CMS templates have title/description rules, not falling back to `name` only | Templates using `name` as title | Webflow |
+| TD3 | Schema coverage per template | Each content template type has appropriate schema (Article for blog, etc.) | Templates missing schema | Webflow |
+| TD4 | Crawl freshness | Top pages crawled within last 30 days | Pages with stale crawl | GSC |
+| TD5 | Sitemap vs live pages | Sitemap URL count matches published page count (within 10%) | Mismatch count | Webflow or sitemap fetch |
+| TD6 | No duplicate meta titles | Zero duplicate `<title>` values across all pages | Duplicate groups | GSC or crawl tool |
+| TD7 | No metadata length issues | All titles 30–60 chars, all descriptions 70–155 chars | Pages outside range | GSC or crawl tool |
+| TD8 | Core Web Vitals | Mobile PageSpeed ≥ 50, LCP < 4s, CLS < 0.1 | Score, LCP, TBT, CLS values | PageSpeed MCP |
+
+For checks marked "Webflow" in the Requires column: if Webflow MCP is unavailable, mark as `N/A — GSC-only mode` and note which signals were used as a partial proxy (e.g., sitemap URL count from WebFetch for TD5).
 
 ### Authority Checks (Deep)
 
@@ -230,8 +306,8 @@ score_dimension(dimension, evidence):
 | Level | Gates (all must pass) |
 |-------|----------------------|
 | 1 | Quick C1 (title) AND C2 (H1) AND GSC shows ≥ 1 ranking query per indexed page |
-| 2 | Level 1 AND CD1 (query-page alignment for top queries) AND quick C4 (FAQ) AND CD5 (≥ 50% CMS field completeness) |
-| 3 | Level 2 AND CD2 (no major cannibalization) AND CD4 (topic coverage ≥ 80%) AND CD3 (no thin content) |
+| 2 | Level 1 AND CD1 (query-page alignment for top queries) AND quick C4 (FAQ) AND CD5 (≥ 50% CMS field completeness — skip if GSC-only mode) |
+| 3 | Level 2 AND CD2 (no major cannibalization) AND CD4 (topic coverage ≥ 80%) AND CD3 (no thin content) AND CD6 (editorial pages have product links) |
 | 4 | Level 3 AND pillar pages rank for 50+ queries AND child pages link back AND CD5 (≥ 90% field completeness) |
 | 5 | Level 4 AND automated freshness signals AND expanding query footprint (more queries month-over-month) |
 
@@ -240,8 +316,8 @@ score_dimension(dimension, evidence):
 | Level | Gates (all must pass) |
 |-------|----------------------|
 | 1 | Quick T1 (HTTPS) AND T2 (viewport) AND title tags exist on ≥ 80% of pages |
-| 2 | Level 1 AND TD1 (all key pages indexed) AND TD6 (no duplicate titles) AND TD5 (sitemap matches) |
-| 3 | Level 2 AND TD3 (schema on all content templates) AND TD2 (no templates using `name` as title) AND TD7 (metadata lengths ok) |
+| 2 | Level 1 AND TD1 (all key pages indexed — skip if GSC-only) AND TD6 (no duplicate titles) AND TD5 (sitemap matches) |
+| 3 | Level 2 AND TD3 (schema on all content templates — skip if GSC-only) AND TD2 (no templates using `name` as title — skip if GSC-only) AND TD7 (metadata lengths ok) AND TD8 (mobile PageSpeed ≥ 50 — skip if no PageSpeed MCP) |
 | 4 | Level 3 AND Organization + Person schema AND BreadcrumbList AND TD4 (crawl freshness < 30 days for top pages) |
 | 5 | Level 4 AND zero technical debt AND programmatic schema AND automated monitoring |
 
@@ -319,11 +395,14 @@ Output a single markdown file with these sections:
 
 **Prepared for:** {domain}
 **Date:** YYYY-MM-DD
-**Assessment type:** Deep (GSC + Webflow data)
+**Assessment type:** Deep ({platform} + GSC data)
 **Confidence:** Medium–High
 **Period analyzed:** Last 90 days
-**Data sources:** GSC ([X] days of data, [Y] pages, [Z] queries), Webflow ([N] pages, [M] CMS items across [K] collections), Keywords Everywhere ([status])
+**Data sources:** GSC ([X] days of data, [Y] pages, [Z] queries)[, Webflow ([N] pages, [M] CMS items across [K] collections) — omit if GSC-only mode][, PageSpeed (mobile [score]/100, desktop [score]/100) — omit if unavailable][, [Crawl Tool] crawl ([N] pages) — omit if not provided], Keywords Everywhere ([status])
+**CMS platform:** {platform}
 ```
+
+Adapt the data sources line to only list sources that were actually used.
 
 ---
 
@@ -405,13 +484,15 @@ For each dimension, write a **data-backed narrative** (not a pass/fail table):
 
 **5. Opportunities & Business Impact**
 
-Prioritized table of opportunities. Use ICE scoring internally but present as a clean priority list:
+Prioritized table of opportunities. Use ICE scoring internally and show the score — it makes prioritization logic transparent and defensible in client conversations:
 
-| Priority | Opportunity | Estimated Impact | What You're Leaving on the Table |
-|----------|-------------|------------------|----------------------------------|
-| Must fix | [opportunity] | [quantified: impressions, clicks, pages affected] | [business consequence] |
-| High impact | [opportunity] | [quantified] | [business consequence] |
-| Nice to have | [opportunity] | [quantified] | [business consequence] |
+| Priority | ICE | Opportunity | Estimated Impact | What You're Leaving on the Table |
+|----------|-----|-------------|------------------|----------------------------------|
+| Must fix | 9.0 | [opportunity] | [quantified: impressions, clicks, pages affected] | [business consequence] |
+| High impact | 6.0 | [opportunity] | [quantified] | [business consequence] |
+| Nice to have | 2.5 | [opportunity] | [quantified] | [business consequence] |
+
+ICE = (Impact × Confidence) / Effort. Show one decimal place. Clients appreciate the rigor and it prevents scope arguments.
 
 For each opportunity:
 - Quantify with GSC data where possible (impressions at risk, potential click gain from CTR improvement, etc.)
@@ -520,11 +601,47 @@ Save these files:
 - `./{domain}/reports/audit-deep-YYYY-MM-DD.md` (timestamped)
 - `./{domain}/reports/latest-deep.md` (overwrite each run — other skills read this)
 
-Optionally save supporting datasets as JSON under `./{domain}/reports/data/`:
+Save supporting datasets as JSON under `./{domain}/reports/data/`:
 - `content-gaps.json`
 - `cannibalization.json`
 - `indexation.json`
 - `metadata-audit.json`
+- **`baseline.json`** — structured snapshot for `/weekly-report` delta comparisons:
+
+```json
+{
+  "domain": "{domain}",
+  "date": "YYYY-MM-DD",
+  "platform": "{platform}",
+  "maturity": {
+    "overall": 0,
+    "content": 0,
+    "technical": 0,
+    "authority": 0,
+    "measurement": 0
+  },
+  "search_footprint": {
+    "total_impressions_90d": 0,
+    "total_clicks_90d": 0,
+    "avg_ctr": 0.0,
+    "avg_position": 0.0,
+    "pages_with_impressions": 0,
+    "queries_with_impressions": 0
+  },
+  "top_pages": [
+    {"url": "", "impressions": 0, "clicks": 0, "ctr": 0.0, "position": 0.0}
+  ],
+  "pagespeed": {
+    "mobile_score": null,
+    "desktop_score": null,
+    "lcp_mobile": null,
+    "tbt_mobile": null,
+    "cls_mobile": null
+  }
+}
+```
+
+`/weekly-report` loads `baseline.json` to compute week-over-week deltas against this engagement starting point.
 
 Create directories if needed: `mkdir -p ./{domain}/reports/data/`
 
@@ -533,7 +650,7 @@ Create directories if needed: `mkdir -p ./{domain}/reports/data/`
 Append to `./{domain}/reports/activity-log.md`:
 
 ```
-| YYYY-MM-DD | /audit:deep | Deep audit. Overall Level: X (Name). Content: X, Technical: X, Authority: X, Measurement: X. Must-fix items: N. |
+| YYYY-MM-DD | /audit:deep | Deep audit ({platform}). Overall Level: X. Content: X, Technical: X, Authority: X, Measurement: X. Must-fix: N. [Mobile PageSpeed: XX/100.] |
 ```
 
 Log even on early exit.

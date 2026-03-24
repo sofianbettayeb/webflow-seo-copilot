@@ -1,7 +1,7 @@
 {
   "name": "audit-deep",
-  "description": "Deep SEO & AEO maturity audit with GSC + Webflow data. Full indexation, content gaps, cannibalization, and CMS template analysis.",
-  "version": "1.0.0",
+  "description": "Deep SEO & AEO maturity audit with GSC data. Works with Webflow, WordPress, and any CMS. Full indexation, content gaps, cannibalization, CMS template analysis, Core Web Vitals, and crawl tool integration.",
+  "version": "1.2.0",
   "author": {
     "name": "Sofian Bettayeb"
   },
