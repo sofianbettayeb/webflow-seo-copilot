@@ -1,15 +1,15 @@
 ---
-name: seo-structure-mapper
+name: topic-map
 version: "1.2"
 description: |
   Convert keyword exports, URL lists, and performance data into a structured SEO keyword map — with per-cluster keyword ownership tables, product page tracking, editorial→product linking status, cluster maps, gap analysis, cannibalization detection, and a 90-day editorial calendar.
   Triggers: seo structure, site architecture, keyword map, keyword ownership map, page keyword map, what keyword does each page target, product page map, pillar pages, topic clusters, content map, seo map, page structure, editorial calendar, content plan, keyword ownership, content gaps.
   Requires: A page list (manual, Webflow MCP, or GSC) + a keyword list. Strongly recommended: Keywords Everywhere for topic discovery and volume enrichment.
   Workflow: Intake → Normalize → Cluster → KE Enrichment & Topic Discovery → Map → Roles → Gaps → Cannibalization → Prioritize → Output.
-  Modes: /seo-structure-mapper (full analysis + editorial calendar), /seo-structure-mapper:audit (existing structure only, no gap analysis), /seo-structure-mapper:quick (structure map only, no editorial calendar).
+  Modes: /topic-map (full analysis + editorial calendar), /topic-map:audit (existing structure only, no gap analysis), /topic-map:quick (structure map only, no editorial calendar).
 ---
 
-# SEO Structure Mapper
+# Topic Map
 
 Most sites have pages and keywords — but no clear view of which page owns which topic, where there are gaps, and what to build next. This skill fixes that.
 
@@ -31,9 +31,9 @@ It takes any combination of URLs, keyword exports, and performance data, and out
 
 | Mode | Command | Use Case |
 |------|---------|----------|
-| **Full** | `/seo-structure-mapper` | Complete analysis: cluster map, keyword ownership, gaps, priorities, editorial calendar |
-| **Audit** | `/seo-structure-mapper:audit` | Existing structure only — no gap analysis, no editorial calendar. Good for a quick health check. |
-| **Quick** | `/seo-structure-mapper:quick` | Structure map and top priorities, no editorial calendar. |
+| **Full** | `/topic-map` | Complete analysis: cluster map, keyword ownership, gaps, priorities, editorial calendar |
+| **Audit** | `/topic-map:audit` | Existing structure only — no gap analysis, no editorial calendar. Good for a quick health check. |
+| **Quick** | `/topic-map:quick` | Structure map and top priorities, no editorial calendar. |
 
 ## Workflow Overview
 
@@ -47,7 +47,7 @@ INTAKE → NORMALIZE → CLUSTER → MAP → ROLES → GAPS → CANNIBALIZATION 
 
 ⚡ GUARD — **No page list and no keyword list:**
 If the user provides neither a page list nor a keyword list, and neither Webflow MCP nor GSC MCP are connected:
-- Stop: "SEO Structure Mapper needs at least a page list and a keyword list to work. Paste your URLs and keywords, or connect Webflow MCP or GSC MCP."
+- Stop: "Topic Map needs at least a page list and a keyword list to work. Paste your URLs and keywords, or connect Webflow MCP or GSC MCP."
 
 ⚡ GUARD — **Only pages, no keywords:**
 If pages are available but no keywords can be sourced:
@@ -119,7 +119,7 @@ If GSC MCP is available: list properties and ask user to select. Extract domain 
 If GSC not available: ask user for their domain (used only for the report save path and activity log).
 
 Check `.claude/reports/{domain}/activity-log.md` for recent context:
-- If `/seo-structure-mapper` was run in the last 30 days → warn: "A structure map was already generated on [date]. Run again to update it?"
+- If `/topic-map` was run in the last 30 days → warn: "A structure map was already generated on [date]. Run again to update it?"
 - Read last 5 entries for context (recent skills run, recent publishes)
 
 ### 0.4 Collect Inputs
@@ -758,12 +758,12 @@ Every report includes a header:
 
 ### 8.8 Save Report
 
-Save to `.claude/reports/{domain}/seo-structure-map-YYYY-MM-DD.md`.
+Save to `.claude/reports/{domain}/topic-map-YYYY-MM-DD.md`.
 
 Also save a stable pointer file:
-`.claude/reports/{domain}/latest-seo-structure-map.md` — overwrite with each run (always points to the latest map).
+`.claude/reports/{domain}/latest-topic-map.md` — overwrite with each run (always points to the latest map).
 
-Other skills (e.g., `/weekly-report`, `/write-blog`) should check for `latest-seo-structure-map.md` to avoid recommending pages or clusters that are already mapped or planned.
+Other skills (e.g., `/weekly-report`, `/write-blog`) should check for `latest-topic-map.md` to avoid recommending pages or clusters that are already mapped or planned.
 
 If directory creation fails: output in terminal only, warn user.
 
@@ -795,7 +795,7 @@ If directory creation fails: output in terminal only, warn user.
 
 ## Integration with Other Skills
 
-SEO Structure Mapper is **planning-only**. Other skills execute.
+Topic Map is **planning-only**. Other skills execute.
 
 | Recommendation type | Skill | Why |
 |---------------------|-------|-----|
@@ -841,7 +841,7 @@ If the file doesn't exist, create it with the header:
 Then append:
 
 ```
-| YYYY-MM-DD | /seo-structure-mapper | [one-line summary: e.g., "Mapped 47 pages, 312 keywords. 5 clusters, 8 gaps, 2 cannibalization risks. Calendar: 12 weeks. Report saved."] |
+| YYYY-MM-DD | /topic-map | [one-line summary: e.g., "Mapped 47 pages, 312 keywords. 5 clusters, 8 gaps, 2 cannibalization risks. Calendar: 12 weeks. Report saved."] |
 ```
 
 Log even if the skill exits early — note reason (e.g., "Aborted: no keyword list provided").

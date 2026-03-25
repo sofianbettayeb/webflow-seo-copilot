@@ -1,0 +1,11 @@
+{
+  "name": "topic-map",
+  "description": "Convert keyword exports, URL lists, and performance data into a structured topic map — per-cluster keyword ownership tables, product page tracking, editorial→product linking status, gap analysis, and a 90-day editorial calendar.",
+  "version": "1.2.0",
+  "author": {
+    "name": "Sofian Bettayeb"
+  },
+  "homepage": "https://github.com/sofianbettayeb/webflow-seo-copilot",
+  "license": "MIT",
+  "keywords": ["seo", "site-architecture", "keyword-mapping", "pillar-pages", "topic-clusters", "gap-analysis", "editorial-calendar", "webflow", "gsc"]
+}
