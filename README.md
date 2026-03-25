@@ -30,6 +30,7 @@ Claude Code skills for Webflow SEO — keyword research, content creation, traff
 /plugin install monthly-report@webflow-seo-copilot
 /plugin install audit@webflow-seo-copilot
 /plugin install audit-deep@webflow-seo-copilot
+/plugin install topic-map@webflow-seo-copilot
 
 # Run setup first — captures brand voice, SEO goals, and activates activity logging
 /getting-started
@@ -164,13 +165,27 @@ Pre-sale SEO & AEO maturity assessment from any public URL. No MCP servers neede
 
 ### `/audit:deep`
 
-Post-sale engagement baseline with GSC + Webflow data. Same maturity model as `/audit` but data-backed: 90-day search analytics, CMS analysis, content gaps, keyword cannibalization, indexation cross-reference, and a phased roadmap (quick wins → optimization → growth).
+Post-sale engagement baseline with GSC + Webflow data. Same maturity model as `/audit` but data-backed: 90-day search analytics, CMS analysis, content gaps, keyword cannibalization, indexation cross-reference, and a phased roadmap (quick wins → optimization → growth). Works with Webflow, WordPress, and any CMS platform.
 
 ```
 /audit:deep
 ```
 
 [Full skill docs →](plugins/audit-deep/skills/audit-deep/SKILL.md)
+
+---
+
+### `/topic-map`
+
+Turn keyword exports, URL lists, and GSC data into a structured keyword map. Outputs one table per cluster showing which page targets which keyword, page type (Hub / Editorial / Product), and status (existing / missing / orphan). Surfaces editorial→product linking gaps, cannibalization risks, and a 90-day editorial calendar. Works from any combination of inputs — paste URLs and keywords, or connect Webflow MCP and GSC for auto-fetch.
+
+```
+/topic-map                  — full: cluster tables, gap analysis, editorial calendar
+/topic-map:audit            — existing structure only, no gap analysis
+/topic-map:quick            — cluster tables + top priorities, no editorial calendar
+```
+
+[Full skill docs →](plugins/topic-map/skills/topic-map/SKILL.md)
 
 ---
 
@@ -194,6 +209,10 @@ Post-sale engagement baseline with GSC + Webflow data. Same maturity model as `/
 | Monthly performance review | `/monthly-report` |
 | Pre-sale site assessment (no MCP) | `/audit {url}` |
 | Post-sale engagement baseline | `/audit:deep` |
+| Map which keyword each page targets | `/topic-map` |
+| Find missing pages and topic gaps | `/topic-map` |
+| Visualize hub → editorial → product structure | `/topic-map` |
+| Quick structure check, no calendar | `/topic-map:quick` |
 
 ## How skills work together
 
