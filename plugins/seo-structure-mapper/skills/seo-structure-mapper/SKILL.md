@@ -1,9 +1,9 @@
 ---
 name: seo-structure-mapper
-version: "1.1"
+version: "1.2"
 description: |
-  Convert keyword exports, URL lists, and performance data into a structured SEO page architecture — with a page inventory table, cluster maps, keyword ownership, new topic suggestions, gap analysis, cannibalization detection, and a 90-day editorial calendar.
-  Triggers: seo structure, site architecture, keyword map, pillar pages, topic clusters, content map, seo map, page structure, editorial calendar, content plan, keyword ownership, content gaps.
+  Convert keyword exports, URL lists, and performance data into a structured SEO keyword map — with per-cluster keyword ownership tables, product page tracking, editorial→product linking status, cluster maps, gap analysis, cannibalization detection, and a 90-day editorial calendar.
+  Triggers: seo structure, site architecture, keyword map, keyword ownership map, page keyword map, what keyword does each page target, product page map, pillar pages, topic clusters, content map, seo map, page structure, editorial calendar, content plan, keyword ownership, content gaps.
   Requires: A page list (manual, Webflow MCP, or GSC) + a keyword list. Strongly recommended: Keywords Everywhere for topic discovery and volume enrichment.
   Workflow: Intake → Normalize → Cluster → KE Enrichment & Topic Discovery → Map → Roles → Gaps → Cannibalization → Prioritize → Output.
   Modes: /seo-structure-mapper (full analysis + editorial calendar), /seo-structure-mapper:audit (existing structure only, no gap analysis), /seo-structure-mapper:quick (structure map only, no editorial calendar).
@@ -13,7 +13,7 @@ description: |
 
 Most sites have pages and keywords — but no clear view of which page owns which topic, where there are gaps, and what to build next. This skill fixes that.
 
-It takes any combination of URLs, keyword exports, and performance data, and outputs a clear page architecture: topic clusters, keyword ownership per page, missing pages, cannibalization risks, and a prioritized editorial calendar.
+It takes any combination of URLs, keyword exports, and performance data, and outputs a clear keyword map: per-cluster ownership tables showing which page targets which keyword, product page tracking, editorial→product linking status, gap analysis, cannibalization risks, and a prioritized editorial calendar.
 
 **This skill is read-only** — it produces a structured map and editorial plan, but never modifies Webflow content. It hands off to `/write-blog`, `/refresh-content`, and `/click-recovery` for execution.
 
@@ -386,9 +386,12 @@ Assign a structural role to each existing page.
 | **Homepage** | Root URL — targets the broadest brand/category keyword | `/` |
 | **Pillar page** | Covers a major topic comprehensively — links to multiple support pages | `/topic` or `/guide/topic` |
 | **Support page** | Deep-dives into one specific sub-topic within a pillar — links back up | `/blog/specific-topic` or `/topic/subtopic` |
-| **Landing page** | Transactional focus — conversion over ranking | `/pricing`, `/contact`, `/free-trial` |
+| **Product page** | Transactional page for a specific service, trip, or offering. The destination that editorial content should link to. Primary metric is conversion, not ranking. | `/trips/gorilla-day-trip`, `/services/seo-audit` |
+| **Landing page** | Generic transactional focus — not tied to a specific product (pricing, contact, free trial) | `/pricing`, `/contact`, `/free-trial` |
 | **Index page** | Lists/aggregates content (e.g., blog index, category page) — not a ranking target itself | `/blog`, `/resources` |
 | **Standalone** | Topic doesn't map under a pillar — independent ranking target | `/about`, one-off guides |
+
+**Product vs. Landing page:** Use "Product page" when the page represents a specific bookable, purchasable, or requestable offering that editorial content should link to. Use "Landing page" for generic conversion pages (pricing, contact, sign-up) that are not cluster-specific.
 
 ### 4.2 Assign Roles
 
@@ -522,35 +525,75 @@ Each scored recommendation:
 
 Build and save the full structure map, plus editorial calendar.
 
-### 8.1 Page Inventory Table
+### 8.1 Keyword Map — Per-Cluster Tables
 
-**This is the first and mandatory output.** Render before anything else. Every page gets exactly one row. No exceptions.
+**This is the first and mandatory output.** Render before anything else. Output one table per cluster, with a summary table at the end. Every page gets exactly one row somewhere. No exceptions.
+
+#### Per-cluster table format
+
+For each cluster, render an H3 header and table, followed by two summary lines:
 
 ```
-## Page Inventory — {domain}
+### Cluster: {Cluster Name}
 
-| URL | Page Title | Page Type | Primary Keyword | Volume/Imp | Secondary Keywords | Status | Notes |
-|-----|------------|-----------|-----------------|------------|--------------------|--------|-------|
-| / | Homepage title | Homepage | "primary kw" | 1,200/mo | "kw2", "kw3" | ✅ Existing | — |
-| /blog/topic | "Article Title" | Pillar page | "main topic" | 850 imp | "variant 1", "variant 2" | ✅ Existing | — |
-| /blog/subtopic | "Support Article" | Support page | "specific topic" | 320 imp | "long tail" | ✅ Existing | ⚠️ Cannibalization risk with /blog/topic |
-| /pricing | "Pricing" | Landing page | "tool pricing" | 200/mo | "plans", "cost" | ✅ Existing | — |
-| — | "Proposed Page Title" | Support page | "gap keyword" | 500/mo | "variant 1" | ❌ Gap — create | — |
-| — | "Planned Page Title" | Pillar page | "planned topic" | 800/mo | — | ⏳ Planned — not live | In sitemap but 404 |
+| URL | Page Type | Primary Keyword | Volume | GSC Imp | Status |
+|-----|-----------|-----------------|--------|---------|--------|
+| /rwanda | Hub | rwanda tours | 1,200/mo | 433 | ✅ Exists |
+| /gorilla-trekking | Editorial | gorilla trekking rwanda | 3,600/mo | 1,200 | ✅ Exists |
+| /volcanoes-np | Editorial | volcanoes national park rwanda | 2,400/mo | — | ❌ Missing |
+| /trips/gorilla-day-trip | Product | gorilla day trip | 480/mo | 620 | ✅ Exists |
+| /trips/kigali-city-tour | Product | kigali city tour | 480/mo | 890 | ✅ Exists |
+
+**Cluster health**: 3/5 pages exist | 2 gaps | 0 cannibalization risks
+**Linking**: Editorial → Product: ⚠️ 1/2 (gorilla-trekking links to gorilla trip, not to kigali tour)
 ```
+
+**Sort order within each table:**
+1. Hub page (if exists)
+2. Pillar page (if exists and distinct from hub)
+3. Editorial/Support pages — existing rows first, then ❌ Missing rows
+4. Product pages — existing rows first, then ❌ Missing rows
 
 **Status values:**
-- `✅ Existing` — page is live
-- `❌ Gap` — topic has demand but no page exists
-- `⏳ Planned` — page is in sitemap or planned but not created yet
+- `✅ Exists` — page is live
+- `❌ Missing` — topic has demand but no page exists
+- `⏳ Planned` — page is in sitemap or planned but not yet live
 - `⚠️ Orphan` — page exists but no keywords map to it
-- `🚫 Cannibalization` — keyword is split across 2+ pages
+- `🚫 Cannibalizes {url}` — keyword is split across 2+ pages
 
-**Page Type values:** Homepage · Pillar page · Support page · Landing page · Index page · Programmatic · Standalone · Utility (404, privacy, etc.)
+**Column rules:**
+- `Volume` = KE monthly volume if available — omit column if KE not connected
+- `GSC Imp` = 90-day GSC impressions — omit column if GSC not connected
+- If neither KE nor GSC is available: replace both columns with a single `Demand` column with qualitative values (High / Medium / Low / Unknown)
 
-**Volume/Imp column:** use monthly search volume if KE is connected; use GSC impressions if not. Label accordingly.
+**Cluster health line:** `{N}/{total} pages exist | {N} gaps | {N} cannibalization risks`
 
-Sort order: Homepage first, then by cluster (all pages in a cluster together), then gaps for that cluster, then next cluster.
+**Linking line (check editorial → product links):**
+- `✅ All editorial pages link to a product page in this cluster`
+- `⚠️ {N}/{M} editorial pages link to a product page — missing: {page list}`
+- `ℹ️ No product pages in this cluster — no linking check required`
+
+Linking status is determined by checking whether editorial/support pages in the cluster contain a contextual in-content link (not just navigation) to at least one product page in the same cluster.
+
+---
+
+#### After all cluster tables: Full Site Summary Table
+
+Render a compact single table covering all existing pages (no gap rows) for a quick full-site scan:
+
+```
+## Full Site Summary — {domain}
+
+| URL | Type | Primary Keyword | Cluster | Status |
+|-----|------|-----------------|---------|--------|
+| / | Hub | brand keyword | All | ✅ |
+| /rwanda | Hub | rwanda tours | Rwanda | ✅ |
+| /gorilla-trekking | Editorial | gorilla trekking rwanda | Rwanda | ✅ |
+| /trips/gorilla-day-trip | Product | gorilla day trip | Rwanda | ✅ |
+| /pricing | Landing page | — | — | ✅ |
+```
+
+No volume/impressions columns — just keyword ownership at a glance. Sort: Homepage → Hubs → per-cluster pages → standalone pages → landing/utility pages.
 
 ### 8.2 Cluster Map (Visual Hierarchy)
 
@@ -699,10 +742,11 @@ A 90-day schedule for executing the must-do and high-value recommendations:
 Every report includes a header:
 
 ```
-# SEO Structure Map — {domain}
+# SEO Keyword Map — {domain}
 **Generated**: {date}
 **Pages analyzed**: {N} | **Keywords analyzed**: {N}
-**Clusters identified**: {N} | **Content gaps**: {N} | **Cannibalization risks**: {N}
+**Clusters**: {N} | {N} with gaps | {N} with linking issues
+**Content gaps**: {N} | **Cannibalization risks**: {N}
 
 **Data sources**:
 - Pages: [Webflow MCP / GSC / manual paste]
