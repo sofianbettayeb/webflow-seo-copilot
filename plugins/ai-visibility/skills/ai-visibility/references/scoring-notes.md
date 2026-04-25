@@ -53,10 +53,23 @@ When a check fails, the report should describe the missing signal as a finding (
 The 15% sentiment component is a normalized score:
 
 ```
-sentiment_health = (positive_mentions × 100 + neutral_mentions × 50) / total_mentions
+sentiment_health = (positive × 100 + neutral × 50) / total
 ```
 
-So 100% = every mention is positive, 50% = every mention is neutral, 0% = every mention is negative. A "healthy" brand sits above 65%.
+So 100% = every record is positive, 50% = every record is neutral, 0% = every record is negative. A "healthy" brand sits above 65%.
+
+### Brand sentiment vs category sentiment
+
+The `get_insights.sentiment` payload aggregates sentiment across **all tracked prompts**, including responses where the brand was not mentioned. That number reflects the tone of the surrounding category conversation, not the tone of the brand's own coverage.
+
+Compute and label both:
+
+- **Category sentiment** = platform value from `get_insights.sentiment`. Use this when reporting the platform-computed Sentiment Health score.
+- **Brand sentiment** = compute from `get_results` rows where any engine mentioned the brand. This is the sentiment of the brand's actual mentions.
+
+If `mentioned_count < 10`, brand sentiment is too small to report on its own. In that case:
+- Put **brand sentiment** as the headline figure on the scorecard (with the count, e.g., "1 mention, neutral").
+- Footnote category sentiment so the platform-derived score isn't mistaken for brand reception.
 
 ## Voice rules for findings
 

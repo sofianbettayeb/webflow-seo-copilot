@@ -173,6 +173,8 @@
     page-break-inside: avoid;
     break-inside: avoid;
   }
+  .llm-head { display: flex; align-items: center; gap: 8px; min-height: 22px; }
+  .llm-logo { width: 18px; height: 18px; flex-shrink: 0; display: block; }
   .llm-card .name {
     font-size: 11px;
     text-transform: uppercase;
@@ -292,6 +294,58 @@
   .competitor-fill { background: var(--accent); height: 100%; border-radius: 2px; }
   .competitor-count { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-soft); text-align: right; font-variant-numeric: tabular-nums; }
 
+  /* -------- external source list -------- */
+  .section-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(74, 143, 168, 0.12);
+    color: var(--grade-b);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 14px;
+    letter-spacing: 0.02em;
+    vertical-align: middle;
+    margin-left: 12px;
+  }
+  .section-tag svg { width: 11px; height: 11px; }
+  .sources-list { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+  .source-row {
+    display: grid;
+    grid-template-columns: 36px 28px 1fr auto;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    background: var(--paper);
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+  .source-rank {
+    width: 28px; height: 28px;
+    background: var(--rule-soft);
+    border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px; font-weight: 500;
+    color: var(--ink-soft);
+  }
+  .source-icon { width: 22px; height: 22px; color: var(--ink-muted); display: flex; align-items: center; justify-content: center; }
+  .source-icon svg { width: 18px; height: 18px; }
+  .source-domain { font-size: 14px; font-weight: 500; color: var(--ink); font-family: 'JetBrains Mono', monospace; }
+  .source-count {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-muted);
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .source-row.is-owned .source-domain { color: var(--accent); }
+  .source-row.is-owned { border-color: var(--accent); background: var(--accent-soft); }
+
   /* -------- gap prompts appendix -------- */
   table.gaps {
     width: 100%;
@@ -345,11 +399,26 @@
     size: A4;
     margin: 16mm;
   }
+  /* Force backgrounds + colors to render in PDF. Browsers default to economy-print
+     and strip backgrounds, which would erase the bars, pills, badges, and section tags. */
+  html, body, .competitor-track, .competitor-fill,
+  .sentiment-bar, .sentiment-bar > span,
+  .pill, .grade-badge, .methodology, .section-tag,
+  .findings li::before, table.topics th, table.gaps th,
+  .engine-tag, .findings .evidence code, .source-rank, .source-row.is-owned {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
   @media print {
+    * {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
     body { background: white; font-size: 11pt; }
     .page { padding: 0; max-width: none; box-shadow: none; }
     h2 { margin-top: 28px; }
-    .score-card, .llm-card, .competitor-row, .findings li, .methodology {
+    .score-card, .llm-card, .competitor-row, .source-row, .findings li, .methodology {
       break-inside: avoid;
       page-break-inside: avoid;
     }
@@ -406,12 +475,13 @@
 
   <!-- ========== PER-LLM VISIBILITY ========== -->
   <h2>Visibility by engine</h2>
-  <p style="font-size:12px;color:var(--ink-soft);margin-top:-8px;">Brand mention rate across {{totalPrompts}} prompts tracked over the last 90 days.</p>
+  <p style="font-size:12px;color:var(--ink-soft);margin-top:-8px;">Brand mention rate across {{totalPrompts}} prompts tracked over {{dataWindowLabel}}.</p>
   <div class="llm-grid">
-    <!-- repeat this block 4×: ChatGPT, Claude, Perplexity, Google AI Overview -->
+    <!-- repeat this block 4×: ChatGPT, Claude, Perplexity, Google AIO -->
+    <!-- engineLogoSvg comes from references/engine-logos.md (inline SVG, no external requests). -->
     {{#engines}}
     <div class="llm-card">
-      <div class="name">{{engineName}}</div>
+      <div class="llm-head">{{{engineLogoSvg}}}<span class="name">{{engineName}}</span></div>
       <div class="rate">{{mentionRate}}%</div>
       <div class="rate-label">mentioned in {{mentionCount}} of {{promptCount}} prompts</div>
       <div class="stat">Avg position: <strong>{{avgPosition}}</strong></div>
@@ -488,7 +558,7 @@
 
   <!-- ========== COMPETITOR LANDSCAPE ========== -->
   <h2>Competitor landscape</h2>
-  <p style="font-size:12px;color:var(--ink-soft);margin-top:-8px;">Share-of-voice across the {{gapPromptCount}} prompts where {{brandName}} is mentioned in 0 or 1 of 4 engines.</p>
+  <p style="font-size:12px;color:var(--ink-soft);margin-top:-8px;">Share-of-voice across the {{gapPromptCount}} prompts where {{brandName}} is mentioned in 0 or 1 of {{engineCount}} engines.</p>
   <div class="competitor-list">
     {{#competitors}}
     <div class="competitor-row">
@@ -501,9 +571,23 @@
     {{/competitors}}
   </div>
 
+  <!-- ========== EXTERNAL SOURCE INFLUENCE ========== -->
+  <h2>External source influence<span class="section-tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3h7v7"/><path d="M21 3l-9 9"/><path d="M19 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h6"/></svg>Third-party</span></h2>
+  <p style="font-size:12px;color:var(--ink-soft);margin-top:-8px;">The domains LLMs cite when answering {{brandName}}'s {{totalPrompts}} tracked prompts. {{uniqueSources}} unique domains, {{totalCitations}} total citations across the engines whose source lists were captured. <strong style="color:var(--ink);">{{brandDomain}}</strong> appears in <strong style="color:var(--ink);">{{brandInSources}}</strong> of them.</p>
+  <div class="sources-list">
+    {{#sources}}
+    <div class="source-row {{#isOwned}}is-owned{{/isOwned}}">
+      <div class="source-rank">{{rank}}</div>
+      <div class="source-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 010 18M12 3a14 14 0 000 18"/></svg></div>
+      <div class="source-domain">{{domain}}</div>
+      <div class="source-count">{{citations}} citations</div>
+    </div>
+    {{/sources}}
+  </div>
+
   <!-- ========== APPENDIX: GAP PROMPTS ========== -->
   <h2>Appendix · Gap prompts</h2>
-  <p style="font-size:12px;color:var(--ink-soft);margin-top:-8px;">Every tracked prompt where {{brandName}} is mentioned in 0 or 1 of 4 engines. Use this as the raw evidence behind the gaps section.</p>
+  <p style="font-size:12px;color:var(--ink-soft);margin-top:-8px;">Every tracked prompt where {{brandName}} is mentioned in 0 or 1 of {{engineCount}} engines. Use this as the raw evidence behind the gaps section.</p>
   <table class="gaps">
     <thead>
       <tr>
@@ -530,11 +614,11 @@
   <!-- ========== METHODOLOGY FOOTER ========== -->
   <div class="methodology">
     <h4>How to read this report</h4>
-    <p>The AI Visibility score is a 0–100 composite from the AEO Copilot platform. It blends three signals: how often the brand is mentioned across the four tracked engines (60%), the technical readiness of the website for AI crawlers (25%), and the sentiment health of the mentions that do happen (15%). Grades follow standard A–F bands: A ≥ 85, B ≥ 70, C ≥ 55, D ≥ 40, F &lt; 40.</p>
+    <p>The AI Visibility score is a 0–100 composite from the AEO Copilot platform. It blends three signals: how often the brand is mentioned across the tracked engines (60%), the technical readiness of the website for AI crawlers (25%), and the sentiment health of the mentions that do happen (15%). Grades follow standard A–F bands: A ≥ 85, B ≥ 70, C ≥ 55, D ≥ 40, F &lt; 40.</p>
     <dl>
-      <dt>Data window</dt><dd>Last 90 days · {{dataFromDate}} → {{dataToDate}}</dd>
-      <dt>Prompt corpus</dt><dd>{{totalPrompts}} prompts across {{totalTopics}} topics</dd>
-      <dt>Engines tracked</dt><dd>ChatGPT, Claude, Perplexity, Google AI Overview</dd>
+      <dt>Data window</dt><dd>{{dataWindowLabel}} · {{dataFromDate}} → {{dataToDate}}</dd>
+      <dt>Prompt corpus</dt><dd>{{totalPrompts}} prompts across {{totalTopics}} topics ({{corpusBand}})</dd>
+      <dt>Engines tracked</dt><dd>{{enginesTrackedList}}</dd>
       <dt>Last platform sync</dt><dd>{{lastSyncDate}}</dd>
       <dt>Source</dt><dd>AEO Copilot · aeo-copilot.com</dd>
     </dl>
