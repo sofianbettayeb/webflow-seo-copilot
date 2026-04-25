@@ -1,8 +1,8 @@
 ---
 name: ai-visibility
-version: "1.0"
+version: "1.1"
 description: |
-  Baseline AI visibility report — a one-page client diagnostic showing how a brand appears across ChatGPT, Claude, Perplexity, and Google AI Overview. Pulls live data from AEO Copilot, computes per-LLM scorecards, surfaces gaps with evidence, and renders a single self-contained HTML file (print-styled for Cmd+P → PDF).
+  Baseline AI visibility report — a one-page client diagnostic showing how a brand appears across ChatGPT, Claude, Perplexity, and Google AIO. Pulls live data from AEO Copilot, computes per-LLM scorecards, surfaces gaps with evidence, ranks the external domains LLMs cite, and renders a single self-contained HTML file (print-styled for Cmd+P → PDF).
   Triggers: ai visibility, ai visibility report, baseline ai report, llm visibility, llm visibility report, brand visibility audit, aeo baseline, aeo report.
   Requires: AEO Copilot MCP server. Optional: nothing.
   Workflow: Discover → Fetch → Aggregate → Render → Save.
@@ -11,16 +11,16 @@ description: |
 
 # AI Visibility Skill
 
-Baseline diagnostic of a brand's presence across the four major AI engines (ChatGPT, Claude, Perplexity, Google AI Overview). Designed as a **client deliverable** — a single HTML page Sofian hands to a new client at the start of an engagement so they can answer in five minutes:
+Baseline diagnostic of a brand's presence across the four tracked AI engines (ChatGPT, Claude, Perplexity, Google AIO). A **client deliverable**, a single HTML page handed to a new client at the start of an engagement so they can answer in five minutes:
 
 1. *How visible is my brand in LLMs today?*
 2. *What's working and what's not?*
 
-This skill is **read-only** and **diagnostic-only**. It surfaces findings with evidence (specific prompt counts, scores, citations, competitor names) but never prescribes "do this" actions. The client takes the diagnosis to inform their own roadmap.
+This skill is **read-only** and **diagnostic-only**. Findings cite evidence (specific prompt counts, scores, citations, competitor names, source domains) and never prescribe "do this" actions. The client takes the diagnosis to inform their own roadmap.
 
 ## Prerequisites
 
-- **Required**: AEO Copilot MCP server — exposes `list_brands`, `list_topics`, `get_results`, `get_insights`, `get_recommendations`. Repository: https://github.com/sofianbettayeb/aeo-copilot-mcp.
+- **Required**: AEO Copilot MCP server. Exposes `list_brands`, `list_topics`, `get_results`, `get_insights`, `get_recommendations`. Repository: https://github.com/sofianbettayeb/aeo-copilot-mcp.
 
 ## Workflow Overview
 
@@ -35,12 +35,18 @@ DISCOVER → FETCH → AGGREGATE → RENDER → SAVE
 ⚡ GUARD — **AEO Copilot MCP unavailable:**
 - Stop: "AI Visibility report requires the AEO Copilot MCP. Connect `aeo-copilot-mcp` and try again."
 
-⚡ GUARD — **Brand has no tracked prompts (empty `get_results`):**
+⚡ GUARD — **Brand has no tracked prompts** (empty `get_results` *and* `get_insights.visibility` is null):
 - Stop: "Brand `{name}` has no tracked prompts in AEO Copilot yet. Add topics and prompts in the dashboard, run a tracking cycle, then re-run `/ai-visibility`."
 
-⚡ GUARD — **Very small prompt corpus (< 10 prompts in 90 days):**
-- Warn: "Small prompt corpus ({N} prompts in 90 days). Findings will be directional, not statistical. Continue?"
+⚡ GUARD — **Filtered fetch returns empty but insights show data**:
+- Don't stop. The MCP date filter is unreliable. Fall back to an unfiltered `get_results` call and trim client-side by `runDate`. Note this in the methodology footnote: "Date filter bypassed (server-side filter returned empty)."
+
+⚡ GUARD — **Prompt corpus too small** (< 10 prompts):
+- Warn: "Small prompt corpus ({N} prompts). Findings will be directional, not statistical. Continue?"
 - If declined: stop.
+
+⚡ GUARD — **Per-row engine field missing** (e.g., `googleAio` not in `get_results` rows):
+- Don't stop. Render the card from `get_insights.mentionVolume` aggregates only and add a footnote on that card: "Per-prompt detail unavailable; aggregate only."
 
 ⚡ GUARD — **User requests abort:**
 - Confirm: "Stop the workflow? Progress will be lost."
@@ -59,7 +65,7 @@ Search for tools BEFORE starting:
 ### 0.2 Load Config
 
 Load `.claude/seo-copilot-config.json` if it exists. Extract:
-- `business.name` → cross-check against AEO Copilot brand name (sanity check the user picked the right brand).
+- `business.name` → cross-check against AEO Copilot brand name (sanity check the user picked the right brand). If a name match exists, pre-select it in the brand picker.
 - `seo.competitors` → highlight these in the competitor landscape section if they appear.
 
 If not found: proceed with defaults, note once "Run `/getting-started` for personalized recommendations."
@@ -69,16 +75,23 @@ If not found: proceed with defaults, note once "Run `/getting-started` for perso
 Always prompt the user — never auto-select.
 
 1. Call `list_brands`.
-2. If 0 brands: stop with "No brands found in AEO Copilot. Add a brand in the dashboard first."
-3. If 1 brand: confirm — "Found one brand: `{name}` ({website}). Generate the baseline report for this brand?"
-4. If 2+ brands: present a numbered list (name, website, industry) and ask user to pick one.
+2. **Filter the list before display.** Many AEO Copilot accounts contain test/example brands. Hide brands that:
+   - have no `website` value, OR
+   - have `website` containing `example.com`, `test.com`, or matching `*.example.*`, OR
+   - have a `name` ending in 3–4 random alphanumerics (e.g. `xiF`, `IxK`, `2wfJ`, `YTKs`) — heuristic for autogenerated test brands, OR
+   - have a `name` starting with `Test ` or `Manual Test`.
+   
+   After filtering, if test brands were hidden, append: "+{N} test brands hidden, type 'all' to see them."
+3. If 0 real brands after filter: stop with "No brands found in AEO Copilot. Add a brand in the dashboard first."
+4. If 1 real brand: confirm: "Found one brand: `{name}` ({website}). Generate the baseline report for this brand?"
+5. If 2+ real brands: present a numbered list (name, website, industry) and ask user to pick one. If `business.name` from config matches one of them, pre-select it: "Config matches `{name}` — proceed with this brand? (y/N to pick a different one)"
 
-Store: `brandId`, `brandName`, `brandDomain` (extracted from website URL — strip `https://`, `www.`, trailing slash, lowercase).
+Store: `brandId`, `brandName`, `brandDomain` (extracted from website URL: strip `https://`, `www.`, trailing slash, lowercase).
 
 ### 0.4 Activity Log Check
 
 Read `.claude/reports/{brandDomain}/activity-log.md` if present. Surface:
-- Any prior `/ai-visibility` runs in the last 60 days — note the date so the user knows whether this is a true baseline or a re-run.
+- Any prior `/ai-visibility` runs in the last 60 days. Note the date so the user knows whether this is a true baseline or a re-run.
 - Recent activity from other skills on this brand.
 
 If no activity log: proceed silently.
@@ -100,26 +113,53 @@ Call these four MCP tools in parallel:
 ### 1.1 `list_topics(brandId)`
 Topic catalog with name, description, target customers, geographic focus, differentiation, pages, keywords. Used to label the topic-performance table and group gap prompts.
 
-### 1.2 `get_results(brandId, from=90d ago, to=today, limit=500)`
-The evidence corpus. Each row: prompt, topic, per-LLM mention status (`chatgptMentioned`, `claudeMentioned`, `perplexityMentioned`, `googleAioMentioned`), per-LLM position, per-LLM sentiment, sources, competitors.
+### 1.2 `get_results(brandId, limit=500)`
+
+Fetch **without** date filters by default. The MCP's date filter has been observed to return zero rows even when data is inside the window. Trim client-side by `runDate` after the call.
 
 If `limit=500` is hit (corpus is larger), record this and add a footnote in the methodology.
 
+#### 1.2a Detect available engine fields
+
+The per-row schema uses nested objects: `chatgpt`, `claude`, `perplexity`, `googleAio` — each with `{mentioned, position, sentiment, sources, competitors}`. Not every brand has all four fields populated.
+
+After fetching, inspect the first non-empty row to detect which engine keys are present. Set `engines_with_per_row = [keys present]`. The remaining engines (e.g. `googleAio`) fall back to aggregate-only data from `get_insights.mentionVolume`.
+
+#### 1.2b Compute the data window
+
+```
+all_run_dates = [r.runDate for r in results]
+data_from = min(all_run_dates)
+data_to   = max(all_run_dates)
+window_days = (data_to - data_from).days
+```
+
+Set the `dataWindowLabel` placeholder accordingly:
+
+| `window_days` | `dataWindowLabel` |
+|---------------|-------------------|
+| 0–13 | `"the last sync ({data_to})"` |
+| 14–60 | `"the past {window_days} days"` |
+| 61–120 | `"the past 90 days"` |
+| > 120 | `"the past {window_days} days"` |
+
+Do not say "last 90 days" when the actual data window is one week. Adapt to what's there.
+
 ### 1.3 `get_insights(brandId)`
-Pre-computed: visibility score, sentiment breakdown, competitive share, weekly trends, top topics, competitor list. **Use the platform's score as-is** — do not recompute.
+Pre-computed: visibility score, sentiment breakdown, competitive share, weekly trends, top topics, competitor list, mention volume per topic per engine. **Use the platform's score as-is** — do not recompute the composite.
 
 ### 1.4 `get_recommendations(brandId)`
-Used as one signal feeding the "what's not working" findings. **Never surface as prescriptions** — translate them into descriptive findings ("X gap detected" not "do Y to fix it").
+Used as one signal feeding the "what's not working" findings. **Never surface as prescriptions** — translate into descriptive findings ("X gap detected" not "do Y to fix it").
 
 ---
 
 ## Phase 2: AGGREGATE
 
-Compute four derived datasets the API doesn't return directly. Every aggregation must preserve the underlying counts so they can be cited as evidence.
+Compute five derived datasets the API doesn't return directly. Every aggregation must preserve the underlying counts so they can be cited as evidence.
 
 ### 2.1 Per-LLM Scorecard
 
-For each engine in `[chatgpt, claude, perplexity, googleAio]`, iterate `get_results` rows and compute:
+For each engine in `engines_with_per_row`, iterate `get_results` rows and compute:
 
 - **Mention rate %** = `mentioned_count / total_prompts × 100`
 - **Avg position** when mentioned (skip rows where the engine didn't mention; report "n/a" if 0 mentions)
@@ -127,22 +167,27 @@ For each engine in `[chatgpt, claude, perplexity, googleAio]`, iterate `get_resu
 - **Strongest topic**: topic with highest mention rate on this engine (ties broken by prompt count)
 - **Weakest topic**: topic with lowest mention rate on this engine (where prompt count ≥ 3 — ignore tiny topics)
 
+For engines NOT in `engines_with_per_row`, fill the card from `get_insights.mentionVolume` only:
+- **Mention rate %** = `Σ engine_mentions across topics / total_prompts × 100`
+- Avg position, sentiment split, strongest/weakest topic = "n/a (aggregate only)"
+- Add a small footnote on the card: "Per-prompt detail unavailable on this engine."
+
 ### 2.2 Topic Performance Table
 
 For each topic, compute:
 - Prompt count
-- Combined visibility % across all 4 engines (sum of mentions / (4 × prompt_count) × 100)
-- Avg position when mentioned (across all 4 engines)
+- Combined visibility % across the engines that have per-row data: `total_mentions / (engine_count × prompt_count) × 100`. If only aggregate data exists, fall back to `get_insights.topTopics[i].visibility`.
+- Avg position when mentioned (across the available engines)
 - Sentiment skew: dominant sentiment label (positive / neutral / negative / mixed)
 
 Sort by visibility % descending.
 
 ### 2.3 Gap Inventory
 
-A prompt is a **gap** if the brand is mentioned in 0 or 1 of the 4 engines. For each gap prompt, capture:
+A prompt is a **gap** if the brand is mentioned in 0 or 1 of the engines that have per-row data. For each gap prompt, capture:
 - The prompt text
 - The topic it belongs to
-- Which engines missed the brand
+- Which engines missed the brand (with the **display label**, not the key — "Google AIO" not "googleAio")
 - Which competitors appeared in those engines (deduplicated, ranked by frequency)
 
 ### 2.4 Competitor Share-of-Voice on Gaps
@@ -151,6 +196,28 @@ Across all gap prompts, count competitor appearances. Top 5 by count. For each, 
 - Number of gap prompts they appear in
 - Topics where they dominate (topics where this competitor's count > brand's count)
 
+### 2.5 External Source Influence
+
+Aggregate the domains LLMs cite when answering the brand's prompts. This shows the **evidence base** the LLMs are reading from — and whether the brand's own domain is part of it.
+
+For each row in `get_results`:
+- Take `r.mainSource` (if present)
+- Take every entry in `r.{engine}.sources` for each engine in `engines_with_per_row`
+
+Normalize each source:
+- If it's a URL: `urlparse(s).netloc.lower().replace('www.', '')`. Keep the host.
+- If it has no dot or contains spaces (descriptive label like "Salesforce Partner Directory"): drop. The aggregate is for citable domains only.
+
+Count occurrences. Top 10 by count. For each:
+- `domain`, `citations`, `is_owned` (true if domain == `brandDomain`).
+
+Also compute and surface:
+- `unique_sources` = total unique domains
+- `total_citations` = sum of all citations
+- `brand_in_sources` = `sources_count.get(brandDomain, 0)`
+
+If `brand_in_sources` is 0 or below 5% of `total_citations`, generate a finding for "What's not working": "{brandDomain} appears in {brand_in_sources} of {total_citations} citations. The brand isn't part of the evidence base the LLMs are reading from."
+
 ---
 
 ## Phase 3: BUILD FINDINGS
@@ -158,24 +225,26 @@ Across all gap prompts, count competitor appearances. Top 5 by count. For each, 
 Generate the narrative content for sections 5 (What's working) and 6 (What's not working). Every finding follows the same structure:
 
 ```
-{one-sentence finding} — {evidence line with concrete numbers}
+{one-sentence claim}. {evidence line with concrete numbers}.
 ```
 
 **Evidence-first principle (non-negotiable):** every finding must cite at least one of:
 - A prompt count (e.g., "11 of 62 prompts")
-- A score with its band (e.g., "B grade — 68/100")
+- A score with its band (e.g., "B grade, 68/100")
 - A specific competitor name (e.g., "Competitor X appears in 19 of 26 'vs' prompts")
 - A specific source URL or topic name
 
 No floating claims like "the brand performs well" without a number behind it.
 
-### 3.1 What's Working — 3 to 5 findings
+### 3.1 What's Working — 0 to 5 findings
 
 Source from:
 - Engines or topics with mention rate ≥ 40%
 - Topics with positive sentiment ≥ 50% of mentions
 - Position metrics where avg position ≤ 3
-- Source attribution wins (brand cited as primary source)
+- Source attribution wins (brand domain in `External Source Influence` top 10)
+
+If 0–2 working findings exist, **collapse the section into a paragraph** and be honest about it: "There isn't much to celebrate yet. {single best signal with number}."
 
 ### 3.2 What's Not Working — 3 to 5 findings
 
@@ -184,6 +253,7 @@ Source from:
 - Topics with high prompt count (≥ 5) and zero brand mentions on any engine
 - Sentiment patterns where negative ≥ 25% of mentions
 - Competitor dominance: topics where one competitor outperforms the brand by 2× or more
+- **Source absence**: brand domain in 0 or < 5% of source citations (Phase 2.5)
 - Technical gaps surfaced by `get_recommendations` — translate prescriptions into descriptive findings (e.g., recommendation "Add llms.txt" → finding "No llms.txt detected on the domain")
 
 ### 3.3 Format Adaptation
@@ -193,33 +263,50 @@ Per repo CLAUDE.md output guidance:
 - Never output a section header with nothing under it.
 - Prefer specificity over completeness — one concrete finding beats five vague ones.
 
+### 3.4 Voice Pass (mandatory)
+
+Before rendering, run all generated copy (TL;DR, scorecard drivers, working/gap findings, source intro) through the rules in `references/voice-rules.md`. Specifically:
+
+- Strip every em dash. Replace with commas, periods, or colons.
+- Cut filler ("showcasing", "highlighting", "natural beachhead", "currently aligned", "presumed in order").
+- Kill rule-of-three padding when the third item carries no extra weight.
+- Use "is"/"are" instead of "serves as", "stands as", "functions as".
+- Cite the count, not just the rate ("11 of 62" beats "18%").
+
+After the first pass, do a single audit sentence: "What about this would make a smart reader assume an LLM wrote it?" Answer in one line, then revise the offending sentences. Single audit pass — don't loop.
+
+This step is non-negotiable for client deliverables. Sofian's global CLAUDE.md mandates `/humanizer` on all client-facing copy.
+
 ---
 
 ## Phase 4: RENDER
 
 ### 4.1 Load template
 
-Read `template.html` from this skill's directory. It contains the full HTML/CSS skeleton with `{{placeholder}}` tokens for every dynamic value.
+Read `template.html` from this skill's directory. It contains the full HTML/CSS skeleton with `{{placeholder}}` tokens for every dynamic value. Mustache-style sections (`{{#name}}...{{/name}}`) are repeated per-item. The triple-braced `{{{engineLogoSvg}}}` is rendered without HTML escaping (the SVG is trusted, sourced from `references/engine-logos.md`).
 
 ### 4.2 Fill placeholders
 
 Replace placeholders with computed values. The template defines all of them — see the template file for the full list. Key groups:
 
-- Header: brand name, domain, date, overall grade, TL;DR
-- Executive scorecard: 3 score cards (AI Visibility, Technical Readiness, Sentiment Health) with band labels
-- Per-LLM grid: 4 cards × {mention rate, avg position, sentiment bar, strongest topic, weakest topic}
-- Topic table: rows from Phase 2.2
-- What's working / what's not working: rendered as `<li>` evidence lines
-- Competitor landscape: top 5 with bar widths proportional to share-of-voice
-- Appendix table: full gap-prompt inventory from Phase 2.3
-- Footer: methodology, data window, prompt corpus size, last platform sync
+- **Header**: brand name, domain, date, overall grade, TL;DR
+- **Executive scorecard**: 3 score cards (AI Visibility, Technical Readiness, Sentiment Health) with band labels. Sentiment Health uses the platform value but the driver text **must** clarify brand-vs-category (see `references/scoring-notes.md` "Brand sentiment vs category sentiment").
+- **Per-LLM grid**: card per engine with `{{{engineLogoSvg}}}`, `engineName`, mention rate, avg position, sentiment bar, strongest topic, weakest topic. Use the labels from `references/engine-logos.md` (`Google AIO`, not `Google AI Overview`).
+- **Topic table**: rows from Phase 2.2
+- **What's working / what's not working**: rendered as `<li>` evidence lines (or `<p>` if collapsed)
+- **Competitor landscape**: top 5 with bar widths proportional to share-of-voice. Append the brand's own row at the bottom for transparency, with its actual mention count.
+- **External source influence**: top 10 from Phase 2.5. Mark `is_owned` on the brand's own domain if it appears.
+- **Appendix table**: full gap-prompt inventory from Phase 2.3
+- **Footer**: methodology, `dataWindowLabel`, `dataFromDate`, `dataToDate`, `totalPrompts`, `totalTopics`, `corpusBand` (statistical/directional/single-cycle), `enginesTrackedList`, `lastSyncDate`
 
 ### 4.3 Visual design
 
-Use the `frontend-design` skill conventions — no generic AI aesthetic. Required:
-- Editorial serif for headlines (e.g., Fraunces, Source Serif Pro), clean sans-serif for body
-- Neutral professional palette — white background, near-black text, one accent color for scores/charts
-- Print-styled: `@page { size: A4; margin: 16mm }`, `page-break-inside: avoid` on cards and tables, hide nav/buttons in `@media print`
+Required:
+- Editorial serif for headlines (Fraunces or similar), clean sans-serif for body
+- Neutral professional palette: white background, near-black text, one accent color
+- Engine logos: inline SVG from `references/engine-logos.md`, brand colors
+- Print-styled: `@page { size: A4; margin: 16mm }`, `page-break-inside: avoid` on cards and tables
+- **Print color rendering**: the template includes `print-color-adjust: exact` on every colored element. **Do not remove these rules.** Browsers default to economy-print and strip backgrounds, which would erase bars, pills, badges, and the third-party section tag in PDF.
 - Self-contained: inline CSS, web fonts via `<link>` only (no external JS, no images that aren't inline SVG or data URIs)
 
 ### 4.4 Section order
@@ -230,9 +317,10 @@ Use the `frontend-design` skill conventions — no generic AI aesthetic. Require
 4. Topic performance (table)
 5. What's working (evidence-backed findings)
 6. What's not working (evidence-backed findings)
-7. Competitor landscape (top 5 bar chart)
-8. Appendix: gap prompts (full evidence table)
-9. Methodology footer
+7. Competitor landscape (top 5 bar chart, plus brand row)
+8. External source influence (top 10 cited domains, with "Third-party" tag)
+9. Appendix: gap prompts (full evidence table)
+10. Methodology footer
 
 ---
 
@@ -242,7 +330,11 @@ Use the `frontend-design` skill conventions — no generic AI aesthetic. Require
 
 Write the rendered HTML to `report_path`.
 
-### 5.2 Activity log
+### 5.2 Verify in print preview
+
+Before declaring success, mention to the user that the print fidelity has been wired in. The bars, pills, badges, and section tags should render in PDF. If the user reports white-on-white in print, the template's `print-color-adjust` rules have been tampered with — restore from `template.html`.
+
+### 5.3 Activity log
 
 Append to `activity_log_path`. If the file doesn't exist, create it with the standard header:
 
@@ -256,12 +348,12 @@ Append to `activity_log_path`. If the file doesn't exist, create it with the sta
 Append one row:
 
 ```
-| YYYY-MM-DD | /ai-visibility | Baseline AI visibility report. Grade: {X}. Visibility: {N}%. Strongest engine: {engine} ({M}%). Weakest: {engine} ({M}%). {C} competitors tracked. |
+| YYYY-MM-DD | /ai-visibility | Baseline AI visibility report. Grade: {X}. Visibility: {N}%. Strongest engine: {engine} ({M}%). Weakest: {engine} ({M}%). {brandDomain} in {K}/{T} source citations. |
 ```
 
 Log even on early exit (with reason).
 
-### 5.3 Success message
+### 5.4 Success message
 
 Output to the user:
 
@@ -279,7 +371,9 @@ Top finding: {one-line TL;DR pulled from the report header}.
 
 ## References
 
-- `references/scoring-notes.md` — AEO Copilot scoring formula (60% topic / 25% technical / 15% sentiment, A–F bands). Load this when generating findings to ensure language stays consistent with how the platform scores.
+- `references/scoring-notes.md` — AEO Copilot scoring formula (60% topic / 25% technical / 15% sentiment, A–F bands), plus the brand-vs-category sentiment distinction. Load this when generating findings.
+- `references/voice-rules.md` — Humanizer checklist for the Phase 3.4 voice pass. Em dash hunting, filler list, audit prompt.
+- `references/engine-logos.md` — Inline SVG paths for ChatGPT, Claude, Perplexity, Google AIO. Brand colors and display labels. Load this in Phase 4.2 when filling per-LLM cards.
 - `template.html` — HTML/CSS skeleton with placeholders.
 
 ## Integration with Other Skills
@@ -289,4 +383,5 @@ Top finding: {one-line TL;DR pulled from the report header}.
 | Low engine visibility, content gaps | `/aeo-optimize {url}` | Page-level AEO rewrite |
 | Schema/llms.txt gaps surfaced | `/aeo-optimize:audit` | Quick AEO scoring |
 | Topic coverage gaps | `/keywords-opportunity:discover` | Find new content topics |
+| Brand absent from source list | `/aeo-optimize` on the brand's pillar pages | Make pages more citable |
 | Track progress over time | AEO Copilot dashboard | Weekly automated tracking |
