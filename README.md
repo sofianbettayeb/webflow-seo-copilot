@@ -8,7 +8,8 @@ Claude Code skills for Webflow SEO — keyword research, content creation, traff
 |------------|-------------|
 | [Webflow MCP](https://developers.webflow.com/mcp/reference/overview) | All skills that touch Webflow content |
 | [Google Search Console MCP](https://github.com/sofianbettayeb/gsc-mcp-server) | `/click-recovery`, `/weekly-report`, `/monthly-report`, `/audit:deep`, optional for `/refresh-content` |
-| [Keywords Everywhere MCP](https://github.com/hithereiamaliff/mcp-keywords-everywhere) | Optional — adds search volume and intent data to several skills |
+| [AEO Copilot MCP](https://github.com/sofianbettayeb/aeo-copilot-mcp) | `/ai-visibility` (baseline LLM visibility report) |
+| [Keywords Everywhere MCP](https://github.com/hithereiamaliff/mcp-keywords-everywhere) | Optional, adds search volume and intent data to several skills |
 
 `/audit {url}` requires no MCP servers — any public URL works.
 
@@ -30,6 +31,7 @@ Claude Code skills for Webflow SEO — keyword research, content creation, traff
 /plugin install monthly-report@webflow-seo-copilot
 /plugin install audit@webflow-seo-copilot
 /plugin install audit-deep@webflow-seo-copilot
+/plugin install ai-visibility@webflow-seo-copilot
 /plugin install topic-map@webflow-seo-copilot
 
 # Run setup first — captures brand voice, SEO goals, and activates activity logging
@@ -175,6 +177,20 @@ Post-sale engagement baseline with GSC + Webflow data. Same maturity model as `/
 
 ---
 
+### `/ai-visibility`
+
+Baseline AI visibility report. A one-page client diagnostic showing how a brand appears across ChatGPT, Claude, Perplexity, and Google AIO. Pulls live data from AEO Copilot, computes per-LLM scorecards, surfaces gaps with evidence, ranks the external domains the LLMs cite as sources, and renders a self-contained HTML file print-styled for Cmd+P → PDF.
+
+Read-only and diagnostic-only. Findings cite counts, scores, and competitor names. Never prescribes "do this" actions, so the client owns the roadmap.
+
+```
+/ai-visibility
+```
+
+[Full skill docs →](plugins/ai-visibility/skills/ai-visibility/SKILL.md)
+
+---
+
 ### `/topic-map`
 
 Turn keyword exports, URL lists, and GSC data into a structured keyword map. Outputs one table per cluster showing which page targets which keyword, page type (Hub / Editorial / Product), and status (existing / missing / orphan). Surfaces editorial→product linking gaps, cannibalization risks, and a 90-day editorial calendar. Works from any combination of inputs — paste URLs and keywords, or connect Webflow MCP and GSC for auto-fetch.
@@ -209,6 +225,8 @@ Turn keyword exports, URL lists, and GSC data into a structured keyword map. Out
 | Monthly performance review | `/monthly-report` |
 | Pre-sale site assessment (no MCP) | `/audit {url}` |
 | Post-sale engagement baseline | `/audit:deep` |
+| Baseline LLM visibility for a client | `/ai-visibility` |
+| Find which domains LLMs cite for your topics | `/ai-visibility` |
 | Map which keyword each page targets | `/topic-map` |
 | Find missing pages and topic gaps | `/topic-map` |
 | Visualize hub → editorial → product structure | `/topic-map` |
