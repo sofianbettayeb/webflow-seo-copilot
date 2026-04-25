@@ -1,0 +1,545 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>AI Visibility Baseline — {{brandName}}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* -------- tokens -------- */
+  :root {
+    --bg: #FAFAF7;
+    --paper: #FFFFFF;
+    --ink: #1A1715;
+    --ink-soft: #5C534B;
+    --ink-muted: #8A8278;
+    --rule: #E8E3DC;
+    --rule-soft: #F0EBE3;
+    --accent: #C4691E;
+    --accent-soft: #F5E8D9;
+    --grade-a: #2F7A4E;
+    --grade-b: #4A8FA8;
+    --grade-c: #B58C2C;
+    --grade-d: #C9602E;
+    --grade-f: #B23A3A;
+    --pos: #2F7A4E;
+    --neu: #8A8278;
+    --neg: #B23A3A;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    color: var(--ink);
+    background: var(--bg);
+    font-size: 14px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .page {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 56px 64px;
+    background: var(--paper);
+  }
+  h1, h2, h3, h4 {
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 500;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+    margin: 0;
+  }
+  h1 { font-size: 38px; line-height: 1.1; font-weight: 600; }
+  h2 { font-size: 24px; line-height: 1.2; margin-top: 48px; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--rule); }
+  h3 { font-size: 17px; line-height: 1.3; }
+  h4 { font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-muted); }
+  p { margin: 0 0 12px; }
+  ul { margin: 0; padding-left: 0; list-style: none; }
+
+  /* -------- header -------- */
+  .doc-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    border-bottom: 2px solid var(--ink);
+    padding-bottom: 24px;
+  }
+  .doc-header .meta {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--ink-muted);
+  }
+  .doc-header .brand-line {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-top: 8px;
+  }
+  .tldr {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 18px;
+    line-height: 1.5;
+    font-style: italic;
+    color: var(--ink-soft);
+    margin: 24px 0 8px;
+    padding-left: 16px;
+    border-left: 3px solid var(--accent);
+  }
+
+  /* -------- scorecard -------- */
+  .scorecard {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-top: 8px;
+  }
+  .score-card {
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 20px;
+    background: var(--paper);
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+  .score-card .label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-muted);
+    font-weight: 600;
+  }
+  .score-card .value {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 44px;
+    line-height: 1;
+    font-weight: 600;
+    margin: 6px 0 8px;
+  }
+  .score-card .value .unit { font-size: 18px; color: var(--ink-soft); }
+  .score-card .driver {
+    font-size: 12px;
+    color: var(--ink-soft);
+    line-height: 1.4;
+    margin-top: 8px;
+  }
+  .grade-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    color: white;
+    margin-left: 6px;
+    vertical-align: 4px;
+  }
+  .grade-A { background: var(--grade-a); }
+  .grade-B { background: var(--grade-b); }
+  .grade-C { background: var(--grade-c); }
+  .grade-D { background: var(--grade-d); }
+  .grade-F { background: var(--grade-f); }
+
+  /* big header grade */
+  .big-grade {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 88px;
+    line-height: 0.9;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .big-grade .score-num {
+    font-size: 18px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    color: var(--ink-muted);
+    display: block;
+    margin-top: 4px;
+  }
+
+  /* -------- per-LLM grid -------- */
+  .llm-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+  .llm-card {
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 16px;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+  .llm-card .name {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-muted);
+    font-weight: 600;
+  }
+  .llm-card .rate {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 32px;
+    font-weight: 600;
+    line-height: 1;
+    margin: 6px 0 4px;
+  }
+  .llm-card .rate-label {
+    font-size: 11px;
+    color: var(--ink-soft);
+  }
+  .llm-card .stat {
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--rule);
+  }
+  .llm-card .stat strong { color: var(--ink); font-weight: 500; }
+  .sentiment-bar {
+    display: flex;
+    height: 6px;
+    border-radius: 3px;
+    overflow: hidden;
+    margin: 6px 0 4px;
+    background: var(--rule);
+  }
+  .sentiment-bar > span { display: block; height: 100%; }
+  .sentiment-bar .pos { background: var(--pos); }
+  .sentiment-bar .neu { background: var(--neu); }
+  .sentiment-bar .neg { background: var(--neg); }
+  .sentiment-key { font-size: 10px; color: var(--ink-muted); display: flex; gap: 10px; }
+  .sentiment-key span::before {
+    content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 1px; margin-right: 4px; vertical-align: 1px;
+  }
+  .sentiment-key .pos::before { background: var(--pos); }
+  .sentiment-key .neu::before { background: var(--neu); }
+  .sentiment-key .neg::before { background: var(--neg); }
+  .topic-anchor { font-size: 11px; color: var(--ink-soft); line-height: 1.4; }
+  .topic-anchor .topic-label { color: var(--ink-muted); text-transform: uppercase; letter-spacing: 0.06em; font-size: 10px; font-weight: 600; }
+
+  /* -------- topic table -------- */
+  table.topics {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  table.topics th, table.topics td {
+    text-align: left;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--rule);
+  }
+  table.topics th {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-muted);
+    font-weight: 600;
+    background: var(--rule-soft);
+  }
+  table.topics td.num { font-variant-numeric: tabular-nums; }
+  table.topics td .topic-name { font-weight: 500; }
+  .pill {
+    display: inline-block;
+    font-size: 10px;
+    padding: 2px 7px;
+    border-radius: 8px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+  }
+  .pill-pos { background: rgba(47,122,78,0.10); color: var(--pos); }
+  .pill-neu { background: rgba(138,130,120,0.14); color: var(--ink-soft); }
+  .pill-neg { background: rgba(178,58,58,0.10); color: var(--neg); }
+  .pill-mix { background: rgba(196,105,30,0.10); color: var(--accent); }
+
+  /* -------- findings -------- */
+  .findings { margin-top: 4px; }
+  .findings li {
+    padding: 14px 0 14px 20px;
+    border-bottom: 1px solid var(--rule);
+    position: relative;
+  }
+  .findings li:last-child { border-bottom: none; }
+  .findings li::before {
+    content: "";
+    position: absolute;
+    left: 0; top: 22px;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+  }
+  .findings.working li::before { background: var(--pos); }
+  .findings.gaps li::before { background: var(--neg); }
+  .findings .claim { font-weight: 500; color: var(--ink); display: block; margin-bottom: 4px; }
+  .findings .evidence { font-size: 12px; color: var(--ink-soft); line-height: 1.5; }
+  .findings .evidence code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    background: var(--rule-soft);
+    padding: 1px 5px;
+    border-radius: 2px;
+    color: var(--ink);
+  }
+
+  /* -------- competitor bars -------- */
+  .competitor-list { display: flex; flex-direction: column; gap: 14px; margin-top: 4px; }
+  .competitor-row { display: grid; grid-template-columns: 200px 1fr 60px; align-items: center; gap: 12px; }
+  .competitor-name { font-weight: 500; font-size: 13px; }
+  .competitor-name .own { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent); margin-left: 6px; }
+  .competitor-track { background: var(--rule-soft); height: 18px; border-radius: 2px; position: relative; }
+  .competitor-fill { background: var(--accent); height: 100%; border-radius: 2px; }
+  .competitor-count { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-soft); text-align: right; font-variant-numeric: tabular-nums; }
+
+  /* -------- gap prompts appendix -------- */
+  table.gaps {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  table.gaps th, table.gaps td {
+    text-align: left;
+    padding: 9px 10px;
+    border-bottom: 1px solid var(--rule);
+    vertical-align: top;
+  }
+  table.gaps th {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-muted);
+    font-weight: 600;
+    background: var(--rule-soft);
+  }
+  table.gaps td .prompt-text { color: var(--ink); }
+  table.gaps td .topic-tag { font-size: 10px; color: var(--ink-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+  .engine-tag {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 1px 5px;
+    border-radius: 2px;
+    background: var(--rule-soft);
+    color: var(--ink-soft);
+    margin-right: 4px;
+  }
+
+  /* -------- methodology footer -------- */
+  .methodology {
+    margin-top: 64px;
+    padding: 24px;
+    background: var(--rule-soft);
+    border-radius: 4px;
+    font-size: 12px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+  }
+  .methodology h4 { color: var(--ink); margin-bottom: 8px; }
+  .methodology dl { margin: 0; display: grid; grid-template-columns: 180px 1fr; gap: 4px 16px; }
+  .methodology dt { color: var(--ink-muted); }
+  .methodology dd { margin: 0; }
+
+  /* -------- print -------- */
+  @page {
+    size: A4;
+    margin: 16mm;
+  }
+  @media print {
+    body { background: white; font-size: 11pt; }
+    .page { padding: 0; max-width: none; box-shadow: none; }
+    h2 { margin-top: 28px; }
+    .score-card, .llm-card, .competitor-row, .findings li, .methodology {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+    table.topics tr, table.gaps tr {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+    h2 {
+      break-after: avoid;
+      page-break-after: avoid;
+    }
+  }
+</style>
+</head>
+<body>
+<main class="page">
+
+  <!-- ========== HEADER ========== -->
+  <header class="doc-header">
+    <div>
+      <div class="meta">AI Visibility · Baseline Report</div>
+      <h1 style="margin-top:8px;">{{brandName}}</h1>
+      <div class="brand-line">{{brandDomain}} · {{reportDate}}</div>
+    </div>
+    <div style="text-align:right;">
+      <div class="big-grade">
+        {{overallGrade}}
+        <span class="score-num">{{overallScore}} / 100</span>
+      </div>
+    </div>
+  </header>
+
+  <p class="tldr">{{tldr}}</p>
+
+  <!-- ========== EXECUTIVE SCORECARD ========== -->
+  <h2>Executive scorecard</h2>
+  <div class="scorecard">
+    <div class="score-card">
+      <div class="label">AI visibility</div>
+      <div class="value">{{visibilityScore}}<span class="unit"> / 100</span><span class="grade-badge grade-{{visibilityGrade}}">{{visibilityGrade}}</span></div>
+      <div class="driver">{{visibilityDriver}}</div>
+    </div>
+    <div class="score-card">
+      <div class="label">Technical readiness</div>
+      <div class="value">{{technicalScore}}<span class="unit"> / 100</span><span class="grade-badge grade-{{technicalGrade}}">{{technicalGrade}}</span></div>
+      <div class="driver">{{technicalDriver}}</div>
+    </div>
+    <div class="score-card">
+      <div class="label">Sentiment health</div>
+      <div class="value">{{sentimentHealth}}<span class="unit">%</span><span class="grade-badge grade-{{sentimentGrade}}">{{sentimentGrade}}</span></div>
+      <div class="driver">{{sentimentDriver}}</div>
+    </div>
+  </div>
+
+  <!-- ========== PER-LLM VISIBILITY ========== -->
+  <h2>Visibility by engine</h2>
+  <p style="font-size:12px;color:var(--ink-soft);margin-top:-8px;">Brand mention rate across {{totalPrompts}} prompts tracked over the last 90 days.</p>
+  <div class="llm-grid">
+    <!-- repeat this block 4×: ChatGPT, Claude, Perplexity, Google AI Overview -->
+    {{#engines}}
+    <div class="llm-card">
+      <div class="name">{{engineName}}</div>
+      <div class="rate">{{mentionRate}}%</div>
+      <div class="rate-label">mentioned in {{mentionCount}} of {{promptCount}} prompts</div>
+      <div class="stat">Avg position: <strong>{{avgPosition}}</strong></div>
+      <div class="stat" style="border-top:none;padding-top:4px;">
+        <div class="sentiment-bar">
+          <span class="pos" style="width:{{posPct}}%"></span>
+          <span class="neu" style="width:{{neuPct}}%"></span>
+          <span class="neg" style="width:{{negPct}}%"></span>
+        </div>
+        <div class="sentiment-key">
+          <span class="pos">{{posCount}} pos</span>
+          <span class="neu">{{neuCount}} neu</span>
+          <span class="neg">{{negCount}} neg</span>
+        </div>
+      </div>
+      <div class="stat">
+        <div class="topic-anchor">
+          <span class="topic-label">Strongest topic</span><br>{{strongestTopic}}
+        </div>
+        <div class="topic-anchor" style="margin-top:8px;">
+          <span class="topic-label">Weakest topic</span><br>{{weakestTopic}}
+        </div>
+      </div>
+    </div>
+    {{/engines}}
+  </div>
+
+  <!-- ========== TOPIC PERFORMANCE ========== -->
+  <h2>Topic performance</h2>
+  <table class="topics">
+    <thead>
+      <tr>
+        <th>Topic</th>
+        <th class="num">Prompts</th>
+        <th class="num">Visibility</th>
+        <th class="num">Avg position</th>
+        <th>Sentiment</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#topics}}
+      <tr>
+        <td><span class="topic-name">{{topicName}}</span></td>
+        <td class="num">{{promptCount}}</td>
+        <td class="num">{{visibilityPct}}%</td>
+        <td class="num">{{avgPosition}}</td>
+        <td><span class="pill pill-{{sentimentClass}}">{{sentimentLabel}}</span></td>
+      </tr>
+      {{/topics}}
+    </tbody>
+  </table>
+
+  <!-- ========== WHAT'S WORKING ========== -->
+  <h2>What's working</h2>
+  <ul class="findings working">
+    {{#workingFindings}}
+    <li>
+      <span class="claim">{{claim}}</span>
+      <span class="evidence">{{evidence}}</span>
+    </li>
+    {{/workingFindings}}
+  </ul>
+
+  <!-- ========== WHAT'S NOT WORKING ========== -->
+  <h2>What's not working</h2>
+  <ul class="findings gaps">
+    {{#gapFindings}}
+    <li>
+      <span class="claim">{{claim}}</span>
+      <span class="evidence">{{evidence}}</span>
+    </li>
+    {{/gapFindings}}
+  </ul>
+
+  <!-- ========== COMPETITOR LANDSCAPE ========== -->
+  <h2>Competitor landscape</h2>
+  <p style="font-size:12px;color:var(--ink-soft);margin-top:-8px;">Share-of-voice across the {{gapPromptCount}} prompts where {{brandName}} is mentioned in 0 or 1 of 4 engines.</p>
+  <div class="competitor-list">
+    {{#competitors}}
+    <div class="competitor-row">
+      <div class="competitor-name">{{competitorName}}{{#isOwn}}<span class="own">your brand</span>{{/isOwn}}</div>
+      <div class="competitor-track">
+        <div class="competitor-fill" style="width:{{barWidth}}%"></div>
+      </div>
+      <div class="competitor-count">{{appearances}}</div>
+    </div>
+    {{/competitors}}
+  </div>
+
+  <!-- ========== APPENDIX: GAP PROMPTS ========== -->
+  <h2>Appendix · Gap prompts</h2>
+  <p style="font-size:12px;color:var(--ink-soft);margin-top:-8px;">Every tracked prompt where {{brandName}} is mentioned in 0 or 1 of 4 engines. Use this as the raw evidence behind the gaps section.</p>
+  <table class="gaps">
+    <thead>
+      <tr>
+        <th style="width:50%;">Prompt</th>
+        <th>Topic</th>
+        <th>Missing on</th>
+        <th>Competitors appearing</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#gapPrompts}}
+      <tr>
+        <td>
+          <div class="prompt-text">{{promptText}}</div>
+        </td>
+        <td><span class="topic-tag">{{topicName}}</span></td>
+        <td>{{#missingEngines}}<span class="engine-tag">{{.}}</span>{{/missingEngines}}</td>
+        <td>{{competitorList}}</td>
+      </tr>
+      {{/gapPrompts}}
+    </tbody>
+  </table>
+
+  <!-- ========== METHODOLOGY FOOTER ========== -->
+  <div class="methodology">
+    <h4>How to read this report</h4>
+    <p>The AI Visibility score is a 0–100 composite from the AEO Copilot platform. It blends three signals: how often the brand is mentioned across the four tracked engines (60%), the technical readiness of the website for AI crawlers (25%), and the sentiment health of the mentions that do happen (15%). Grades follow standard A–F bands: A ≥ 85, B ≥ 70, C ≥ 55, D ≥ 40, F &lt; 40.</p>
+    <dl>
+      <dt>Data window</dt><dd>Last 90 days · {{dataFromDate}} → {{dataToDate}}</dd>
+      <dt>Prompt corpus</dt><dd>{{totalPrompts}} prompts across {{totalTopics}} topics</dd>
+      <dt>Engines tracked</dt><dd>ChatGPT, Claude, Perplexity, Google AI Overview</dd>
+      <dt>Last platform sync</dt><dd>{{lastSyncDate}}</dd>
+      <dt>Source</dt><dd>AEO Copilot · aeo-copilot.com</dd>
+    </dl>
+  </div>
+
+</main>
+</body>
+</html>

@@ -15,7 +15,7 @@ Most sites have pages and keywords — but no clear view of which page owns whic
 
 It takes any combination of URLs, keyword exports, and performance data, and outputs a clear keyword map: per-cluster ownership tables showing which page targets which keyword, product page tracking, editorial→product linking status, gap analysis, cannibalization risks, and a prioritized editorial calendar.
 
-**This skill is read-only** — it produces a structured map and editorial plan, but never modifies Webflow content. It hands off to `/write-blog`, `/refresh-content`, and `/click-recovery` for execution.
+**This skill is read-only** — it produces a structured map and editorial plan, but never modifies Webflow content. It hands off to `/keywords-opportunity:new-page`, `/keywords-opportunity:new-cluster`, `/write-blog`, `/refresh-content`, and `/click-recovery` for execution.
 
 ---
 
@@ -464,7 +464,7 @@ For each gap cluster:
 
 ### 6.2 Topic Gaps vs. Coverage Gaps
 
-**Topic gap**: An entire topic cluster has no existing page at all → need to create a new page.
+**Topic gap**: An entire topic cluster has no existing page at all → research keywords first with `/keywords-opportunity:new-page` (single page) or `/keywords-opportunity:new-cluster` (full cluster), then create with `/write-blog`.
 
 **Coverage gap**: A page exists for the topic, but it only covers part of the keyword cluster → the existing page needs expansion (via `/refresh-content`), or a support page needs to be created for the uncovered sub-topic.
 
@@ -718,11 +718,13 @@ A 90-day schedule for executing the must-do and high-value recommendations:
 - Resolve [page] vs [page] cannibalization → use `/refresh-content`
 
 ### Week 3–4: Pillar page creation
-- Create: "Webflow SEO Guide" (pillar for Webflow SEO cluster) → use `/write-blog`
+- Research keywords: `/keywords-opportunity:new-page` → topic: "webflow seo guide"
+- Create: "Webflow SEO Guide" (pillar for Webflow SEO cluster) → use `/write-blog` with brief from above
   Target keyword: "webflow seo" | Proposed slug: /blog/webflow-seo-guide
   Keywords to cover: [list top 5]
 
 ### Week 5–6: Support page creation
+- Research keywords for new cluster: `/keywords-opportunity:new-cluster` → topic: "Webflow CMS"
 - Create: "Webflow CMS Dynamic Lists" (support under CMS Setup pillar) → use `/write-blog`
 - Expand: /blog/webflow-seo-checklist (add image alt + sitemap sections) → use `/refresh-content`
 
@@ -799,7 +801,10 @@ Topic Map is **planning-only**. Other skills execute.
 
 | Recommendation type | Skill | Why |
 |---------------------|-------|-----|
-| New page creation | `/write-blog` | Full SEO + AEO-optimized draft |
+| New page creation (keyword already known) | `/write-blog` | Full SEO + AEO-optimized draft |
+| New page (keyword not yet researched) | `/keywords-opportunity:new-page` | Research keywords first → brief feeds `/write-blog` |
+| New product or service page | `/keywords-opportunity:new-product` | Commercial keyword brief → then `/write-blog` |
+| New topic cluster (all pages missing) | `/keywords-opportunity:new-cluster` | Plan the full cluster keyword map → then re-run `/topic-map` to verify |
 | Existing page expansion | `/refresh-content` | Content refresh targeting new keywords |
 | Meta title / CTR issues | `/click-recovery` | Fast metadata fixes |
 | Cannibalization fix (winner page) | `/refresh-content` | Strengthen the winning page |

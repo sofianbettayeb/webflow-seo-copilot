@@ -100,8 +100,8 @@
     {
       "name": "keywords-opportunity",
       "source": "./plugins/keywords-opportunity",
-      "description": "Discover keyword opportunities using GSC and Keywords Everywhere — surfaces striking distance keywords already ranking on pages 1-3 and uncovers new keywords worth targeting.",
-      "version": "1.1.0",
+      "description": "Discover keyword opportunities using GSC and Keywords Everywhere — surfaces striking distance keywords, uncovers new opportunities, and researches keywords for new pages, products, or topic clusters before you create them.",
+      "version": "1.2.0",
       "author": {
         "name": "Sofian Bettayeb"
       },
@@ -140,6 +140,17 @@
       },
       "category": "seo",
       "tags": ["seo", "keyword-map", "topic-clusters", "content-strategy", "gap-analysis", "pillar-pages", "keyword-ownership", "editorial-calendar", "gsc", "mcp"]
+    },
+    {
+      "name": "ai-visibility",
+      "source": "./plugins/ai-visibility",
+      "description": "Baseline AI visibility report. Pulls AEO Copilot data (ChatGPT, Claude, Perplexity, Google AI Overview) and renders a single-page client-ready HTML diagnostic with evidence-backed findings, per-LLM scorecards, topic performance, and competitor share-of-voice. Print-styled for Cmd+P → PDF.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Sofian Bettayeb"
+      },
+      "category": "aeo",
+      "tags": ["aeo", "ai-visibility", "baseline", "report", "chatgpt", "claude", "perplexity", "ai-overview", "diagnostic", "client-deliverable", "mcp"]
     }
   ]
 }

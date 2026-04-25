@@ -1,12 +1,12 @@
 ---
 name: keywords-opportunity
-version: "1.1"
+version: "1.2"
 description: |
-  Discover keyword opportunities using GSC + Keywords Everywhere. Surfaces striking distance keywords already ranking on pages 1-3 and uncovers new keywords worth targeting through content creation or expansion.
-  Triggers: keyword opportunities, keyword research, keyword gaps, striking distance, new keywords, rank opportunities, keyword discovery, find keywords.
-  Requires: Google Search Console MCP server. Optional but strongly recommended: Keywords Everywhere MCP server.
+  Discover keyword opportunities using GSC + Keywords Everywhere. Surfaces striking distance keywords already ranking on pages 1-3, uncovers new keywords worth targeting, and researches keywords for new pages, products, or clusters before you create them.
+  Triggers: keyword opportunities, keyword research, keyword gaps, striking distance, new keywords, rank opportunities, keyword discovery, find keywords, keywords for new page, keywords for new product, keyword brief, what keywords should I target, launch new page, new product keywords, new cluster, topic cluster research.
+  Requires: Google Search Console MCP server (not required for new-page/new-product/new-cluster modes). Strongly recommended: Keywords Everywhere MCP server.
   Workflow: Discover → Fetch → Clean → Enrich → Analyze → Score → Report → Save.
-  Modes: /keywords-opportunity (full: striking distance + new discovery), /keywords-opportunity:striking (page 1-3 wins only), /keywords-opportunity:discover (new keywords only).
+  Modes: /keywords-opportunity (full: striking distance + new discovery), /keywords-opportunity:striking (page 1-3 wins only), /keywords-opportunity:discover (new keywords only), /keywords-opportunity:new-page (keyword brief for a new page), /keywords-opportunity:new-product (keyword brief for a new product or service page), /keywords-opportunity:new-cluster (keyword map for a new topic cluster).
 ---
 
 # Keyword Opportunity Skill
@@ -46,6 +46,11 @@ This skill surfaces both. It's read-only — it points you to `/refresh-content`
 | **Full** | `/keywords-opportunity` | Both striking distance + new discovery. Full report. |
 | **Striking** | `/keywords-opportunity:striking` | Already-ranking keywords on pages 1-3. Fastest ROI. |
 | **Discover** | `/keywords-opportunity:discover` | New keyword opportunities not yet targeted. |
+| **New page** | `/keywords-opportunity:new-page` | Keyword brief for a new page before writing it. No GSC required. |
+| **New product** | `/keywords-opportunity:new-product` | Keyword brief for a new product or service page. Commercial intent focus. |
+| **New cluster** | `/keywords-opportunity:new-cluster` | Full keyword map for a new topic cluster — hub + editorial + product pages. |
+
+**The new-\* modes have a different workflow** — they don't pull from existing rankings. They start from a description, research keywords from scratch via Keywords Everywhere, and output a keyword brief. See the dedicated section below.
 
 ---
 
@@ -65,7 +70,8 @@ At the start of execution, check if `.claude/seo-copilot-config.json` exists:
 - If no: proceed with defaults, note "Run `/getting-started` for personalized recommendations."
 
 ⚡ GUARD — **GSC MCP unavailable:**
-- Stop: "Keyword Opportunity requires Google Search Console. Connect GSC MCP and try again."
+- For full / striking / discover modes → Stop: "Keyword Opportunity requires Google Search Console. Connect GSC MCP and try again."
+- For new-page / new-product / new-cluster modes → proceed without GSC. Note: "GSC not connected — cannibalization check skipped."
 
 ⚡ GUARD — **Keywords Everywhere unavailable:**
 - Proceed, but add a prominent warning to the report header:
@@ -631,7 +637,383 @@ Recommendation: {Create a dedicated article / Expand existing page at {URL}}
 
 ---
 
-## Phase 5: SAVE
+---
+
+## New Page / Product / Cluster Modes
+
+These three modes share a single research pipeline but differ in intake, scoring, and output. They are inverted from the existing modes: instead of analyzing what you already rank for, they research what you *should* target before creating new content.
+
+**GSC is optional** — used only to catch cannibalization with existing pages. **Keywords Everywhere is the primary data source** — warn if missing.
+
+---
+
+### NP Phase 1: INTAKE
+
+Ask the user for the information needed to seed keyword research. Use a single message with all questions at once — don't ask one at a time.
+
+**For `:new-page`:**
+```
+To research keywords for your new page, I need a few details:
+
+1. What is the page about? (describe the topic, product, or question it answers — 1-3 sentences)
+2. Who is the target audience?
+3. What type of page is it? (blog post / landing page / static page / CMS item)
+4. Primary goal: traffic / leads / conversions / authority
+5. Any keywords you already have in mind? (optional — leave blank to start from scratch)
+```
+
+**For `:new-product`:**
+```
+To research keywords for your new product or service page, I need:
+
+1. What is the product or service? (name + short description)
+2. Who is the target audience?
+3. What problem does it solve or what outcome does it deliver?
+4. Price range or tier: free / low-cost / mid-market / premium / enterprise
+5. Any direct competitors you're aware of? (optional)
+6. Any keywords you already have in mind? (optional)
+```
+
+**For `:new-cluster`:**
+```
+To plan keywords for a new topic cluster, I need:
+
+1. What is the broad topic area? (e.g., "Webflow CMS optimization" or "B2B SaaS onboarding")
+2. Who is the target audience?
+3. Do you have any existing pages on this topic? (URLs — leave blank if starting from scratch)
+4. What's the commercial goal — does this cluster lead to a product or service page?
+5. Any seed keywords you already have in mind? (optional)
+```
+
+Wait for user response before proceeding.
+
+---
+
+### NP Phase 2: SEED KEYWORD GENERATION
+
+From the intake, generate 8–12 seed keyword variations internally before fetching KE data. Do not show this list to the user — it's used to prime the KE queries.
+
+**Seed generation rules:**
+
+1. **Root phrase**: the clearest 2-3 word description of the topic (e.g., "webflow seo tools")
+2. **Variants**: add qualifiers — "best", "for [audience]", "how to", "[root] guide", "[root] checklist"
+3. **Long-tail variants**: add specificity — "best [root] for [use case]", "[root] compared", "[root] vs [alternative]"
+4. **Commercial variants** (for `:new-product` only): add "price", "cost", "buy", "review", "[product name] vs", "[product category] software"
+5. **Question variants**: "what is [root]", "how to [action]", "why [problem]"
+
+For `:new-cluster`: generate seeds per intended page type (hub, editorial, product) separately.
+
+---
+
+### NP Phase 3: KE RESEARCH
+
+⚡ GUARD — **KE unavailable for new-\* modes:**
+```
+⚠️ Keywords Everywhere isn't connected.
+New page/product/cluster modes rely on KE for volume and competition data.
+Without it, I can only suggest keywords based on your description — with no volume validation.
+
+Options:
+1. Connect Keywords Everywhere: https://github.com/hithereiamaliff/mcp-keywords-everywhere
+2. Continue without volume data (keyword suggestions only — no confidence in search demand)
+```
+Wait for user choice. If they continue without KE: note in brief, skip volume-dependent scoring.
+
+**If KE available:**
+
+**Step 1 — Volume check on seeds:**
+- Fetch: monthly volume, CPC, competition, 12-month trend for all seed keywords
+- Apply Volume Source Priority Rule from Phase 2.1 (KE volume > GSC impressions if available)
+
+**Step 2 — Related keyword expansion:**
+- For the top 3 seeds by volume: fetch KE related keywords
+- For the top 3 seeds by CPC (`:new-product` mode): fetch KE related keywords separately
+- Deduplicate across all fetched results
+
+**Step 3 — PASF (People Also Search For):**
+- Fetch PASF keywords for the top seed by volume
+- These reveal adjacent intent — important for `:new-cluster` editorial page planning
+
+**Step 4 — Filter:**
+Remove from consideration:
+- Volume < 30/month AND CPC < $1 (too small to act on)
+- Declining trend ↓ > 30% YoY (avoid shrinking topics)
+- Unrelated to the described topic (semantic drift from expansion)
+
+**Step 5 — Intent classification:**
+
+Classify each remaining keyword by intent:
+
+| Intent | Signal | Role |
+|--------|--------|------|
+| Informational | "how to", "what is", "guide", "checklist", "tips", "tutorial" | Blog / editorial |
+| Commercial | "best", "vs", "review", "alternative", "compare" | Editorial → Product |
+| Transactional | "buy", "price", "cost", "hire", "[product] for [use case]" | Product / landing page |
+| Navigational | brand name queries | Ignore for new pages |
+
+For `:new-product`: prioritize commercial + transactional. Informational keywords go in the "supporting content" section.
+For `:new-page` (blog): prioritize informational. Commercial keywords go in "related opportunities" section.
+For `:new-cluster`: sort all intent types — they map to different page roles.
+
+---
+
+### NP Phase 3.5: TOPIC MAP CROSS-REFERENCE
+
+If `.claude/reports/{domain}/latest-topic-map.md` exists:
+- Read it before proceeding
+- For each candidate primary keyword: check if the topic map already has a page assigned to this keyword or cluster
+- If a page is already mapped to this keyword → note: "This keyword is already mapped to {URL} in your topic map. Creating a new page risks cannibalization. Consider expanding {URL} instead."
+- If the candidate cluster has ❌ Missing status in the topic map → confirm this is a genuine gap and flag it as validated in the brief
+
+This avoids recommending pages that are already planned or in progress.
+
+---
+
+### NP Phase 4: CANNIBALIZATION CHECK
+
+If GSC is connected AND Webflow MCP is connected:
+
+For each candidate primary keyword (top 5 by volume/CPC):
+- Check GSC: does the site already rank for this keyword on any page?
+- Check Webflow inventory: does a page already exist targeting this keyword?
+
+If a page already exists and ranks for the keyword:
+```
+⚠️ Cannibalization risk: "{keyword}" — your existing page at {URL} already ranks at position {pos}.
+Creating a new page targeting this keyword would split authority and likely hurt both pages.
+Recommendation: {expand existing page / differentiate clearly / use as secondary keyword instead}
+```
+
+Flag the keyword as `⚠️ cannibalizes {URL}` in the brief output. Do not remove it — surface it for the user to decide.
+
+---
+
+### NP Phase 5: SCORE AND SELECT
+
+Score every candidate keyword using:
+
+```
+volume_score      = min(volume / 500, 5)
+commercial_score  = min(CPC / 2, 5)   # proxy for intent value
+attainability     = (1 - competition) × 5   # competition 0-1 → attainability 0-5
+trend_modifier    = 1.2 if ↑ else (0.8 if ↓ else 1.0)
+opportunity_score = round(((volume_score + commercial_score + attainability) / 3) × trend_modifier, 1)
+```
+
+**Primary keyword selection:**
+
+Select the keyword with the highest opportunity_score that:
+- Matches the page goal (informational for blog, transactional/commercial for product)
+- Has attainability > 2.0 (competition < 0.6)
+- Is not flagged as a cannibalization risk (prefer a cannibalization-safe keyword)
+
+If the highest-scoring keyword has a cannibalization flag, still surface it but recommend it as secondary.
+
+**Secondary keywords (3–5):**
+
+From remaining candidates, select by:
+1. Same intent cluster as primary (closely related)
+2. High volume, lower competition (attainability > 3.0)
+3. Long-tail variants of the primary (lower competition, high specificity)
+
+**LSI / supporting keywords (5–10 for `:new-cluster`):**
+
+Lower-volume related terms that should appear naturally in the content. Not targeting pages directly — used to signal topical depth to search engines.
+
+---
+
+### NP Phase 6: OUTPUT — KEYWORD BRIEF
+
+Output a structured brief the user can hand directly to `/write-blog`, `/cms-collection-setup`, or use to brief a writer.
+
+---
+
+**For `:new-page` and `:new-product`:**
+
+```
+# Keyword Brief — {page description}
+
+**Generated**: YYYY-MM-DD
+**Page type**: {blog post / landing page / product page / CMS item}
+**Target audience**: {audience}
+**Primary goal**: {traffic / leads / conversion}
+
+---
+
+## Primary Keyword
+
+**{primary keyword}**
+- Volume: {N}/mo | CPC: ${X} | Competition: {0.0–1.0} | Trend: {↑/→/↓}
+- Intent: {informational / commercial / transactional}
+- Rationale: {1 sentence — why this is the right primary keyword for this page and goal}
+{if cannibalization risk}: ⚠️ Note: existing page at {URL} ranks for this — differentiate clearly
+
+## Recommended URL Slug
+`/{suggested-slug}`
+
+## Recommended Title Tag (50–60 chars)
+"{Suggested Title | Brand}"
+
+## Recommended H1
+"{Suggested H1}"
+
+## Recommended Meta Description (140–155 chars)
+"{Suggested meta description}"
+
+---
+
+## Secondary Keywords (target naturally in subheadings + body)
+
+| Keyword | Volume/mo | CPC | Competition | Trend | Use in |
+|---------|-----------|-----|-------------|-------|--------|
+| {keyword} | {N} | ${X} | {0.0–1.0} | ↑/→/↓ | H2 / intro / FAQ |
+| ... | | | | | |
+
+---
+
+## Related Keywords (for topical depth — not primary targets)
+
+{keyword1}, {keyword2}, {keyword3}, {keyword4}, {keyword5}
+
+---
+
+## Content Angle
+
+{2-3 sentences: recommended article format (tutorial / comparison / guide / listicle / case study), key sections to cover, what differentiates a strong answer for this keyword}
+
+---
+
+## Keyword Gaps to Address
+
+Related keywords worth creating separate pages for later (don't stuff into this page):
+
+| Keyword | Volume/mo | Suggested page | Priority |
+|---------|-----------|----------------|----------|
+| {keyword} | {N} | {/suggested-slug} | High / Medium |
+
+---
+
+## Next Steps
+
+- → Run `/write-blog` with this brief to create the page
+- → If a CMS collection: Run `/cms-collection-setup` first to confirm keyword fields exist
+{if cannibalization risk}: → Run `/click-recovery` on {URL} first to differentiate the existing page before creating this one
+```
+
+---
+
+**For `:new-cluster`:**
+
+```
+# Cluster Keyword Map — {cluster topic}
+
+**Generated**: YYYY-MM-DD
+**Cluster topic**: {topic}
+**Target audience**: {audience}
+**Commercial goal**: {product/service page at {URL} or "none identified"}
+
+---
+
+## Cluster Overview
+
+| Page Role | Count | Keywords identified | Content gaps |
+|-----------|-------|---------------------|--------------|
+| Hub | 1 | {N} | {N} |
+| Editorial | {N} | {N} | {N} |
+| Product | {N} | {N} | {N} |
+
+---
+
+## Hub Page
+
+**Target keyword**: {hub keyword}
+- Volume: {N}/mo | CPC: ${X} | Competition: {0.0–1.0} | Trend: ↑/→/↓
+- Slug: `/{suggested-slug}`
+- Title: "{Suggested Title}"
+- Purpose: anchor page for the cluster — covers the broad topic, links to all editorial and product pages
+
+---
+
+## Editorial Pages
+
+For each recommended editorial page:
+
+### Editorial {N}: {page title}
+**Target keyword**: {keyword} | {N}/mo | ${CPC} CPC | {competition} | {↑/→/↓}
+- Slug: `/{suggested-slug}`
+- Title: "{Suggested Title}"
+- Intent: {informational / commercial}
+- Links to: Hub page + {product page slug if applicable}
+- Secondary keywords: {keyword1}, {keyword2}
+
+---
+
+## Product Pages
+
+For each product/service page identified:
+
+### Product {N}: {page title}
+**Target keyword**: {keyword} | {N}/mo | ${CPC} CPC | {competition} | {↑/→/↓}
+- Slug: `/{suggested-slug}`
+- Title: "{Suggested Title}"
+- Intent: transactional / commercial
+- Supporting editorial pages: {list}
+- Secondary keywords: {keyword1}, {keyword2}
+
+---
+
+## Internal Linking Plan
+
+| From | To | Anchor text | Why |
+|------|----|-------------|-----|
+| Hub | Editorial {N} | {suggested anchor} | Topic coverage |
+| Editorial {N} | Product {N} | {suggested anchor} | Conversion path |
+| Editorial {N} | Hub | {suggested anchor} | Authority flow |
+
+---
+
+## Creation Priority
+
+| Page | Keyword | Volume/mo | Effort | Priority |
+|------|---------|-----------|--------|----------|
+| Hub | {keyword} | {N} | Low | Must do first |
+| Editorial {N} | {keyword} | {N} | Medium | Create after hub |
+| Product {N} | {keyword} | {N} | Low | May exist — check |
+
+---
+
+## Next Steps
+
+- → Create Hub page first: Run `/write-blog` with primary keyword "{hub keyword}"
+- → Then each editorial page in priority order
+- → Check `/topic-map` after creating pages to verify cluster structure
+```
+
+---
+
+### NP Phase 7: SAVE
+
+Save the brief to:
+- `.claude/reports/{domain}/keyword-brief-{slug}-YYYY-MM-DD.md` — timestamped
+- `.claude/reports/{domain}/latest-keyword-brief.md` — overwrite each run
+
+If no domain is set (GSC not connected): save to `./keyword-briefs/keyword-brief-{date}.md` in the working directory.
+
+Create directories if needed.
+
+---
+
+### NP Activity Log
+
+**After every new-\* mode run**, append to `.claude/reports/{domain}/activity-log.md`:
+
+```
+| YYYY-MM-DD | /keywords-opportunity:new-page | Keyword brief for "{primary keyword}". Volume: {N}/mo, CPC: ${X}. {N} secondary keywords. {Cannibalization: yes/no}. |
+| YYYY-MM-DD | /keywords-opportunity:new-product | Product keyword brief for "{product name}". Primary: "{keyword}" ({N}/mo, ${X} CPC). {N} transactional keywords identified. |
+| YYYY-MM-DD | /keywords-opportunity:new-cluster | Cluster map for "{topic}". {N} pages planned: 1 hub, {N} editorial, {N} product. Top keyword: "{keyword}" ({N}/mo). |
+```
+
+---
 
 Save two files:
 - `.claude/reports/{domain}/keywords-opportunity-YYYY-MM-DD.md` — full timestamped report
@@ -671,6 +1053,9 @@ This skill is **read-only** — it identifies opportunities and routes to the ri
 | High-volume new keyword gap | `/write-blog` | New article — run `/write-blog` targeting the cluster keyword |
 | Long-tail cluster, thin existing page | `/refresh-content {url}` | Expand to cover the cluster |
 | CMS missing keyword fields | `/cms-collection-setup:review` | Add primary/secondary keyword fields first |
+| Launching a new page | `/keywords-opportunity:new-page` | Research keywords before writing — then feed brief into `/write-blog` |
+| Launching a new product or service page | `/keywords-opportunity:new-product` | Commercial keyword brief → feeds `/write-blog` or Webflow page creation |
+| Planning a new topic cluster | `/keywords-opportunity:new-cluster` → `/topic-map` | Build cluster keyword map, then verify structure with `/topic-map` |
 
 **Recommended workflow:**
 1. Run `/keywords-opportunity` monthly to refresh the opportunity map
@@ -751,5 +1136,7 @@ If the file doesn't exist, create it with the header:
 ```
 | YYYY-MM-DD | /keywords-opportunity:discover | New keyword discovery: N opportunities. Content gaps: N, KE expansion: N, Long-tail clusters: N. |
 ```
+
+**New page/product/cluster modes** — logged in the NP Phase 7 section above.
 
 Log even on early exit (e.g., "Aborted: KE not connected. GSC-only: N striking pages found.").

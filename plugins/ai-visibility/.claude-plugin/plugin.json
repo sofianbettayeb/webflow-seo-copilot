@@ -1,0 +1,11 @@
+{
+  "name": "ai-visibility",
+  "description": "Baseline AI visibility report. Pulls AEO Copilot data (ChatGPT, Claude, Perplexity, Google AI Overview) and renders a single-page client-ready HTML diagnostic with evidence-backed findings, per-LLM scorecards, topic performance, and competitor share-of-voice. Print-styled for Cmd+P → PDF.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Sofian Bettayeb"
+  },
+  "homepage": "https://github.com/sofianbettayeb/webflow-seo-copilot",
+  "license": "MIT",
+  "keywords": ["aeo", "ai-visibility", "baseline", "report", "chatgpt", "claude", "perplexity", "ai-overview", "diagnostic", "client-deliverable"]
+}
