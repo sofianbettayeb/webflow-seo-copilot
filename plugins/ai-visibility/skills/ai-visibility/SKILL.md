@@ -16,7 +16,9 @@ Baseline diagnostic of a brand's presence across the four tracked AI engines (Ch
 1. *How visible is my brand in LLMs today?*
 2. *What's working and what's not?*
 
-This skill is **read-only** and **diagnostic-only**. Findings cite evidence (specific prompt counts, scores, citations, competitor names, source domains) and never prescribe "do this" actions. The client takes the diagnosis to inform their own roadmap.
+This skill is **read-only** and **diagnostic-only for findings**. Findings cite evidence (specific prompt counts, scores, citations, competitor names, source domains) and never prescribe "do this" actions inside the findings sections. The client takes the diagnosis to inform their own roadmap.
+
+**Exception — "What's next" section:** the report ends with a fixed 3-step engagement block (Meet → Discovery → Project) before the appendix. This is Sofian's offer, not a data-derived prescription. It is **content-locked**: render verbatim from the static block in `template.html`. Do not regenerate, infer, rewrite, or omit it. Source of truth: `references/whats-next.md`.
 
 ## Prerequisites
 
@@ -218,6 +220,22 @@ Also compute and surface:
 
 If `brand_in_sources` is 0 or below 5% of `total_citations`, generate a finding for "What's not working": "{brandDomain} appears in {brand_in_sources} of {total_citations} citations. The brand isn't part of the evidence base the LLMs are reading from."
 
+### 2.6 Engine Headline
+
+A one-line insight rendered above the per-LLM grid. The reader should walk away with the engine takeaway in 5 seconds without scanning all 4 cards.
+
+Algorithm (deterministic, no creative phrasing):
+
+1. From the per-LLM mention rates (Phase 2.1), identify `min_rate` (weakest engine), `max_rate` (strongest), and `median_all` (median of the four). Also note the min and max of the **other three** engines when isolating the weakest (`others_min`, `others_max`).
+2. **If `min_rate` ≤ `median_all` − 15 percentage points** → frame the weakness:
+   `"{Engine} is the soft spot at {min_rate}%. The other three engines sit between {others_min}% and {others_max}%."`
+3. **Else if `max_rate` ≥ `median_all` + 15 percentage points** → frame the lead:
+   `"{Engine} leads at {max_rate}%, well ahead of the {others_min}–{others_max}% range on the others."`
+4. **Else** (engines clustered) → frame parity:
+   `"All four engines mention the brand within a {max_rate − min_rate}-point band ({min_rate}–{max_rate}%). No single engine is the standout."`
+
+Always renders one of the three forms, never null. Render verbatim, do not embellish. Pass the result through Phase 3.4 voice rules before output.
+
 ---
 
 ## Phase 3: BUILD FINDINGS
@@ -291,6 +309,7 @@ Replace placeholders with computed values. The template defines all of them — 
 
 - **Header**: brand name, domain, date, overall grade, TL;DR
 - **Executive scorecard**: 3 score cards (AI Visibility, Technical Readiness, Sentiment Health) with band labels. Sentiment Health uses the platform value but the driver text **must** clarify brand-vs-category (see `references/scoring-notes.md` "Brand sentiment vs category sentiment").
+- **Engine headline**: one-line `{{engineHeadline}}` from Phase 2.6, rendered above the per-LLM grid
 - **Per-LLM grid**: card per engine with `{{{engineLogoSvg}}}`, `engineName`, mention rate, avg position, sentiment bar, strongest topic, weakest topic. Use the labels from `references/engine-logos.md` (`Google AIO`, not `Google AI Overview`).
 - **Topic table**: rows from Phase 2.2
 - **What's working / what's not working**: rendered as `<li>` evidence lines (or `<p>` if collapsed)
@@ -313,14 +332,15 @@ Required:
 
 1. Header (brand + grade + TL;DR)
 2. Executive scorecard
-3. Per-LLM visibility (4-card grid)
+3. Per-LLM visibility (engine headline from Phase 2.6 + 4-card grid)
 4. Topic performance (table)
 5. What's working (evidence-backed findings)
 6. What's not working (evidence-backed findings)
 7. Competitor landscape (top 5 bar chart, plus brand row)
 8. External source influence (top 10 cited domains, with "Third-party" tag)
-9. Appendix: gap prompts (full evidence table)
-10. Methodology footer
+9. What's next (static, content-locked — render verbatim from `template.html`; canonical copy in `references/whats-next.md`)
+10. Appendix: gap prompts (full evidence table)
+11. Methodology footer
 
 ---
 
@@ -374,6 +394,7 @@ Top finding: {one-line TL;DR pulled from the report header}.
 - `references/scoring-notes.md` — AEO Copilot scoring formula (60% topic / 25% technical / 15% sentiment, A–F bands), plus the brand-vs-category sentiment distinction. Load this when generating findings.
 - `references/voice-rules.md` — Humanizer checklist for the Phase 3.4 voice pass. Em dash hunting, filler list, audit prompt.
 - `references/engine-logos.md` — Inline SVG paths for ChatGPT, Claude, Perplexity, Google AIO. Brand colors and display labels. Load this in Phase 4.2 when filling per-LLM cards.
+- `references/whats-next.md` — Canonical copy for the content-locked "What's next" engagement section. Edit here, then mirror into the `<!-- WHATS_NEXT -->` block in `template.html`.
 - `template.html` — HTML/CSS skeleton with placeholders.
 
 ## Integration with Other Skills

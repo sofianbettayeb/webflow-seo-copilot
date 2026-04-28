@@ -379,6 +379,93 @@
     margin-right: 4px;
   }
 
+  /* -------- engine headline -------- */
+  .engine-headline {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--ink);
+    margin: 12px 0 18px 0;
+    padding: 12px 16px;
+    background: var(--rule-soft);
+    border-left: 3px solid var(--accent);
+    border-radius: 2px;
+    line-height: 1.4;
+  }
+
+  /* -------- whats next (content-locked) -------- */
+  .whats-next {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-top: 4px;
+  }
+  .whats-next-card {
+    background: var(--rule-soft);
+    border-radius: 4px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+  }
+  .whats-next-step {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--accent);
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .whats-next-card h3 {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0 0 10px 0;
+    color: var(--ink);
+  }
+  .whats-next-time {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    background: var(--rule);
+    padding: 3px 7px;
+    border-radius: 2px;
+    color: var(--ink-soft);
+    margin-bottom: 12px;
+    align-self: flex-start;
+  }
+  .whats-next-card p {
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--ink-soft);
+    margin: 0 0 12px 0;
+  }
+  .whats-next-card ul {
+    margin: 0 0 12px 0;
+    padding-left: 16px;
+    list-style: disc;
+    font-size: 12px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+  }
+  .whats-next-card ul li { margin-bottom: 4px; }
+  .whats-next-card ul li strong { color: var(--ink); }
+  .whats-next-yget {
+    margin-top: auto;
+    padding-top: 12px;
+    border-top: 1px solid var(--rule);
+  }
+  .whats-next-yget-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-muted);
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .whats-next-yget p {
+    font-size: 12px;
+    margin: 0;
+  }
+
   /* -------- methodology footer -------- */
   .methodology {
     margin-top: 64px;
@@ -418,7 +505,7 @@
     body { background: white; font-size: 11pt; }
     .page { padding: 0; max-width: none; box-shadow: none; }
     h2 { margin-top: 28px; }
-    .score-card, .llm-card, .competitor-row, .source-row, .findings li, .methodology {
+    .score-card, .llm-card, .competitor-row, .source-row, .findings li, .whats-next-card, .methodology {
       break-inside: avoid;
       page-break-inside: avoid;
     }
@@ -476,6 +563,7 @@
   <!-- ========== PER-LLM VISIBILITY ========== -->
   <h2>Visibility by engine</h2>
   <p style="font-size:12px;color:var(--ink-soft);margin-top:-8px;">Brand mention rate across {{totalPrompts}} prompts tracked over {{dataWindowLabel}}.</p>
+  <p class="engine-headline">{{engineHeadline}}</p>
   <div class="llm-grid">
     <!-- repeat this block 4×: ChatGPT, Claude, Perplexity, Google AIO -->
     <!-- engineLogoSvg comes from references/engine-logos.md (inline SVG, no external requests). -->
@@ -583,6 +671,47 @@
       <div class="source-count">{{citations}} citations</div>
     </div>
     {{/sources}}
+  </div>
+
+  <!-- ========== WHAT'S NEXT (content-locked) ========== -->
+  <!-- Source of truth: references/whats-next.md. If you edit this block, mirror the change there. -->
+  <h2>What's next</h2>
+  <p style="font-size:12px;color:var(--ink-soft);margin-top:-8px;">Three steps from this report to a measurably more visible brand.</p>
+  <div class="whats-next">
+    <div class="whats-next-card">
+      <div class="whats-next-step">Step 1</div>
+      <h3>Meet the expert</h3>
+      <span class="whats-next-time">1 hour call</span>
+      <p>Walk through this report. Map your AEO maturity vs. ambition. Decide if Discovery is the right next step.</p>
+      <div class="whats-next-yget">
+        <div class="whats-next-yget-label">You get</div>
+        <p>A clear read on whether AEO is the right investment today. No commitment.</p>
+      </div>
+    </div>
+    <div class="whats-next-card">
+      <div class="whats-next-step">Step 2</div>
+      <h3>AEO Discovery</h3>
+      <span class="whats-next-time">1 week + 1h30 workshop</span>
+      <p>Audit your technical health, content gaps, and entity clarity. Build the roadmap, scope, KPIs, and delivery model.</p>
+      <div class="whats-next-yget">
+        <div class="whats-next-yget-label">You get</div>
+        <p>Audit report with priority roadmap, plus a working proposal you can sign.</p>
+      </div>
+    </div>
+    <div class="whats-next-card">
+      <div class="whats-next-step">Step 3</div>
+      <h3>Start the project</h3>
+      <span class="whats-next-time">90 days recommended</span>
+      <ul>
+        <li><strong>Foundation</strong> (weeks 1–3): technical fixes, workflow, measurement</li>
+        <li><strong>Optimisation</strong> (weeks 4–11): content, AI snippets, weekly review</li>
+        <li><strong>Renewal</strong> (week 12): what worked, what's next</li>
+      </ul>
+      <div class="whats-next-yget">
+        <div class="whats-next-yget-label">You get</div>
+        <p>Compounding AI visibility, plus a clean go/no-go decision at day 90.</p>
+      </div>
+    </div>
   </div>
 
   <!-- ========== APPENDIX: GAP PROMPTS ========== -->
