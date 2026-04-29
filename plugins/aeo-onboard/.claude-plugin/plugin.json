@@ -1,0 +1,11 @@
+{
+  "name": "aeo-onboard",
+  "description": "Bootstrap a brand in AEO Copilot end-to-end from a URL — analyze the site, create the brand, run the technical audit, design 5 buyer-journey topics with listicle prompts, and trigger the first tracking cycle. Hands off to /ai-visibility for the baseline report.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Sofian Bettayeb"
+  },
+  "homepage": "https://github.com/sofianbettayeb/webflow-seo-copilot",
+  "license": "MIT",
+  "keywords": ["aeo", "onboarding", "brand-setup", "topic-design", "tech-audit", "tracking", "client-bootstrap"]
+}

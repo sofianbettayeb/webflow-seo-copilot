@@ -145,12 +145,23 @@
       "name": "ai-visibility",
       "source": "./plugins/ai-visibility",
       "description": "Baseline AI visibility report. Pulls AEO Copilot data (ChatGPT, Claude, Perplexity, Google AIO) and renders a single-page client-ready HTML diagnostic with evidence-backed findings, per-LLM scorecards, topic performance, competitor share-of-voice, and external source influence. Print-styled for Cmd+P → PDF.",
-      "version": "1.1.0",
+      "version": "1.3.0",
       "author": {
         "name": "Sofian Bettayeb"
       },
       "category": "aeo",
       "tags": ["aeo", "ai-visibility", "baseline", "report", "chatgpt", "claude", "perplexity", "ai-overview", "diagnostic", "client-deliverable", "source-influence", "mcp"]
+    },
+    {
+      "name": "aeo-onboard",
+      "source": "./plugins/aeo-onboard",
+      "description": "Bootstrap a brand in AEO Copilot end-to-end from a URL — analyze the site, create the brand, run the technical audit, design 5 buyer-journey topics with listicle prompts, and trigger the first tracking cycle. Hands off to /ai-visibility for the baseline report.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Sofian Bettayeb"
+      },
+      "category": "aeo",
+      "tags": ["aeo", "onboarding", "brand-setup", "topic-design", "tech-audit", "tracking", "client-bootstrap", "mcp"]
     }
   ]
 }
