@@ -1,5 +1,44 @@
 # Changelog — ai-visibility
 
+## 1.3.0 — 2026-04-29
+
+Added a render-verification pass. Caught a real bug on the `CloudNC` baseline where Google AIO (aggregate-only, zero mentions) was missing from every appendix row's "Missing on" cell. The skill now self-checks before declaring success, so future reports can't ship with the same class of regression.
+
+### Added
+
+- **Phase 4.5 — VERIFY.** Five deterministic acceptance checks run on the rendered HTML before writing the file. Failures loop back to Phase 4 with a specific diff message; abort after two consecutive failures rather than ship a partial report.
+  1. No leftover `{{placeholder}}` tokens in the output.
+  2. Section completeness — every `<!-- ========== ... ========== -->` marker in `template.html` appears in the render.
+  3. Engine coverage in appendix — every engine in `engines_to_report` either appears in ≥1 gap row's "Missing on" cell, is in `aggregate_partial_engines` (exempt), or has 100% mention rate (also exempt).
+  4. Gap row count == `len(gap_inventory)`.
+  5. Internal numeric consistency — `totalCitations`, per-engine `mentionCount`, and `gapPromptCount` all match the Phase 2 aggregates.
+
+- **Phase 1.2c — Compute the canonical engine list.** Single source of truth: `engines_to_report` (always all four), with `aggregate_zero_engines` and `aggregate_partial_engines` derived from per-row availability and mention totals. All downstream phases read this one variable instead of re-deriving from `engines_with_per_row`.
+
+### Changed
+
+- **Phase 2.3 — Gap inventory.** Three explicit rules for building `missed_engines` per gap row. Most importantly: aggregate-only engines with zero mentions across the corpus (e.g., Google AIO when `googleAioMentions: 0` for every topic) are appended to **every** gap row's missed list. Aggregate-only with partial mentions remain omitted from per-row missed and footnoted on the engine card. Phase 4.5.3 enforces this.
+
+### Notes
+
+- No template changes. The bug fix lives in skill logic only; existing reports re-render correctly under 1.3.0.
+- Cache rebuild required (1.2.0 → 1.3.0).
+- Estimated overhead per run: ~2 seconds for the verification pass.
+
+## 1.2.0 — 2026-04-29
+
+Tested against the `CloudNC` brand baseline. Two changes to the report layout, surfaced through a real client run.
+
+### Layout
+
+- **"How to read this report" moved to the top.** Previously sat at the bottom in the methodology footer; clients reached the scorecard before knowing the framing of the score. Block now renders right after the TL;DR, above the Executive scorecard, so the reader has the methodology context before seeing the grade.
+- **"What's next" card is the new render target for the bottom of the report.** The methodology block no longer competes with the CTA for the closing slot.
+
+### Notes
+
+- No skill workflow changes. Phase 4 placeholder fill remains identical; only the position of the methodology div in `template.html` changed.
+- Cache rebuild required (this is the v1.1.0 → v1.2.0 bump).
+
 ## 1.1.0 — 2026-04-25
 
 Tested against the `Thunder` brand baseline. Surfaced and fixed several issues that would have made v1.0.0 ship a broken or untrustworthy report on real client data.

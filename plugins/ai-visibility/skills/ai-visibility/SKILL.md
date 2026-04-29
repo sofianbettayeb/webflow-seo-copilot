@@ -1,6 +1,6 @@
 ---
 name: ai-visibility
-version: "1.1"
+version: "1.3"
 description: |
   Baseline AI visibility report — a one-page client diagnostic showing how a brand appears across ChatGPT, Claude, Perplexity, and Google AIO. Pulls live data from AEO Copilot, computes per-LLM scorecards, surfaces gaps with evidence, ranks the external domains LLMs cite, and renders a single self-contained HTML file (print-styled for Cmd+P → PDF).
   Triggers: ai visibility, ai visibility report, baseline ai report, llm visibility, llm visibility report, brand visibility audit, aeo baseline, aeo report.
@@ -127,6 +127,29 @@ The per-row schema uses nested objects: `chatgpt`, `claude`, `perplexity`, `goog
 
 After fetching, inspect the first non-empty row to detect which engine keys are present. Set `engines_with_per_row = [keys present]`. The remaining engines (e.g. `googleAio`) fall back to aggregate-only data from `get_insights.mentionVolume`.
 
+#### 1.2c Compute the canonical engine list
+
+Define `engines_to_report` **once**, here, and use it everywhere downstream (Phase 2 aggregations, Phase 4 placeholders, Phase 4.5 verification). All four tracked engines are always reported. The distinction is which data source feeds each card:
+
+```
+engines_to_report = ['chatgpt', 'claude', 'perplexity', 'googleAio']
+engines_aggregate_only = [e for e in engines_to_report if e not in engines_with_per_row]
+
+# For each aggregate-only engine, classify its known status from get_insights.mentionVolume:
+aggregate_zero_engines = [
+    e for e in engines_aggregate_only
+    if sum(t['{e}Mentions'] for t in get_insights.mentionVolume) == 0
+]
+# These engines are known to have missed every prompt — they must appear
+# in every gap row's missed list (Phase 2.3).
+
+aggregate_partial_engines = [e for e in engines_aggregate_only if e not in aggregate_zero_engines]
+# These have some mentions but no per-prompt detail — omit from per-row
+# missed list and footnote on the engine card instead.
+```
+
+Single source of truth. If you need to answer "which engines am I reporting on?" anywhere downstream, read `engines_to_report`. Do not re-derive from `engines_with_per_row` alone.
+
 #### 1.2b Compute the data window
 
 ```
@@ -186,11 +209,19 @@ Sort by visibility % descending.
 
 ### 2.3 Gap Inventory
 
-A prompt is a **gap** if the brand is mentioned in 0 or 1 of the engines that have per-row data. For each gap prompt, capture:
+A prompt is a **gap** if the brand is mentioned in 0 or 1 of the engines in `engines_with_per_row`. For each gap prompt, capture:
 - The prompt text
 - The topic it belongs to
 - Which engines missed the brand (with the **display label**, not the key — "Google AIO" not "googleAio")
 - Which competitors appeared in those engines (deduplicated, ranked by frequency)
+
+**Building `missed_engines` for each gap row** — three rules, applied in order:
+
+1. **Per-row engines:** for each engine in `engines_with_per_row` where `row[engine].mentioned == False`, add the display label.
+2. **Aggregate-zero engines:** every engine in `aggregate_zero_engines` (Phase 1.2c) is known to have missed every prompt — append to the missed list of **every** gap row.
+3. **Aggregate-partial engines:** omit from per-row `missed_engines`. We don't know which specific prompts they missed. The engine card footnote already documents this.
+
+This is non-negotiable: when a brand has zero mentions on an aggregate-only engine (e.g., Google AIO with `googleAioMentions: 0` across all topics), the appendix's "Missing on" column **must** include that engine for every row. Phase 4.5 verifies this.
 
 ### 2.4 Competitor Share-of-Voice on Gaps
 
@@ -341,6 +372,61 @@ Required:
 9. What's next (static, content-locked — render verbatim from `template.html`; canonical copy in `references/whats-next.md`)
 10. Appendix: gap prompts (full evidence table)
 11. Methodology footer
+
+---
+
+## Phase 4.5: VERIFY
+
+Before writing the file in Phase 5, the rendered HTML **must** pass all five checks. If any fail, loop back to Phase 4 with a specific diff message and re-render. This is the acceptance pass that prevents silent regressions.
+
+### 4.5.1 No leftover placeholders
+
+```
+assert re.findall(r'\{\{[^}]+\}\}', rendered_html) == []
+```
+
+Any `{{token}}` left in the output means the placeholder set in `template.html` drifted from the placeholder set in Phase 4.2. Surface the exact tokens in the failure message.
+
+### 4.5.2 Section completeness
+
+Count `<!-- ========== ... ========== -->` markers in `template.html`. Every one must have a matching marker in the rendered output. Mismatch = a section was accidentally stripped (regex misfire, mustache block ate too much).
+
+### 4.5.3 Engine coverage in appendix
+
+For every engine in `engines_to_report` (Phase 1.2c), one of these must hold:
+- It appears in **at least one** gap row's "Missing on" cell, OR
+- It is in `aggregate_partial_engines` (per-prompt unknown — exempt from this check), OR
+- The brand has 100% mention rate on it (no gap row exists where it's missed — also exempt).
+
+If an engine in `aggregate_zero_engines` is **not** present in every gap row's missed list, fail with: "Engine `{e}` has zero aggregate mentions but is missing from {N} gap rows. Phase 2.3 rule 2 was not applied."
+
+This is the check that would have caught the Google AIO bug.
+
+### 4.5.4 Gap row count consistency
+
+```
+assert count_appendix_rows(rendered_html) == len(gap_inventory)
+```
+
+If the rendered table has fewer rows than the gap inventory, a render template loop truncated the data.
+
+### 4.5.5 Internal numeric consistency
+
+- `totalCitations` placeholder == sum of `citations` across the rendered top-N source rows + remainder (the long tail not in top 10). Tolerate ±1 for rounding.
+- `mentionCount` for each engine card == platform `mentionVolume` for that engine summed across topics. Tolerate ±0.
+- `gapPromptCount` == `len(gap_inventory)`.
+
+If any number rendered in the report disagrees with the underlying aggregate computed in Phase 2, fail with the specific delta.
+
+### Failure protocol
+
+When a check fails:
+1. Output the exact failure message (which check, which value, which expected value).
+2. Loop back to Phase 4 to re-render with the fix.
+3. Do not write the file in Phase 5 until all five pass.
+4. After two consecutive fail loops, abort and surface the bug to the user. Do not write a partial report.
+
+This phase is non-negotiable. The cost is ~2 seconds per render. The alternative is the user finding bugs in client deliverables.
 
 ---
 

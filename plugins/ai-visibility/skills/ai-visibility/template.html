@@ -540,6 +540,19 @@
 
   <p class="tldr">{{tldr}}</p>
 
+  <!-- ========== HOW TO READ (top placement) ========== -->
+  <div class="methodology">
+    <h4>How to read this report</h4>
+    <p>The AI Visibility score is a 0–100 composite from the AEO Copilot platform. It blends three signals: how often the brand is mentioned across the tracked engines (60%), the technical readiness of the website for AI crawlers (25%), and the sentiment health of the mentions that do happen (15%). Grades follow standard A–F bands: A ≥ 85, B ≥ 70, C ≥ 55, D ≥ 40, F &lt; 40.</p>
+    <dl>
+      <dt>Data window</dt><dd>{{dataWindowLabel}} · {{dataFromDate}} → {{dataToDate}}</dd>
+      <dt>Prompt corpus</dt><dd>{{totalPrompts}} prompts across {{totalTopics}} topics ({{corpusBand}})</dd>
+      <dt>Engines tracked</dt><dd>{{enginesTrackedList}}</dd>
+      <dt>Last platform sync</dt><dd>{{lastSyncDate}}</dd>
+      <dt>Source</dt><dd>AEO Copilot · aeo-copilot.com</dd>
+    </dl>
+  </div>
+
   <!-- ========== EXECUTIVE SCORECARD ========== -->
   <h2>Executive scorecard</h2>
   <div class="scorecard">
@@ -739,19 +752,6 @@
       {{/gapPrompts}}
     </tbody>
   </table>
-
-  <!-- ========== METHODOLOGY FOOTER ========== -->
-  <div class="methodology">
-    <h4>How to read this report</h4>
-    <p>The AI Visibility score is a 0–100 composite from the AEO Copilot platform. It blends three signals: how often the brand is mentioned across the tracked engines (60%), the technical readiness of the website for AI crawlers (25%), and the sentiment health of the mentions that do happen (15%). Grades follow standard A–F bands: A ≥ 85, B ≥ 70, C ≥ 55, D ≥ 40, F &lt; 40.</p>
-    <dl>
-      <dt>Data window</dt><dd>{{dataWindowLabel}} · {{dataFromDate}} → {{dataToDate}}</dd>
-      <dt>Prompt corpus</dt><dd>{{totalPrompts}} prompts across {{totalTopics}} topics ({{corpusBand}})</dd>
-      <dt>Engines tracked</dt><dd>{{enginesTrackedList}}</dd>
-      <dt>Last platform sync</dt><dd>{{lastSyncDate}}</dd>
-      <dt>Source</dt><dd>AEO Copilot · aeo-copilot.com</dd>
-    </dl>
-  </div>
 
 </main>
 </body>
