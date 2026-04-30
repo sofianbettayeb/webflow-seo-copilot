@@ -8,7 +8,7 @@ Claude Code skills for Webflow SEO — keyword research, content creation, traff
 |------------|-------------|
 | [Webflow MCP](https://developers.webflow.com/mcp/reference/overview) | All skills that touch Webflow content |
 | [Google Search Console MCP](https://github.com/sofianbettayeb/gsc-mcp-server) | `/click-recovery`, `/weekly-report`, `/monthly-report`, `/audit:deep`, optional for `/refresh-content` |
-| [AEO Copilot MCP](https://github.com/sofianbettayeb/aeo-copilot-mcp) | `/ai-visibility` (baseline LLM visibility report) |
+| [AEO Copilot MCP](https://github.com/sofianbettayeb/aeo-copilot-mcp) | `/aeo-onboard` (brand bootstrap), `/ai-visibility` (baseline LLM visibility report) |
 | [Keywords Everywhere MCP](https://github.com/hithereiamaliff/mcp-keywords-everywhere) | Optional, adds search volume and intent data to several skills |
 
 `/audit {url}` requires no MCP servers — any public URL works.
@@ -31,6 +31,7 @@ Claude Code skills for Webflow SEO — keyword research, content creation, traff
 /plugin install monthly-report@webflow-seo-copilot
 /plugin install audit@webflow-seo-copilot
 /plugin install audit-deep@webflow-seo-copilot
+/plugin install aeo-onboard@webflow-seo-copilot
 /plugin install ai-visibility@webflow-seo-copilot
 /plugin install topic-map@webflow-seo-copilot
 
@@ -177,6 +178,18 @@ Post-sale engagement baseline with GSC + Webflow data. Same maturity model as `/
 
 ---
 
+### `/aeo-onboard`
+
+Bootstrap a brand in AEO Copilot end-to-end from a URL. Analyzes the site, creates the brand, runs the technical audit, designs 5 buyer-journey topics with listicle prompts, and triggers the first tracking cycle. Approval gates on brand metadata, topic design, and tracking execution. Hands off to `/ai-visibility` for the baseline report once the cycle completes.
+
+```
+/aeo-onboard https://example.com
+```
+
+[Full skill docs →](plugins/aeo-onboard/skills/aeo-onboard/SKILL.md)
+
+---
+
 ### `/ai-visibility`
 
 Baseline AI visibility report. A one-page client diagnostic showing how a brand appears across ChatGPT, Claude, Perplexity, and Google AIO. Pulls live data from AEO Copilot, computes per-LLM scorecards, surfaces gaps with evidence, ranks the external domains the LLMs cite as sources, and renders a self-contained HTML file print-styled for Cmd+P → PDF.
@@ -225,6 +238,7 @@ Turn keyword exports, URL lists, and GSC data into a structured keyword map. Out
 | Monthly performance review | `/monthly-report` |
 | Pre-sale site assessment (no MCP) | `/audit {url}` |
 | Post-sale engagement baseline | `/audit:deep` |
+| Onboard a new brand into AEO Copilot from scratch | `/aeo-onboard {url}` |
 | Baseline LLM visibility for a client | `/ai-visibility` |
 | Find which domains LLMs cite for your topics | `/ai-visibility` |
 | Map which keyword each page targets | `/topic-map` |
