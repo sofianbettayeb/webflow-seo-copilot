@@ -25,9 +25,9 @@ If you need to change the offer (durations, deliverables, "you get" lines), edit
 
 ## Step 2 — AEO Discovery
 
-- **Duration:** 1 week + 1h30 workshop
-- **What:** Audit your technical health, content gaps, and entity clarity. Build the roadmap, scope, KPIs, and delivery model.
-- **You get:** Audit report with priority roadmap, plus a working proposal you can sign.
+- **Duration:** 1 week sprint (non full-time) + 90-min workshop
+- **What:** A lean discovery phase led by our AEO consultant. We assess your technical setup, uncover content opportunities, and define entity clarity — without requiring full-time involvement.
+- **You get:** Roadmap, scope, KPIs, and delivery model.
 
 ## Step 3 — Start the project
 
