@@ -180,7 +180,7 @@ Post-sale engagement baseline with GSC + Webflow data. Same maturity model as `/
 
 ### `/aeo-onboard`
 
-Bootstrap a brand in AEO Copilot end-to-end from a URL. Analyzes the site, creates the brand, runs the technical audit, designs 5 buyer-journey topics with listicle prompts, and triggers the first tracking cycle. Approval gates on brand metadata, topic design, and tracking execution. Hands off to `/ai-visibility` for the baseline report once the cycle completes.
+Bootstrap a brand in AEO Copilot from a URL, review-first. Analyzes the site, creates the brand, runs the technical audit, and designs 3 buyer-journey topics with 3 listicle prompts each. The first tracking cycle is an explicit opt-in after prompt review, never automatic. Approval gates on brand metadata, topic design, and tracking execution. Hands off to `/ai-visibility` for the baseline report once the cycle completes.
 
 ```
 /aeo-onboard https://example.com

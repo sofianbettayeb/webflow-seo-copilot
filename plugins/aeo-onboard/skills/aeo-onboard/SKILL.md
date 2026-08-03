@@ -1,17 +1,17 @@
 ---
 name: aeo-onboard
-version: "1.0"
+version: "1.1"
 description: |
-  Bootstrap a brand in AEO Copilot end-to-end from a URL. Analyzes the site, creates the brand, runs the technical audit, designs 5 buyer-journey topics with listicle-style prompts, and triggers the first tracking cycle. Hands off to /ai-visibility for the baseline report once tracking completes.
+  Bootstrap a brand in AEO Copilot from a URL, review-first. Analyzes the site, creates the brand, runs the technical audit, and designs 3 buyer-journey topics with 3 listicle-style prompts each — a curated draft the user approves before anything runs. The first tracking cycle is an explicit opt-in after prompt review, never automatic. Hands off to /ai-visibility for the baseline report once tracking completes.
   Triggers: aeo onboard, onboard brand, bootstrap aeo, set up aeo brand, new brand aeo copilot, create aeo brand, kickoff aeo, aeo setup.
   Requires: AEO Copilot MCP server. Optional: Webflow MCP for confirming live pages.
-  Workflow: Discover → Confirm → Create → Audit → Design Topics → Create Topics → Run Tracking → Log.
+  Workflow: Discover → Confirm → Create → Audit → Design Topics → Create Topics → Review & Run → Log.
   Command: /aeo-onboard {url}
 ---
 
 # AEO Onboard Skill
 
-End-to-end onboarding for a new brand in AEO Copilot. Takes a single URL and produces a tracked brand with topics, prompts, a tech audit, and a first tracking cycle running. The next step after this skill is `/ai-visibility` to render the client baseline once the tracking cycle finishes.
+End-to-end onboarding for a new brand in AEO Copilot. Takes a single URL and produces a brand with a tech audit and a reviewable draft of 3 topics x 3 prompts. This mirrors the in-product URL bootstrap: the draft is meant to be reviewed and edited before the first tracking run — a baseline is only as good as the questions it asks. The next step after this skill is `/ai-visibility` to render the client baseline once the tracking cycle finishes.
 
 This skill **writes to AEO Copilot**. Every state-changing call sits behind an explicit approval gate. No silent writes, ever.
 
@@ -23,7 +23,7 @@ This skill **writes to AEO Copilot**. Every state-changing call sits behind an e
 ## Workflow Overview
 
 ```
-DISCOVER → CONFIRM METADATA → CREATE BRAND → TECH AUDIT → DESIGN TOPICS → CREATE TOPICS & PROMPTS → RUN TRACKING → LOG
+DISCOVER → CONFIRM METADATA → CREATE BRAND → TECH AUDIT → DESIGN TOPICS → CREATE TOPICS & PROMPTS → REVIEW & RUN → LOG
 ```
 
 ---
@@ -163,31 +163,28 @@ End the section with: "Full audit JSON saved to `{tech_audit_path}`."
 
 ## Phase 4: DESIGN TOPICS (approval gate)
 
-Generate 5 topics covering the buyer journey. Each topic = `name`, `description`, `keywords[]`, `pages[]`, `prompts[]` (5–6 listicle prompts).
+Generate exactly 3 topics covering the buyer journey. Each topic = `name`, `description`, `keywords[]`, `pages[]`, `prompts[]` (exactly 3 listicle prompts). A 3x3 draft matches the in-product bootstrap: small enough to review honestly, easy to extend from the dashboard later.
 
-### 4.1 Topic taxonomy (5 axes)
+### 4.1 Topic taxonomy (pick 3 of 5 axes)
 
-Use the framework in `references/topic-frames.md`. Every brand should produce one topic per axis:
+Use the framework in `references/topic-frames.md` and pick the 3 strongest axes for this brand:
 
-1. **Broad category** — the umbrella term for the brand's primary use case. Top-of-funnel demand.
+1. **Broad category** — the umbrella term for the brand's primary use case. Top-of-funnel demand. Almost always include this one.
 2. **Primary integration ecosystem** — the dominant tool/platform the brand plugs into.
 3. **Secondary integration ecosystems** — adjacent stacks the brand also serves (combine 2–4 in one topic if they share intent).
 4. **Industry vertical** — the highest-value sector(s) the brand serves.
 5. **Outcome / business problem** — the operational result buyers care about (productivity, quoting, throughput, compliance, etc.).
 
-If the brand genuinely doesn't fit one of these axes (e.g., no integration ecosystem because it's a standalone B2C product), substitute with a second outcome topic or a use-case topic. Document the substitution in the topic description so it's traceable.
+State which axes were picked and why in one line each. If the brand genuinely doesn't fit an axis (e.g., no integration ecosystem because it's a standalone B2C product), substitute with a second outcome topic or a use-case topic. Document the substitution in the topic description so it's traceable.
 
 ### 4.2 Prompt design
 
-Each topic gets 5–6 listicle-style prompts. Templates in `references/prompt-frames.md`. Span:
+Each topic gets exactly 3 listicle-style prompts. Templates in `references/prompt-frames.md`. Span, per topic:
 - 1 broad list ("List the best {category} tools")
-- 1 year-specific ("Top {N} {category} tools in 2026")
-- 1 persona-targeted ("Best {category} for {persona}")
-- 1 integration/use-case-specific ("Which {category} works with {integration}?")
-- 1 competitor/alternative ("Best alternatives to {competitor}")
-- Optional 6th: industry- or outcome-framed
+- 1 persona- or integration-targeted ("Best {category} for {persona}" / "Which {category} works with {integration}?")
+- 1 competitor/alternative or year-specific ("Best alternatives to {competitor}" / "Top {N} {category} tools in 2026")
 
-Vary phrasing. Avoid identical sentence structures. Apply `references/voice-rules.md`.
+Vary phrasing. Avoid identical sentence structures. Apply `references/voice-rules.md`. If the user wants more coverage, they can add prompts in the dashboard or ask for extras here — default stays at 3.
 
 ### 4.3 Pages array
 
@@ -195,7 +192,7 @@ For each topic, attach 1–3 live URLs from the brand's site that map to that to
 
 ### 4.4 Present for approval
 
-Show the user all 5 topics in a compact format:
+Show the user all 3 topics in a compact format:
 
 ```
 Topic 1: {name} ({axis})
@@ -210,7 +207,7 @@ Topic 1: {name} ({axis})
 Topic 2: ...
 ```
 
-Ask: "Edit any topic, or type 'ok' to create all 5." Loop on edits.
+Ask: "Edit any topic or prompt, or type 'ok' to create all 3. This is the review step — the first tracking run will use these prompts as-is." Loop on edits.
 
 Do not proceed to Phase 5 without explicit `ok`.
 
@@ -226,23 +223,27 @@ For each approved topic:
 
 If `add_prompts` returns 402 → see guard. Stop the loop, but keep already-created topics. Log how many topics/prompts landed.
 
-After all 5 topics:
+After all 3 topics:
 ```
 ✅ {N} topics created. {M} prompts added.
 ```
 
 ---
 
-## Phase 6: RUN TRACKING (approval gate)
+## Phase 6: REVIEW & RUN (approval gate)
+
+The prompts were reviewed and approved in Phase 4, so running now is legitimate — but it is never automatic. Mirror the in-product behavior: creating the setup and running it are two separate decisions.
 
 Show the cost preview verbatim:
 
 ```
-About to execute {M} prompts across 4 LLMs (ChatGPT, Claude, Perplexity, Google AIO). This consumes credits. Proceed? (y/N)
+Your draft is live in AEO Copilot: {N} topics, {M} prompts.
+
+Run the first tracking cycle now? It executes {M} prompts across 4 LLMs (ChatGPT, Claude, Perplexity, Google AIO) and consumes credits. If you'd rather look at the prompts once more in the dashboard first, say no — the setup guide there walks you through review and the first run. (y/N)
 ```
 
 On `y` → `run_brand_prompts({ id: brandId })` (no `topicId` to run all topics).
-On `N` → skip tracking. The brand, topics, and prompts already exist; the user can run tracking from the dashboard later.
+On `N` → skip tracking. The brand, topics, and prompts already exist; the user reviews and runs from the dashboard, where the setup guide picks up the remaining steps.
 
 After triggering:
 ```
@@ -267,7 +268,7 @@ Append to `activity_log_path`. Create the file with the standard header if it do
 Append one row:
 
 ```
-| YYYY-MM-DD | /aeo-onboard | Created brand {name}. Tech audit: schema={x}, sitemap={y}, llms.txt={z}. {N} topics, {M} prompts. Tracking cycle started. |
+| YYYY-MM-DD | /aeo-onboard | Created brand {name}. Tech audit: schema={x}, sitemap={y}, llms.txt={z}. {N} topics, {M} prompts. Tracking: {started | left for dashboard review}. |
 ```
 
 If the user aborted at any phase, log the row anyway with the reason:
@@ -286,9 +287,10 @@ If the user aborted at any phase, log the row anyway with the reason:
   Topics:       {N}
   Prompts:      {M}
   Tech audit:   {tech_audit_path}
-  Tracking:     {started | skipped}
+  Tracking:     {started | left for dashboard review}
 
-Next: /ai-visibility to render the baseline report once tracking completes.
+Next: {if started} /ai-visibility to render the baseline report once tracking completes.
+      {if skipped} Review the prompts in the AEO Copilot dashboard (the setup guide walks you through it), run your baseline there, then /ai-visibility.
 ```
 
 ---

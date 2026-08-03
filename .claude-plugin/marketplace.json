@@ -18,7 +18,14 @@
         "name": "Sofian Bettayeb"
       },
       "category": "setup",
-      "tags": ["config", "setup", "onboarding", "brand-voice", "seo", "aeo"]
+      "tags": [
+        "config",
+        "setup",
+        "onboarding",
+        "brand-voice",
+        "seo",
+        "aeo"
+      ]
     },
     {
       "name": "refresh-content",
@@ -29,7 +36,14 @@
         "name": "Sofian Bettayeb"
       },
       "category": "seo",
-      "tags": ["webflow", "seo", "blog", "content-refresh", "cms", "mcp"]
+      "tags": [
+        "webflow",
+        "seo",
+        "blog",
+        "content-refresh",
+        "cms",
+        "mcp"
+      ]
     },
     {
       "name": "click-recovery",
@@ -40,7 +54,15 @@
         "name": "Sofian Bettayeb"
       },
       "category": "seo",
-      "tags": ["seo", "ctr", "gsc", "google-search-console", "click-recovery", "webflow", "mcp"]
+      "tags": [
+        "seo",
+        "ctr",
+        "gsc",
+        "google-search-console",
+        "click-recovery",
+        "webflow",
+        "mcp"
+      ]
     },
     {
       "name": "monthly-report",
@@ -51,7 +73,17 @@
         "name": "Sofian Bettayeb"
       },
       "category": "seo",
-      "tags": ["seo", "report", "monthly", "gsc", "analytics", "webflow", "executive", "action-plan", "mcp"]
+      "tags": [
+        "seo",
+        "report",
+        "monthly",
+        "gsc",
+        "analytics",
+        "webflow",
+        "executive",
+        "action-plan",
+        "mcp"
+      ]
     },
     {
       "name": "weekly-report",
@@ -62,7 +94,17 @@
         "name": "Sofian Bettayeb"
       },
       "category": "seo",
-      "tags": ["seo", "report", "weekly", "gsc", "analytics", "webflow", "pulse", "action-plan", "mcp"]
+      "tags": [
+        "seo",
+        "report",
+        "weekly",
+        "gsc",
+        "analytics",
+        "webflow",
+        "pulse",
+        "action-plan",
+        "mcp"
+      ]
     },
     {
       "name": "audit",
@@ -73,7 +115,15 @@
         "name": "Sofian Bettayeb"
       },
       "category": "seo",
-      "tags": ["seo", "aeo", "audit", "maturity", "discovery", "scorecard", "webflow"]
+      "tags": [
+        "seo",
+        "aeo",
+        "audit",
+        "maturity",
+        "discovery",
+        "scorecard",
+        "webflow"
+      ]
     },
     {
       "name": "audit-deep",
@@ -84,7 +134,18 @@
         "name": "Sofian Bettayeb"
       },
       "category": "seo",
-      "tags": ["seo", "aeo", "audit", "deep", "maturity", "gsc", "webflow", "indexation", "scorecard", "mcp"]
+      "tags": [
+        "seo",
+        "aeo",
+        "audit",
+        "deep",
+        "maturity",
+        "gsc",
+        "webflow",
+        "indexation",
+        "scorecard",
+        "mcp"
+      ]
     },
     {
       "name": "cms-collection-setup",
@@ -95,7 +156,16 @@
         "name": "Sofian Bettayeb"
       },
       "category": "seo",
-      "tags": ["webflow", "seo", "cms", "collection", "schema", "blog", "content-architecture", "mcp"]
+      "tags": [
+        "webflow",
+        "seo",
+        "cms",
+        "collection",
+        "schema",
+        "blog",
+        "content-architecture",
+        "mcp"
+      ]
     },
     {
       "name": "keywords-opportunity",
@@ -106,7 +176,16 @@
         "name": "Sofian Bettayeb"
       },
       "category": "seo",
-      "tags": ["webflow", "seo", "keywords", "keyword-research", "gsc", "keywords-everywhere", "striking-distance", "mcp"]
+      "tags": [
+        "webflow",
+        "seo",
+        "keywords",
+        "keyword-research",
+        "gsc",
+        "keywords-everywhere",
+        "striking-distance",
+        "mcp"
+      ]
     },
     {
       "name": "aeo-optimize",
@@ -117,7 +196,16 @@
         "name": "Sofian Bettayeb"
       },
       "category": "aeo",
-      "tags": ["webflow", "aeo", "answer-engine-optimization", "faq", "schema", "structured-data", "content-optimization", "mcp"]
+      "tags": [
+        "webflow",
+        "aeo",
+        "answer-engine-optimization",
+        "faq",
+        "schema",
+        "structured-data",
+        "content-optimization",
+        "mcp"
+      ]
     },
     {
       "name": "write-blog",
@@ -128,7 +216,17 @@
         "name": "Sofian Bettayeb"
       },
       "category": "content",
-      "tags": ["webflow", "seo", "aeo", "blog", "content", "cms", "write", "humanizer", "mcp"]
+      "tags": [
+        "webflow",
+        "seo",
+        "aeo",
+        "blog",
+        "content",
+        "cms",
+        "write",
+        "humanizer",
+        "mcp"
+      ]
     },
     {
       "name": "topic-map",
@@ -139,7 +237,18 @@
         "name": "Sofian Bettayeb"
       },
       "category": "seo",
-      "tags": ["seo", "keyword-map", "topic-clusters", "content-strategy", "gap-analysis", "pillar-pages", "keyword-ownership", "editorial-calendar", "gsc", "mcp"]
+      "tags": [
+        "seo",
+        "keyword-map",
+        "topic-clusters",
+        "content-strategy",
+        "gap-analysis",
+        "pillar-pages",
+        "keyword-ownership",
+        "editorial-calendar",
+        "gsc",
+        "mcp"
+      ]
     },
     {
       "name": "ai-visibility",
@@ -150,18 +259,40 @@
         "name": "Sofian Bettayeb"
       },
       "category": "aeo",
-      "tags": ["aeo", "ai-visibility", "baseline", "report", "chatgpt", "claude", "perplexity", "ai-overview", "diagnostic", "client-deliverable", "source-influence", "mcp"]
+      "tags": [
+        "aeo",
+        "ai-visibility",
+        "baseline",
+        "report",
+        "chatgpt",
+        "claude",
+        "perplexity",
+        "ai-overview",
+        "diagnostic",
+        "client-deliverable",
+        "source-influence",
+        "mcp"
+      ]
     },
     {
       "name": "aeo-onboard",
       "source": "./plugins/aeo-onboard",
-      "description": "Bootstrap a brand in AEO Copilot end-to-end from a URL — analyze the site, create the brand, run the technical audit, design 5 buyer-journey topics with listicle prompts, and trigger the first tracking cycle. Hands off to /ai-visibility for the baseline report.",
-      "version": "1.0.0",
+      "description": "Bootstrap a brand in AEO Copilot from a URL, review-first — analyze the site, create the brand, run the technical audit, and design 3 buyer-journey topics with 3 listicle prompts each. The first tracking cycle is an explicit opt-in after prompt review. Hands off to /ai-visibility for the baseline report.",
+      "version": "1.1.0",
       "author": {
         "name": "Sofian Bettayeb"
       },
       "category": "aeo",
-      "tags": ["aeo", "onboarding", "brand-setup", "topic-design", "tech-audit", "tracking", "client-bootstrap", "mcp"]
+      "tags": [
+        "aeo",
+        "onboarding",
+        "brand-setup",
+        "topic-design",
+        "tech-audit",
+        "tracking",
+        "client-bootstrap",
+        "mcp"
+      ]
     }
   ]
 }
